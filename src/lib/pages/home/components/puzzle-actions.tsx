@@ -78,17 +78,20 @@ const BUTTON_ROUNDED: ButtonProps["rounded"] = {
 
 // #region Action Button
 interface ActionButtonProps extends PropsWithChildren {
+  ariaLabel: IconButtonProps["aria-label"];
   iconSize: IconProps["width"];
   onClick?: () => void;
 }
 
 const ActionButton = ({
+  ariaLabel,
   children,
   iconSize,
   onClick,
   ...props
 }: ActionButtonProps) => (
   <IconButton
+    aria-label={ariaLabel}
     aspectRatio={{ lg: 2 / 1 }}
     height={ICON_BUTTON_HEIGHT}
     padding="0.25rem 0"
@@ -166,15 +169,19 @@ type NewPuzzleDialogTriggerProps = {
 
 const NewPuzzleDialogTrigger = ({
   pauseStopwatch,
-}: NewPuzzleDialogTriggerProps) => (
-  <ActionTooltip tooltipText="Start a new puzzle">
-    <Dialog.Trigger asChild onClick={pauseStopwatch}>
-      <ActionButton iconSize={MD_ICON_SIZE_ALT}>
-        <MdOutlineFiberNew />
-      </ActionButton>
-    </Dialog.Trigger>
-  </ActionTooltip>
-);
+}: NewPuzzleDialogTriggerProps) => {
+  const tooltipText = "Start a new puzzle";
+
+  return (
+    <ActionTooltip tooltipText={tooltipText}>
+      <Dialog.Trigger asChild onClick={pauseStopwatch}>
+        <ActionButton ariaLabel={tooltipText} iconSize={MD_ICON_SIZE_ALT}>
+          <MdOutlineFiberNew />
+        </ActionButton>
+      </Dialog.Trigger>
+    </ActionTooltip>
+  );
+};
 
 type NewPuzzleDialogFooterProps = {
   navigate: UseNavigateResult<string>;
@@ -248,16 +255,21 @@ type UndoButtonProps = {
   setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
 };
 
-const UndoButton = ({ setPuzzleHistory }: UndoButtonProps) => (
-  <ActionTooltip tooltipText="Undo the last move">
-    <ActionButton
-      iconSize={IM_ICON_SIZE}
-      onClick={() => handleUndoMove(setPuzzleHistory)}
-    >
-      <ImUndo />
-    </ActionButton>
-  </ActionTooltip>
-);
+const UndoButton = ({ setPuzzleHistory }: UndoButtonProps) => {
+  const tooltipText = "Undo the last move";
+
+  return (
+    <ActionTooltip tooltipText={tooltipText}>
+      <ActionButton
+        ariaLabel={tooltipText}
+        iconSize={IM_ICON_SIZE}
+        onClick={() => handleUndoMove(setPuzzleHistory)}
+      >
+        <ImUndo />
+      </ActionButton>
+    </ActionTooltip>
+  );
+};
 // #endregion
 
 // #region Redo Button
@@ -266,16 +278,21 @@ type RedoButtonProps = {
   setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
 };
 
-const RedoButton = ({ setPuzzleHistory }: RedoButtonProps) => (
-  <ActionTooltip tooltipText="Redo the last undone move">
-    <ActionButton
-      iconSize={IM_ICON_SIZE}
-      onClick={() => handleRedoMove(setPuzzleHistory)}
-    >
-      <ImRedo />
-    </ActionButton>
-  </ActionTooltip>
-);
+const RedoButton = ({ setPuzzleHistory }: RedoButtonProps) => {
+  const tooltipText = "Redo the last undone move";
+
+  return (
+    <ActionTooltip tooltipText={tooltipText}>
+      <ActionButton
+        ariaLabel={tooltipText}
+        iconSize={IM_ICON_SIZE}
+        onClick={() => handleRedoMove(setPuzzleHistory)}
+      >
+        <ImRedo />
+      </ActionButton>
+    </ActionTooltip>
+  );
+};
 // #endregion
 
 // #region Check Solution Button
@@ -337,15 +354,19 @@ type CheckSolutionDialogTriggerProps = {
 
 const CheckSolutionDialogTrigger = ({
   pauseStopwatch,
-}: CheckSolutionDialogTriggerProps) => (
-  <ActionTooltip tooltipText="Check the current solution">
-    <Dialog.Trigger asChild onClick={pauseStopwatch}>
-      <ActionButton iconSize={IM_ICON_SIZE}>
-        <ImCheckmark />
-      </ActionButton>
-    </Dialog.Trigger>
-  </ActionTooltip>
-);
+}: CheckSolutionDialogTriggerProps) => {
+  const tooltipText = "Check the current solution";
+
+  return (
+    <ActionTooltip tooltipText={tooltipText}>
+      <Dialog.Trigger asChild onClick={pauseStopwatch}>
+        <ActionButton ariaLabel={tooltipText} iconSize={IM_ICON_SIZE}>
+          <ImCheckmark />
+        </ActionButton>
+      </Dialog.Trigger>
+    </ActionTooltip>
+  );
+};
 
 type CheckSolutionDialogFooterProps = {
   isPuzzleSolved: boolean;
@@ -444,15 +465,19 @@ type RestartPuzzleDialogTriggerProps = {
 
 const RestartPuzzleDialogTrigger = ({
   pauseStopwatch,
-}: RestartPuzzleDialogTriggerProps) => (
-  <ActionTooltip tooltipText="Restart the puzzle">
-    <Dialog.Trigger asChild onClick={pauseStopwatch}>
-      <ActionButton iconSize={MD_ICON_SIZE}>
-        <MdRestartAlt />
-      </ActionButton>
-    </Dialog.Trigger>
-  </ActionTooltip>
-);
+}: RestartPuzzleDialogTriggerProps) => {
+  const tooltipText = "Restart the puzzle";
+
+  return (
+    <ActionTooltip tooltipText={tooltipText}>
+      <Dialog.Trigger asChild onClick={pauseStopwatch}>
+        <ActionButton ariaLabel={tooltipText} iconSize={MD_ICON_SIZE}>
+          <MdRestartAlt />
+        </ActionButton>
+      </Dialog.Trigger>
+    </ActionTooltip>
+  );
+};
 
 type RestartPuzzleDialogFooterProps = {
   rawBoardState: RawBoardState;
