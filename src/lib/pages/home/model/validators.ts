@@ -11,7 +11,8 @@ const validRawPuzzleStringRegex = SuperExpressive()
   .digit.endOfInput.toRegex();
 
 export const [isRawPuzzleString, BrandedRawPuzzleString] = branded(
-  (input: string) => validRawPuzzleStringRegex.test(input),
+  (input: string) =>
+    typeof input === "string" && validRawPuzzleStringRegex.test(input),
   "RawPuzzleString",
 );
 
@@ -22,7 +23,8 @@ const validEncodedPuzzleStringRegex = SuperExpressive()
   .endOfInput.toRegex();
 
 export const [isEncodedPuzzleString, BrandedEncodedPuzzleString] = branded(
-  (input: string) => validEncodedPuzzleStringRegex.test(input),
+  (input: string) =>
+    typeof input === "string" && validEncodedPuzzleStringRegex.test(input),
   "EncodedPuzzleString",
 );
 // #endregion
@@ -38,7 +40,8 @@ export const [isRawGivenDigit, BrandedRawGivenDigit] = branded(
 const sudokuDigitStringSet = new Set<string>(sudokuDigits);
 
 export const [isSudokuDigit, BrandedSudokuDigit] = branded(
-  (input: string) => sudokuDigitStringSet.has(input),
+  (input: string) =>
+    typeof input === "string" && sudokuDigitStringSet.has(input),
   "SudokuDigit",
 );
 // #endregion
