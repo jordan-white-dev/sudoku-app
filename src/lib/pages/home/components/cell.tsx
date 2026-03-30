@@ -850,11 +850,7 @@ const isEmptyEditableCellWithoutMarkup = (cellState: CellState) => {
 
   if (isGivenDigitInCellContent(cellContent)) return false;
 
-  if (
-    isEnteredDigitInCellContent(cellContent) &&
-    cellContent.enteredDigit !== ""
-  )
-    return false;
+  if (isEnteredDigitInCellContent(cellContent)) return false;
 
   if (
     isMarkupDigitsInCellContent(cellContent) &&

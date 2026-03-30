@@ -10,6 +10,9 @@ export const isEnteredDigitInCellContent = (cellContent: CellContent) =>
 export const isMarkupDigitsInCellContent = (cellContent: CellContent) =>
   "centerMarkups" in cellContent && "cornerMarkups" in cellContent;
 
+export const isEmptyCellContent = (cellContent: CellContent) =>
+  "emptyCell" in cellContent;
+
 export const isGivenOrEnteredDigitInCellContent = (cellContent: CellContent) =>
   "enteredDigit" in cellContent || "givenDigit" in cellContent;
 // #endregion

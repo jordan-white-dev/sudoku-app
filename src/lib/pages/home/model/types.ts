@@ -38,7 +38,7 @@ export type SudokuDigit = typeof BrandedSudokuDigit;
 
 type GivenDigitCellContent = { givenDigit: SudokuDigit };
 
-export type EnteredDigitCellContent = { enteredDigit: SudokuDigit | "" };
+export type EnteredDigitCellContent = { enteredDigit: SudokuDigit };
 
 export type MarkupDigits = [""] | Array<SudokuDigit>;
 export type MarkupDigitsCellContent = {
@@ -46,8 +46,13 @@ export type MarkupDigitsCellContent = {
   cornerMarkups: MarkupDigits;
 };
 
+export type EmptyCellContent = { emptyCell: "" };
+
 export type CellContent = Prettify<
-  GivenDigitCellContent | EnteredDigitCellContent | MarkupDigitsCellContent
+  | GivenDigitCellContent
+  | EnteredDigitCellContent
+  | MarkupDigitsCellContent
+  | EmptyCellContent
 >;
 // #endregion
 

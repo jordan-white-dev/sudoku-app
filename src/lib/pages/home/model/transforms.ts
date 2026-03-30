@@ -9,8 +9,8 @@ import {
   type CellNumber,
   type CellState,
   type ColumnNumber,
+  type EmptyCellContent,
   type EncodedPuzzleString,
-  type EnteredDigitCellContent,
   type PuzzleHistory,
   type RawBoardState,
   type RawGivenDigit,
@@ -159,13 +159,13 @@ export const getBoardStateFromRawBoardState = (
 
     const rawCellState = rawBoardState[candidateCellNumber - 1];
 
-    const emptyEnteredDigitCellContent: EnteredDigitCellContent = {
-      enteredDigit: "",
+    const emptyCellContent: EmptyCellContent = {
+      emptyCell: "",
     };
 
     const cellContent: CellContent =
       rawCellState === null
-        ? emptyEnteredDigitCellContent
+        ? emptyCellContent
         : getGivenDigitCellContentFromRawGivenDigit(rawCellState);
 
     const cellState: CellState = {

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  isEnteredDigitInCellContent,
+  isEmptyCellContent,
   isGivenDigitInCellContent,
 } from "@/lib/pages/home/model/guards";
 import {
@@ -91,17 +91,13 @@ const getTargetCellStateFromBoardState = (
   return candidateCellState;
 };
 
-const expectTargetCellToContainEnteredDigit = (
+const expectTargetCellToContainEmptyCellContent = (
   boardState: BoardState,
   cellNumber: CellNumber,
-  expectedEnteredDigit: SudokuDigit | "",
 ) => {
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
-  expect(isEnteredDigitInCellContent(cellState.cellContent)).toBe(true);
-
-  if (isEnteredDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.enteredDigit).toBe(expectedEnteredDigit);
+  expect(isEmptyCellContent(cellState.cellContent)).toBe(true);
 };
 
 const expectTargetCellToContainGivenDigit = (
@@ -268,15 +264,13 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToContainEnteredDigit(
+      expectTargetCellToContainEmptyCellContent(
         boardState,
         getBrandedCellNumber(1),
-        "",
       );
-      expectTargetCellToContainEnteredDigit(
+      expectTargetCellToContainEmptyCellContent(
         boardState,
         getBrandedCellNumber(81),
-        "",
       );
     });
 
@@ -468,7 +462,7 @@ describe("Digit Accessor", () => {
   it("returns an empty string when an editable cell is still blank", () => {
     // Arrange
     const cellContent: CellContent = {
-      enteredDigit: "",
+      emptyCell: "",
     };
 
     // Act

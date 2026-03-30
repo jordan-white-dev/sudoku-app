@@ -2,6 +2,7 @@ import { type Dispatch, type SetStateAction } from "react";
 
 import { markupColors } from "@/lib/pages/home/model/constants";
 import {
+  isEmptyCellContent,
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
@@ -73,7 +74,7 @@ const getEnteredDigitCellState = (
     const emptyEnteredDigitCellState: CellState = {
       ...currentCellState,
       cellContent: {
-        enteredDigit: "",
+        emptyCell: "",
       },
     };
 
@@ -133,11 +134,7 @@ const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
 
     if (isGivenDigitInCellContent(cellContent)) return true;
 
-    const isNonEmptyEnteredDigit =
-      isEnteredDigitInCellContent(cellContent) &&
-      cellContent.enteredDigit !== "";
-
-    if (isNonEmptyEnteredDigit) return true;
+    if (isEnteredDigitInCellContent(cellContent)) return true;
 
     const doesContainSudokuDigitAsMarkup =
       isMarkupDigitsInCellContent(cellContent) &&
@@ -259,13 +256,9 @@ const getMarkupDigitsCellState = (
 
   const isNotAGivenDigit = !isGivenDigitInCellContent(currentCellContent);
 
-  const isAnEmptyEnteredDigit =
-    isEnteredDigitInCellContent(currentCellContent) &&
-    currentCellContent.enteredDigit === "";
-
   const isValidInputCell =
     isNotAGivenDigit &&
-    (isAnEmptyEnteredDigit || isMarkupDigitsInCellContent(currentCellContent));
+    (isEmptyCellContent || isMarkupDigitsInCellContent(currentCellContent));
 
   if (!isValidInputCell) return currentCellState;
 
@@ -289,7 +282,7 @@ const getMarkupDigitsCellState = (
       markupType,
       sudokuDigit,
     );
-  } else if (isEnteredDigitInCellContent(currentCellContent))
+  } else if (isEmptyCellContent(currentCellContent))
     return getCellStateWithAnEmptyMarkupType(
       currentCellState,
       markupType,
@@ -511,7 +504,7 @@ export const handleClearCell = (
       const nextCellState: CellState = {
         ...currentCellState,
         cellContent: {
-          enteredDigit: "",
+          emptyCell: "",
         },
         markupColors: [""],
       };

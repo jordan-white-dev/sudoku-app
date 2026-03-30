@@ -22,20 +22,24 @@ import {
   MARKUP_COLOR_YELLOW,
 } from "@/lib/pages/home/model/constants";
 import {
+  isEmptyCellContent,
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/model/guards";
 import {
   getBoardStateFromRawBoardState,
+  getBrandedCellNumber,
   getBrandedSudokuDigit,
   getCurrentBoardStateFromPuzzleHistory,
 } from "@/lib/pages/home/model/transforms";
 import {
   type BoardState,
+  type CellNumber,
   type CellState,
   type MarkupColor,
   type PuzzleHistory,
+  type SudokuDigit,
 } from "@/lib/pages/home/model/types";
 
 // #region Shared Test Functions
@@ -116,7 +120,7 @@ const getStartingPuzzleHistoryWithSequentialTransformsApplied = (
 
 const getBoardStateWithTargetCellsSelected = (
   boardState: BoardState,
-  cellNumbers: Array<number>,
+  cellNumbers: Array<CellNumber>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const shouldBeSelected = cellNumbers.includes(cellState.cellNumber);
@@ -134,7 +138,7 @@ const getBoardStateWithTargetCellsSelected = (
 
 const getPuzzleHistoryAfterDigitInput = (
   puzzleHistory: PuzzleHistory,
-  sudokuDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
+  sudokuDigit: SudokuDigit,
 ): PuzzleHistory => {
   const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
     puzzleHistory,
@@ -152,7 +156,7 @@ const getPuzzleHistoryAfterDigitInput = (
 
 const getTargetCellStateFromBoardState = (
   boardState: BoardState,
-  cellNumber: number,
+  cellNumber: CellNumber,
 ): CellState => {
   const candidateCellState = boardState.find(
     (cellState) => cellState.cellNumber === cellNumber,
@@ -164,20 +168,19 @@ const getTargetCellStateFromBoardState = (
   return candidateCellState;
 };
 
+const expectTargetCellToContainEmptyCellContent = (
+  boardState: BoardState,
+  cellNumber: CellNumber,
+) => {
+  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+
+  expect(isEmptyCellContent(cellState.cellContent)).toBe(true);
+};
+
 const expectTargetCellToContainEnteredDigit = (
   boardState: BoardState,
-  cellNumber: number,
-  expectedEnteredDigit:
-    | ""
-    | "1"
-    | "2"
-    | "3"
-    | "4"
-    | "5"
-    | "6"
-    | "7"
-    | "8"
-    | "9",
+  cellNumber: CellNumber,
+  expectedEnteredDigit: SudokuDigit,
 ) => {
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
@@ -187,10 +190,31 @@ const expectTargetCellToContainEnteredDigit = (
     expect(cellState.cellContent.enteredDigit).toBe(expectedEnteredDigit);
 };
 
+const getBoardStateWithEmptyCellContentInTargetCell = (
+  boardState: BoardState,
+  cellNumber: CellNumber,
+) => {
+  const nextBoardState: BoardState = boardState.map((cellState) => {
+    const nextCellState: CellState =
+      cellState.cellNumber === cellNumber
+        ? {
+            ...cellState,
+            cellContent: {
+              emptyCell: "",
+            },
+          }
+        : cellState;
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
+};
+
 const getBoardStateWithEnteredDigitInTargetCell = (
   boardState: BoardState,
-  cellNumber: number,
-  enteredDigit: "" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
+  cellNumber: CellNumber,
+  enteredDigit: SudokuDigit,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
@@ -198,8 +222,7 @@ const getBoardStateWithEnteredDigitInTargetCell = (
         ? {
             ...cellState,
             cellContent: {
-              enteredDigit:
-                enteredDigit === "" ? "" : getBrandedSudokuDigit(enteredDigit),
+              enteredDigit: getBrandedSudokuDigit(enteredDigit),
             },
           }
         : cellState;
@@ -212,9 +235,9 @@ const getBoardStateWithEnteredDigitInTargetCell = (
 
 const getBoardStateWithMarkupDigitsInTargetCell = (
   boardState: BoardState,
-  cellNumber: number,
-  centerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
-  cornerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
+  cellNumber: CellNumber,
+  centerMarkups: Array<SudokuDigit>,
+  cornerMarkups: Array<SudokuDigit>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
@@ -242,7 +265,7 @@ const getBoardStateWithMarkupDigitsInTargetCell = (
 
 const getBoardStateWithMarkupColorsInTargetCell = (
   boardState: BoardState,
-  cellNumber: number,
+  cellNumber: CellNumber,
   markupColors: Array<MarkupColor>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
@@ -262,8 +285,8 @@ const getBoardStateWithMarkupColorsInTargetCell = (
 
 const expectTargetCellToContainMarkupColors = (
   boardState: BoardState,
-  cellNumber: number,
-  expectedMarkupColors: Array<MarkupColor | "">,
+  cellNumber: CellNumber,
+  expectedMarkupColors: [""] | Array<MarkupColor>,
 ) => {
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
@@ -272,8 +295,8 @@ const expectTargetCellToContainMarkupColors = (
 
 const getBoardStateWithGivenDigitInTargetCell = (
   boardState: BoardState,
-  cellNumber: number,
-  givenDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
+  cellNumber: CellNumber,
+  givenDigit: SudokuDigit,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState =
@@ -294,8 +317,8 @@ const getBoardStateWithGivenDigitInTargetCell = (
 
 const expectTargetCellToContainGivenDigit = (
   boardState: BoardState,
-  cellNumber: number,
-  expectedGivenDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
+  cellNumber: CellNumber,
+  expectedGivenDigit: SudokuDigit,
 ) => {
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
@@ -335,7 +358,7 @@ const getPuzzleHistoryAfterUndoingMove = (
 
 const getPuzzleHistoryAfterCenterMarkupInput = (
   puzzleHistory: PuzzleHistory,
-  sudokuDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
+  sudokuDigit: SudokuDigit,
 ): PuzzleHistory => {
   const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
     puzzleHistory,
@@ -353,10 +376,8 @@ const getPuzzleHistoryAfterCenterMarkupInput = (
 
 const expectTargetCellToContainCenterMarkups = (
   boardState: BoardState,
-  cellNumber: number,
-  expectedCenterMarkups: Array<
-    "" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-  >,
+  cellNumber: CellNumber,
+  expectedCenterMarkups: [""] | Array<SudokuDigit>,
 ) => {
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
@@ -368,10 +389,8 @@ const expectTargetCellToContainCenterMarkups = (
 
 const expectTargetCellToContainCornerMarkups = (
   boardState: BoardState,
-  cellNumber: number,
-  expectedCornerMarkups: Array<
-    "" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-  >,
+  cellNumber: CellNumber,
+  expectedCornerMarkups: [""] | Array<SudokuDigit>,
 ) => {
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
@@ -383,8 +402,8 @@ const expectTargetCellToContainCornerMarkups = (
 
 const getBoardStateWithCenterMarkupsInTargetCell = (
   boardState: BoardState,
-  cellNumber: number,
-  centerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
+  cellNumber: CellNumber,
+  centerMarkups: Array<SudokuDigit>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
@@ -409,7 +428,7 @@ const getBoardStateWithCenterMarkupsInTargetCell = (
 
 const getPuzzleHistoryAfterCornerMarkupInput = (
   puzzleHistory: PuzzleHistory,
-  sudokuDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
+  sudokuDigit: SudokuDigit,
 ): PuzzleHistory => {
   const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
     puzzleHistory,
@@ -427,8 +446,8 @@ const getPuzzleHistoryAfterCornerMarkupInput = (
 
 const getBoardStateWithCornerMarkupsInTargetCell = (
   boardState: BoardState,
-  cellNumber: number,
-  cornerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
+  cellNumber: CellNumber,
+  cornerMarkups: Array<SudokuDigit>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
@@ -451,58 +470,14 @@ const getBoardStateWithCornerMarkupsInTargetCell = (
   return nextBoardState;
 };
 
-const colorShortcutDigits = [
-  "1",
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-] as const;
-
-type ColorShortcutDigit = (typeof colorShortcutDigits)[number];
-
-const isDigitStringAColorShortcutDigit = (
-  candidateValue: string,
-): candidateValue is ColorShortcutDigit => {
-  const isValidColorShortcutDigit = colorShortcutDigits.includes(
-    candidateValue as ColorShortcutDigit,
-  );
-
-  return isValidColorShortcutDigit;
-};
-
-const getColorPadInputValueFromMarkupValue = (
-  markupValue: MarkupColor | ColorShortcutDigit,
-) => {
-  if (isDigitStringAColorShortcutDigit(markupValue)) {
-    const sudokuDigit = getBrandedSudokuDigit(markupValue);
-
-    return sudokuDigit;
-  }
-
-  return markupValue;
-};
-
 const getPuzzleHistoryAfterColorPadInput = (
   puzzleHistory: PuzzleHistory,
-  markupValue: MarkupColor | ColorShortcutDigit,
+  markupValue: MarkupColor | SudokuDigit,
 ): PuzzleHistory => {
   const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
     puzzleHistory,
-    (setPuzzleHistory) => {
-      const markupValueForColorPadInput =
-        getColorPadInputValueFromMarkupValue(markupValue);
-
-      handleColorPadInput(
-        puzzleHistory,
-        markupValueForColorPadInput,
-        setPuzzleHistory,
-      );
-    },
+    (setPuzzleHistory) =>
+      handleColorPadInput(puzzleHistory, markupValue, setPuzzleHistory),
   );
 
   return nextPuzzleHistory;
@@ -541,13 +516,17 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState: BoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2, 3]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+            getBrandedCellNumber(3),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
@@ -555,8 +534,16 @@ describe("Digit entry", () => {
     // Assert
     expect(nextPuzzleHistory.currentBoardStateIndex).toBe(1);
     expect(nextPuzzleHistory.boardStateHistory).toHaveLength(2);
-    for (const cellNumber of [1, 2, 3]) {
-      expectTargetCellToContainEnteredDigit(currentBoardState, cellNumber, "4");
+    for (const cellNumber of [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+      getBrandedCellNumber(3),
+    ]) {
+      expectTargetCellToContainEnteredDigit(
+        currentBoardState,
+        getBrandedCellNumber(cellNumber),
+        getBrandedSudokuDigit("4"),
+      );
     }
   });
 
@@ -565,21 +552,31 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "2"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("2"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "4");
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("4"),
+    );
   });
 
   it("replaces markup digits in selected editable cells with the entered digit", () => {
@@ -589,24 +586,30 @@ describe("Digit entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            1,
-            ["2", "7"],
-            ["3", "5"],
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+            [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "4");
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("4"),
+    );
   });
 
   it("preserves color markups in the selected cells when entering a digit", () => {
@@ -614,30 +617,41 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, ""),
+          getBoardStateWithEmptyCellContentInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+          ),
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 1, [
-            MARKUP_COLOR_BLUE,
-            MARKUP_COLOR_RED,
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
           ]),
-        (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "4");
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      MARKUP_COLOR_BLUE,
-      MARKUP_COLOR_RED,
-    ]);
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("4"),
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
+    );
   });
 
   it("preserves given digits in the selected cells when entering a digit", () => {
@@ -645,22 +659,37 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 1, "9"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("9"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainGivenDigit(currentBoardState, 1, "9");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "4");
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("9"),
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("4"),
+    );
   });
 
   it("removes the entered digit from all selected editable cells when they already contain it", () => {
@@ -668,24 +697,38 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "5",
+      getBrandedSudokuDigit("5"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    for (const cellNumber of [1, 2]) {
-      expectTargetCellToContainEnteredDigit(currentBoardState, cellNumber, "");
+    for (const cellNumber of [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+    ]) {
+      expectTargetCellToContainEmptyCellContent(currentBoardState, cellNumber);
     }
   });
 
@@ -694,24 +737,42 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 1, "9"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("9"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "5",
+      getBrandedSudokuDigit("5"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainGivenDigit(currentBoardState, 1, "9");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "");
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("9"),
+    );
+    expectTargetCellToContainEmptyCellContent(
+      currentBoardState,
+      getBrandedCellNumber(2),
+    );
   });
 
   it("sets all selected editable cells to the entered digit when one already contains it and another contains a different editable value", () => {
@@ -719,29 +780,44 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            2,
-            ["2"],
-            ["3"],
+            getBrandedCellNumber(2),
+            [getBrandedSudokuDigit("2")],
+            [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "5",
+      getBrandedSudokuDigit("5"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "5");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "5");
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("5"),
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("5"),
+    );
   });
 
   it("leaves unselected cells unchanged when entering a digit", () => {
@@ -749,24 +825,42 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "2"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("2"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "3"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("3"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "4");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "3");
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("4"),
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("3"),
+    );
   });
 
   it("doesn't add a move to the game's history when entering a digit with no cells selected", () => {
@@ -777,7 +871,7 @@ describe("Digit entry", () => {
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
 
     // Assert
@@ -792,15 +886,21 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 1, "9"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("9"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
 
     // Assert
@@ -815,15 +915,17 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "1",
+      getBrandedSudokuDigit("1"),
     );
     const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
       puzzleHistoryAfterOneMove,
-      "2",
+      getBrandedSudokuDigit("2"),
     );
     const puzzleHistoryUndoneToMoveOne = getPuzzleHistoryAfterUndoingMove(
       puzzleHistoryAfterTwoMoves,
@@ -832,7 +934,7 @@ describe("Digit entry", () => {
     // Act
     const branchedHistory = getPuzzleHistoryAfterDigitInput(
       puzzleHistoryUndoneToMoveOne,
-      "3",
+      getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(branchedHistory);
@@ -842,7 +944,11 @@ describe("Digit entry", () => {
     expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
     expect(branchedHistory.currentBoardStateIndex).toBe(2);
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "3");
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("3"),
+    );
   });
 });
 
@@ -852,22 +958,35 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, ""),
+          getBoardStateWithEmptyCellContentInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["7"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, [""]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
   });
 
   it("adds the entered center markup to a cell that doesn't contain it but contains another center markup", () => {
@@ -875,23 +994,31 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCenterMarkupsInTargetCell(currentBoardState, 1, [
-            "2",
-          ]),
+          getBoardStateWithCenterMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("2")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["2", "7"]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
   });
 
   it("adds a center markup only to a cell that doesn't contain it when cells that both contain it and don't contain it are selected", () => {
@@ -899,28 +1026,43 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCenterMarkupsInTargetCell(currentBoardState, 1, [
-            "7",
-          ]),
+          getBoardStateWithCenterMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("7")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithCenterMarkupsInTargetCell(currentBoardState, 2, [
-            "2",
-          ]),
+          getBoardStateWithCenterMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [getBrandedSudokuDigit("2")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["7"]);
-    expectTargetCellToContainCenterMarkups(currentBoardState, 2, ["2", "7"]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
   });
 
   it("adds the entered center markup only to selected, empty editable cells while leaving selected digit cells unchanged", () => {
@@ -928,24 +1070,42 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, ""),
+          getBoardStateWithEmptyCellContentInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["7"]);
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "5");
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("5"),
+    );
   });
 
   it("adds the entered center markup to selected editable cells that already contain other center markups while leaving cells that already contain the entered center markup unchanged", () => {
@@ -953,28 +1113,43 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCenterMarkupsInTargetCell(currentBoardState, 1, [
-            "7",
-          ]),
+          getBoardStateWithCenterMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("7")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithCenterMarkupsInTargetCell(currentBoardState, 2, [
-            "2",
-          ]),
+          getBoardStateWithCenterMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [getBrandedSudokuDigit("2")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["7"]);
-    expectTargetCellToContainCenterMarkups(currentBoardState, 2, ["2", "7"]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
   });
 
   it("adds the entered center markup to selected editable cells with an empty entered digit while leaving selected non-empty entered digit cells unchanged", () => {
@@ -982,25 +1157,47 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, ""),
+          getBoardStateWithEmptyCellContentInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "4"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("4"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["7"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, [""]);
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "4");
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("4"),
+    );
   });
 
   it("adds the entered center markup to selected editable markup cells while preserving their existing corner markups and leaving selected starting digit cells unchanged", () => {
@@ -1010,28 +1207,47 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            1,
-            ["3"],
-            ["5"],
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("3")],
+            [getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 2, "9"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("9"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["3", "7"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["5"]);
-    expectTargetCellToContainGivenDigit(currentBoardState, 2, "9");
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("5")],
+    );
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("9"),
+    );
   });
 
   it("removes the entered center markup from all selected cells when they're editable and already contain it", () => {
@@ -1059,20 +1275,31 @@ describe("Center markup entry", () => {
           return nextBoardState;
         },
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, [""]);
-    expectTargetCellToContainCenterMarkups(currentBoardState, 2, [""]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [""],
+    );
   });
 
   it("removes only the entered center markup from all selected cells when they contain the markup and another center markup", () => {
@@ -1080,24 +1307,31 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCenterMarkupsInTargetCell(currentBoardState, 1, [
-            "2",
-            "7",
-          ]),
+          getBoardStateWithCenterMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["2"]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("2")],
+    );
   });
 
   it("preserves corner markups in the selected cells when entering a center markup", () => {
@@ -1107,25 +1341,35 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            1,
-            ["2"],
-            ["3", "4"],
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("2")],
+            [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("4")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["2", "7"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["3", "4"]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("4")],
+    );
   });
 
   it("leaves selected digit cells unchanged when entering a center markup", () => {
@@ -1133,24 +1377,43 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 1, "4"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("4"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainGivenDigit(currentBoardState, 1, "4");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "5");
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("4"),
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("5"),
+    );
   });
 
   it("removes the entered center markup from all selected editable cells when all selected cells are either a digit or already contain it", () => {
@@ -1158,29 +1421,55 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 1, "4"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("4"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithCenterMarkupsInTargetCell(currentBoardState, 3, [
-            "7",
+          getBoardStateWithCenterMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(3),
+            [getBrandedSudokuDigit("7")],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+            getBrandedCellNumber(3),
           ]),
-        (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2, 3]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainGivenDigit(currentBoardState, 1, "4");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "5");
-    expectTargetCellToContainCenterMarkups(currentBoardState, 3, [""]);
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("4"),
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("5"),
+    );
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(3),
+      [""],
+    );
   });
 
   it("leaves unselected cells unchanged when entering a center markup", () => {
@@ -1188,28 +1477,42 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCenterMarkupsInTargetCell(currentBoardState, 1, [
-            "2",
-          ]),
+          getBoardStateWithCenterMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("2")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithCenterMarkupsInTargetCell(currentBoardState, 2, [
-            "3",
-          ]),
+          getBoardStateWithCenterMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [getBrandedSudokuDigit("3")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["2", "7"]);
-    expectTargetCellToContainCenterMarkups(currentBoardState, 2, ["3"]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [getBrandedSudokuDigit("3")],
+    );
   });
 
   it("doesn't add a move to the game's history when entering a center markup with no cells selected", () => {
@@ -1220,7 +1523,7 @@ describe("Center markup entry", () => {
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
 
     // Assert
@@ -1235,15 +1538,21 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
 
     // Assert
@@ -1258,15 +1567,17 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
-      "1",
+      getBrandedSudokuDigit("1"),
     );
     const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterCenterMarkupInput(
       puzzleHistoryAfterOneMove,
-      "2",
+      getBrandedSudokuDigit("2"),
     );
     const puzzleHistoryUndoneToMoveOne = getPuzzleHistoryAfterUndoingMove(
       puzzleHistoryAfterTwoMoves,
@@ -1275,7 +1586,7 @@ describe("Center markup entry", () => {
     // Act
     const branchedHistory = getPuzzleHistoryAfterCenterMarkupInput(
       puzzleHistoryUndoneToMoveOne,
-      "3",
+      getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(branchedHistory);
@@ -1285,7 +1596,11 @@ describe("Center markup entry", () => {
     expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
     expect(branchedHistory.currentBoardStateIndex).toBe(2);
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["1", "3"]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("1"), getBrandedSudokuDigit("3")],
+    );
   });
 });
 
@@ -1295,22 +1610,35 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, ""),
+          getBoardStateWithEmptyCellContentInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "3",
+      getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, [""]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["3"]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("3")],
+    );
   });
 
   it("adds the entered corner markup to a cell that doesn't contain it but contains another corner markup", () => {
@@ -1318,23 +1646,31 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCornerMarkupsInTargetCell(currentBoardState, 1, [
-            "2",
-          ]),
+          getBoardStateWithCornerMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("2")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["2", "7"]);
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
   });
 
   it("adds a corner markup only to a cell that doesn't contain it when cells that both contain it and don't contain it are selected", () => {
@@ -1342,28 +1678,43 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCornerMarkupsInTargetCell(currentBoardState, 1, [
-            "7",
-          ]),
+          getBoardStateWithCornerMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("7")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithCornerMarkupsInTargetCell(currentBoardState, 2, [
-            "2",
-          ]),
+          getBoardStateWithCornerMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [getBrandedSudokuDigit("2")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["7"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 2, ["2", "7"]);
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
   });
 
   it("adds the entered corner markup only to selected, empty editable cells while leaving selected digit cells unchanged", () => {
@@ -1371,24 +1722,42 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, ""),
+          getBoardStateWithEmptyCellContentInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["7"]);
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "5");
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("5"),
+    );
   });
 
   it("adds the entered corner markup to selected editable cells that already contain other corner markups while leaving cells that already contain the entered corner markup unchanged", () => {
@@ -1396,28 +1765,43 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCornerMarkupsInTargetCell(currentBoardState, 1, [
-            "7",
-          ]),
+          getBoardStateWithCornerMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("7")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithCornerMarkupsInTargetCell(currentBoardState, 2, [
-            "2",
-          ]),
+          getBoardStateWithCornerMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [getBrandedSudokuDigit("2")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["7"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 2, ["2", "7"]);
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
   });
 
   it("adds the entered corner markup to selected editable cells with an empty entered digit while leaving selected non-empty entered digit cells unchanged", () => {
@@ -1425,25 +1809,47 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, ""),
+          getBoardStateWithEmptyCellContentInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "4"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("4"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, [""]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["7"]);
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "4");
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("4"),
+    );
   });
 
   it("adds the entered corner markup to selected editable markup cells while preserving their existing center markups and leaving selected given digit cells unchanged", () => {
@@ -1453,28 +1859,47 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            1,
-            ["3"],
-            ["5"],
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("3")],
+            [getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 2, "9"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("9"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["3"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["5", "7"]);
-    expectTargetCellToContainGivenDigit(currentBoardState, 2, "9");
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("3")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("9"),
+    );
   });
 
   it("removes the entered corner markup from all selected cells when they're editable and already contain it", () => {
@@ -1502,19 +1927,25 @@ describe("Corner markup entry", () => {
           return nextBoardState;
         },
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "3",
+      getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, [""]);
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
   });
 
   it("removes only the entered corner markup from all selected cells when they contain the markup and another corner markup", () => {
@@ -1522,24 +1953,31 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCornerMarkupsInTargetCell(currentBoardState, 1, [
-            "3",
-            "5",
-          ]),
+          getBoardStateWithCornerMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "3",
+      getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["5"]);
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("5")],
+    );
   });
 
   it("preserves center markups in the selected cells when entering a corner markup", () => {
@@ -1549,25 +1987,35 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            1,
-            ["2", "6"],
-            ["3"],
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("6")],
+            [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["2", "6"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["3", "7"]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("6")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("7")],
+    );
   });
 
   it("leaves selected digit cells unchanged when entering a corner markup", () => {
@@ -1575,24 +2023,43 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 1, "4"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("4"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainGivenDigit(currentBoardState, 1, "4");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "5");
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("4"),
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("5"),
+    );
   });
 
   it("removes the entered corner markup from all selected editable cells when all selected cells are either a digit or already contain it", () => {
@@ -1600,29 +2067,55 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 1, "4"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("4"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithCornerMarkupsInTargetCell(currentBoardState, 3, [
-            "7",
+          getBoardStateWithCornerMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(3),
+            [getBrandedSudokuDigit("7")],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+            getBrandedCellNumber(3),
           ]),
-        (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2, 3]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainGivenDigit(currentBoardState, 1, "4");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "5");
-    expectTargetCellToContainCornerMarkups(currentBoardState, 3, [""]);
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("4"),
+    );
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("5"),
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(3),
+      [""],
+    );
   });
 
   it("leaves unselected cells unchanged when entering a corner markup", () => {
@@ -1630,28 +2123,42 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithCornerMarkupsInTargetCell(currentBoardState, 1, [
-            "2",
-          ]),
+          getBoardStateWithCornerMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("2")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithCornerMarkupsInTargetCell(currentBoardState, 2, [
-            "3",
-          ]),
+          getBoardStateWithCornerMarkupsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [getBrandedSudokuDigit("3")],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["2", "7"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 2, ["3"]);
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [getBrandedSudokuDigit("3")],
+    );
   });
 
   it("doesn't add a move to the game's history when entering a corner markup with no cells selected", () => {
@@ -1662,7 +2169,7 @@ describe("Corner markup entry", () => {
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
 
     // Assert
@@ -1677,15 +2184,21 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "5"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("5"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
 
     // Assert
@@ -1700,15 +2213,17 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
-      "1",
+      getBrandedSudokuDigit("1"),
     );
     const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterCornerMarkupInput(
       puzzleHistoryAfterOneMove,
-      "2",
+      getBrandedSudokuDigit("2"),
     );
     const puzzleHistoryUndoneToMoveOne = getPuzzleHistoryAfterUndoingMove(
       puzzleHistoryAfterTwoMoves,
@@ -1717,7 +2232,7 @@ describe("Corner markup entry", () => {
     // Act
     const branchedHistory = getPuzzleHistoryAfterCornerMarkupInput(
       puzzleHistoryUndoneToMoveOne,
-      "3",
+      getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(branchedHistory);
@@ -1727,7 +2242,11 @@ describe("Corner markup entry", () => {
     expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
     expect(branchedHistory.currentBoardStateIndex).toBe(2);
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["1", "3"]);
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("1"), getBrandedSudokuDigit("3")],
+    );
   });
 });
 
@@ -1737,7 +2256,10 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
@@ -1749,12 +2271,16 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      MARKUP_COLOR_RED,
-    ]);
-    expectTargetCellToContainMarkupColors(currentBoardState, 2, [
-      MARKUP_COLOR_RED,
-    ]);
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [MARKUP_COLOR_RED],
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [MARKUP_COLOR_RED],
+    );
   });
 
   it("adds the keyboard shortcut color to all selected cells", () => {
@@ -1762,53 +2288,62 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
       startingPuzzleHistory,
-      "8",
+      getBrandedSudokuDigit("8"),
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
     expect(
-      getTargetCellStateFromBoardState(currentBoardState, 1).markupColors,
+      getTargetCellStateFromBoardState(
+        currentBoardState,
+        getBrandedCellNumber(1),
+      ).markupColors,
     ).toEqual([MARKUP_COLOR_BLUE]);
   });
 
   it.each([
-    ["1", "gray", MARKUP_COLOR_GRAY],
-    ["2", "white", MARKUP_COLOR_WHITE],
-    ["3", "pink", MARKUP_COLOR_PINK],
-    ["4", "red", MARKUP_COLOR_RED],
-    ["5", "orange", MARKUP_COLOR_ORANGE],
-    ["6", "yellow", MARKUP_COLOR_YELLOW],
-    ["7", "green", MARKUP_COLOR_GREEN],
-    ["8", "blue", MARKUP_COLOR_BLUE],
-    ["9", "purple", MARKUP_COLOR_PURPLE],
-  ] as const)("applies %s's %s markup to the selected cell", (digit, _colorName, expectedColor) => {
+    [getBrandedSudokuDigit("1"), "gray", MARKUP_COLOR_GRAY],
+    [getBrandedSudokuDigit("2"), "white", MARKUP_COLOR_WHITE],
+    [getBrandedSudokuDigit("3"), "pink", MARKUP_COLOR_PINK],
+    [getBrandedSudokuDigit("4"), "red", MARKUP_COLOR_RED],
+    [getBrandedSudokuDigit("5"), "orange", MARKUP_COLOR_ORANGE],
+    [getBrandedSudokuDigit("6"), "yellow", MARKUP_COLOR_YELLOW],
+    [getBrandedSudokuDigit("7"), "green", MARKUP_COLOR_GREEN],
+    [getBrandedSudokuDigit("8"), "blue", MARKUP_COLOR_BLUE],
+    [getBrandedSudokuDigit("9"), "purple", MARKUP_COLOR_PURPLE],
+  ] as const)("applies %s's %s markup to the selected cell", (sudokuDigit, _colorName, expectedColor) => {
     // Arrange
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
     const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
       startingPuzzleHistory,
-      digit,
+      sudokuDigit,
     );
     const currentBoardState =
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      expectedColor,
-    ]);
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [expectedColor],
+    );
   });
 
   it("removes the entered color markup when all selected cells already contain it", () => {
@@ -1816,16 +2351,22 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 1, [
-            MARKUP_COLOR_RED,
-          ]),
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [MARKUP_COLOR_RED],
+          ),
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 2, [
-            MARKUP_COLOR_RED,
-            MARKUP_COLOR_BLUE,
-          ]),
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
@@ -1837,10 +2378,16 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [""]);
-    expectTargetCellToContainMarkupColors(currentBoardState, 2, [
-      MARKUP_COLOR_BLUE,
-    ]);
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [MARKUP_COLOR_BLUE],
+    );
   });
 
   it("adds the entered color markup to a cell that doesn't contain it but contains another color markup", () => {
@@ -1848,11 +2395,15 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 1, [
-            MARKUP_COLOR_RED,
-          ]),
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [MARKUP_COLOR_RED],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
@@ -1864,10 +2415,11 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      MARKUP_COLOR_RED,
-      MARKUP_COLOR_BLUE,
-    ]);
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
+    );
   });
 
   it("adds a color markup only to a cell that doesn't contain it when cells that both contain it and don't contain it are selected", () => {
@@ -1875,15 +2427,22 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 1, [
-            MARKUP_COLOR_RED,
-          ]),
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [MARKUP_COLOR_RED],
+          ),
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 2, [
-            MARKUP_COLOR_BLUE,
-          ]),
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [MARKUP_COLOR_BLUE],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+          ]),
       ]);
 
     // Act
@@ -1895,13 +2454,16 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      MARKUP_COLOR_RED,
-    ]);
-    expectTargetCellToContainMarkupColors(currentBoardState, 2, [
-      MARKUP_COLOR_BLUE,
-      MARKUP_COLOR_RED,
-    ]);
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [MARKUP_COLOR_RED],
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
+    );
   });
 
   it("preserves a selected given digit when entering a color", () => {
@@ -1909,9 +2471,15 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 1, "8"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("8"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
@@ -1923,10 +2491,16 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainGivenDigit(currentBoardState, 1, "8");
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      MARKUP_COLOR_RED,
-    ]);
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("8"),
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [MARKUP_COLOR_RED],
+    );
   });
 
   it("preserves a selected entered digit when entering a color", () => {
@@ -1934,9 +2508,15 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "6"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("6"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
@@ -1948,10 +2528,16 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "6");
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      MARKUP_COLOR_RED,
-    ]);
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("6"),
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [MARKUP_COLOR_RED],
+    );
   });
 
   it("preserves selected markup digits when entering a color", () => {
@@ -1961,12 +2547,14 @@ describe("Color markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            1,
-            ["2", "7"],
-            ["3", "5"],
+            getBrandedCellNumber(1),
+            [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+            [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
@@ -1978,11 +2566,21 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(currentBoardState, 1, ["2", "7"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 1, ["3", "5"]);
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      MARKUP_COLOR_BLUE,
-    ]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [MARKUP_COLOR_BLUE],
+    );
   });
 
   it("leaves unselected cells unchanged when entering a color", () => {
@@ -1990,15 +2588,21 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 1, [
-            MARKUP_COLOR_BLUE,
-          ]),
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [MARKUP_COLOR_BLUE],
+          ),
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 2, [
-            MARKUP_COLOR_RED,
-          ]),
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [MARKUP_COLOR_RED],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
@@ -2010,13 +2614,16 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      MARKUP_COLOR_BLUE,
-      MARKUP_COLOR_RED,
-    ]);
-    expectTargetCellToContainMarkupColors(currentBoardState, 2, [
-      MARKUP_COLOR_RED,
-    ]);
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [MARKUP_COLOR_RED],
+    );
   });
 
   it("doesn't add a move to the game's history when trying to enter a color with no cells selected", () => {
@@ -2042,7 +2649,9 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterColorPadInput(
       startingPuzzleHistory,
@@ -2069,10 +2678,11 @@ describe("Color markup entry", () => {
     expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
     expect(branchedHistory.currentBoardStateIndex).toBe(2);
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [
-      MARKUP_COLOR_BLUE,
-      MARKUP_COLOR_GREEN,
-    ]);
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [MARKUP_COLOR_BLUE, MARKUP_COLOR_GREEN],
+    );
   });
 });
 
@@ -2082,26 +2692,43 @@ describe("Clearing selected cells", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "6"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("6"),
+          ),
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            2,
-            ["2", "7"],
-            ["3", "5"],
+            getBrandedCellNumber(2),
+            [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+            [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 2, [
-            MARKUP_COLOR_BLUE,
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [MARKUP_COLOR_BLUE],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(3),
+            [MARKUP_COLOR_RED],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(4),
+            getBrandedSudokuDigit("7"),
+          ),
+        (currentBoardState) =>
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+            getBrandedCellNumber(2),
+            getBrandedCellNumber(3),
+            getBrandedCellNumber(4),
           ]),
-        (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 3, [
-            MARKUP_COLOR_RED,
-          ]),
-        (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 4, "7"),
-        (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1, 2, 3, 4]),
       ]);
 
     // Act
@@ -2112,15 +2739,40 @@ describe("Clearing selected cells", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "");
-    expectTargetCellToContainEnteredDigit(currentBoardState, 3, "");
+    expectTargetCellToContainEmptyCellContent(
+      currentBoardState,
+      getBrandedCellNumber(1),
+    );
+    expectTargetCellToContainEmptyCellContent(
+      currentBoardState,
+      getBrandedCellNumber(2),
+    );
+    expectTargetCellToContainEmptyCellContent(
+      currentBoardState,
+      getBrandedCellNumber(3),
+    );
 
-    expectTargetCellToContainGivenDigit(currentBoardState, 4, "7");
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(4),
+      getBrandedSudokuDigit("7"),
+    );
 
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [""]);
-    expectTargetCellToContainMarkupColors(currentBoardState, 2, [""]);
-    expectTargetCellToContainMarkupColors(currentBoardState, 3, [""]);
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [""],
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(3),
+      [""],
+    );
   });
 
   it("clears just colors and not digits from selected given digit cells", () => {
@@ -2128,13 +2780,21 @@ describe("Clearing selected cells", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithGivenDigitInTargetCell(currentBoardState, 1, "8"),
+          getBoardStateWithGivenDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("8"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 1, [
-            MARKUP_COLOR_BLUE,
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [MARKUP_COLOR_BLUE],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
           ]),
-        (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
       ]);
 
     // Act
@@ -2145,8 +2805,16 @@ describe("Clearing selected cells", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainGivenDigit(currentBoardState, 1, "8");
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [""]);
+    expectTargetCellToContainGivenDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("8"),
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
   });
 
   it("clears digits and colors from selected editable cells that contain both while leaving other cells unchanged", () => {
@@ -2154,20 +2822,33 @@ describe("Clearing selected cells", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "6"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("6"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 1, [
-            MARKUP_COLOR_RED,
-            MARKUP_COLOR_BLUE,
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            getBrandedSudokuDigit("4"),
+          ),
+        (currentBoardState) =>
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [MARKUP_COLOR_GREEN],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
           ]),
-        (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 2, "4"),
-        (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 2, [
-            MARKUP_COLOR_GREEN,
-          ]),
-        (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
       ]);
 
     // Act
@@ -2178,13 +2859,26 @@ describe("Clearing selected cells", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "");
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [""]);
+    expectTargetCellToContainEmptyCellContent(
+      currentBoardState,
+      getBrandedCellNumber(1),
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
 
-    expectTargetCellToContainEnteredDigit(currentBoardState, 2, "4");
-    expectTargetCellToContainMarkupColors(currentBoardState, 2, [
-      MARKUP_COLOR_GREEN,
-    ]);
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      getBrandedSudokuDigit("4"),
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [MARKUP_COLOR_GREEN],
+    );
   });
 
   it("leaves unselected cells unchanged when clearing selected cells", () => {
@@ -2192,24 +2886,34 @@ describe("Clearing selected cells", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, "6"),
+          getBoardStateWithEnteredDigitInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            getBrandedSudokuDigit("6"),
+          ),
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 1, [
-            MARKUP_COLOR_RED,
-          ]),
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+            [MARKUP_COLOR_RED],
+          ),
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            2,
-            ["2"],
-            ["3"],
+            getBrandedCellNumber(2),
+            [getBrandedSudokuDigit("2")],
+            [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
-          getBoardStateWithMarkupColorsInTargetCell(currentBoardState, 2, [
-            MARKUP_COLOR_BLUE,
-          ]),
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(2),
+            [MARKUP_COLOR_BLUE],
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
@@ -2220,14 +2924,31 @@ describe("Clearing selected cells", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "");
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [""]);
+    expectTargetCellToContainEmptyCellContent(
+      currentBoardState,
+      getBrandedCellNumber(1),
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
 
-    expectTargetCellToContainCenterMarkups(currentBoardState, 2, ["2"]);
-    expectTargetCellToContainCornerMarkups(currentBoardState, 2, ["3"]);
-    expectTargetCellToContainMarkupColors(currentBoardState, 2, [
-      MARKUP_COLOR_BLUE,
-    ]);
+    expectTargetCellToContainCenterMarkups(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [getBrandedSudokuDigit("2")],
+    );
+    expectTargetCellToContainCornerMarkups(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [getBrandedSudokuDigit("3")],
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(2),
+      [MARKUP_COLOR_BLUE],
+    );
   });
 
   it("doesn't add a move to the game's history when clearing selected cells with no cells selected", () => {
@@ -2252,9 +2973,14 @@ describe("Clearing selected cells", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithEnteredDigitInTargetCell(currentBoardState, 1, ""),
+          getBoardStateWithEmptyCellContentInTargetCell(
+            currentBoardState,
+            getBrandedCellNumber(1),
+          ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
 
     // Act
@@ -2274,11 +3000,13 @@ describe("Clearing selected cells", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "1",
+      getBrandedSudokuDigit("1"),
     );
     const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterColorPadInput(
       puzzleHistoryAfterOneMove,
@@ -2300,8 +3028,15 @@ describe("Clearing selected cells", () => {
     expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
     expect(branchedHistory.currentBoardStateIndex).toBe(2);
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "");
-    expectTargetCellToContainMarkupColors(currentBoardState, 1, [""]);
+    expectTargetCellToContainEmptyCellContent(
+      currentBoardState,
+      getBrandedCellNumber(1),
+    );
+    expectTargetCellToContainMarkupColors(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      [""],
+    );
   });
 });
 
@@ -2311,15 +3046,17 @@ describe("Undoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
     const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
       puzzleHistoryAfterOneMove,
-      "7",
+      getBrandedSudokuDigit("7"),
     );
 
     // Act
@@ -2340,19 +3077,21 @@ describe("Undoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "1",
+      getBrandedSudokuDigit("1"),
     );
     const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
       puzzleHistoryAfterOneMove,
-      "2",
+      getBrandedSudokuDigit("2"),
     );
     const puzzleHistoryAfterThreeMoves = getPuzzleHistoryAfterDigitInput(
       puzzleHistoryAfterTwoMoves,
-      "3",
+      getBrandedSudokuDigit("3"),
     );
 
     // Act
@@ -2399,11 +3138,13 @@ describe("Redoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "4",
+      getBrandedSudokuDigit("4"),
     );
     const puzzleHistoryAfterUndo = getPuzzleHistoryAfterUndoingMove(
       puzzleHistoryAfterOneMove,
@@ -2427,19 +3168,21 @@ describe("Redoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "1",
+      getBrandedSudokuDigit("1"),
     );
     const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
       puzzleHistoryAfterOneMove,
-      "2",
+      getBrandedSudokuDigit("2"),
     );
     const puzzleHistoryAfterThreeMoves = getPuzzleHistoryAfterDigitInput(
       puzzleHistoryAfterTwoMoves,
-      "3",
+      getBrandedSudokuDigit("3"),
     );
     const puzzleHistoryAfterUndoingTwice = getPuzzleHistoryAfterUndoingMove(
       getPuzzleHistoryAfterUndoingMove(puzzleHistoryAfterThreeMoves),
@@ -2473,22 +3216,24 @@ describe("Redoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [1]),
+          getBoardStateWithTargetCellsSelected(currentBoardState, [
+            getBrandedCellNumber(1),
+          ]),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
-      "1",
+      getBrandedSudokuDigit("1"),
     );
     const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
       puzzleHistoryAfterOneMove,
-      "2",
+      getBrandedSudokuDigit("2"),
     );
     const puzzleHistoryAfterUndo = getPuzzleHistoryAfterUndoingMove(
       puzzleHistoryAfterTwoMoves,
     );
     const branchedPuzzleHistory = getPuzzleHistoryAfterDigitInput(
       puzzleHistoryAfterUndo,
-      "3",
+      getBrandedSudokuDigit("3"),
     );
 
     // Act
@@ -2504,7 +3249,11 @@ describe("Redoing moves", () => {
     expect(branchedPuzzleHistory.boardStateHistory).toHaveLength(3);
     expect(puzzleHistoryAfterRedo.currentBoardStateIndex).toBe(2);
     expect(puzzleHistoryAfterRedo.boardStateHistory).toHaveLength(3);
-    expectTargetCellToContainEnteredDigit(currentBoardState, 1, "3");
+    expectTargetCellToContainEnteredDigit(
+      currentBoardState,
+      getBrandedCellNumber(1),
+      getBrandedSudokuDigit("3"),
+    );
   });
 
   it("does nothing when there are no undone moves to redo", () => {
