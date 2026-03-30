@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  isPlayerDigitInCellContent,
-  isStartingDigitInCellContent,
+  isEnteredDigitInCellContent,
+  isGivenDigitInCellContent,
 } from "@/lib/pages/home/model/guards";
 import {
   getBoardStateFromRawBoardState,
@@ -14,8 +14,8 @@ import {
   getBrandedSudokuDigit,
   getCurrentBoardStateFromPuzzleHistory,
   getEncodedPuzzleStringFromRawPuzzleString,
+  getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
-  getStartingOrPlayerDigitInCellIfPresent,
 } from "@/lib/pages/home/model/transforms";
 import {
   type BoardState,
@@ -26,14 +26,14 @@ import {
   type ColumnNumber,
   type PuzzleHistory,
   type RawBoardState,
+  type RawGivenDigit,
   type RawPuzzleString,
-  type RawStartingDigit,
   type RowNumber,
   type SudokuDigit,
 } from "@/lib/pages/home/model/types";
 import {
+  isRawGivenDigit,
   isRawPuzzleString,
-  isRawStartingDigit,
 } from "@/lib/pages/home/model/validators";
 
 // #region Shared Test Functions
@@ -51,33 +51,30 @@ const getBrandedRawPuzzleString = (
 const getEmptyRawBoardState = (): RawBoardState =>
   Array.from({ length: 81 }, () => null) as RawBoardState;
 
-const getRawBoardStateWithStartingDigitsInTargetCells = (
-  targetCellsAndRawStartingDigits: Array<{
+const getRawBoardStateWithGivenDigitsInTargetCells = (
+  targetCellsAndRawGivenDigits: Array<{
     cellNumber: CellNumber;
-    rawStartingDigit: RawStartingDigit;
+    rawGivenDigit: RawGivenDigit;
   }>,
 ): RawBoardState => {
   const rawBoardState = getEmptyRawBoardState();
 
-  for (const {
-    cellNumber,
-    rawStartingDigit,
-  } of targetCellsAndRawStartingDigits) {
-    rawBoardState[cellNumber - 1] = rawStartingDigit;
+  for (const { cellNumber, rawGivenDigit } of targetCellsAndRawGivenDigits) {
+    rawBoardState[cellNumber - 1] = rawGivenDigit;
   }
 
   return rawBoardState;
 };
 
-const getBrandedRawStartingDigit = (
-  candidateRawStartingDigit: number,
-): RawStartingDigit => {
-  if (!isRawStartingDigit(candidateRawStartingDigit))
+const getBrandedRawGivenDigit = (
+  candidateRawGivenDigit: number,
+): RawGivenDigit => {
+  if (!isRawGivenDigit(candidateRawGivenDigit))
     throw Error(
-      `Invalid RawStartingDigit "${candidateRawStartingDigit}" in test setup.`,
+      `Invalid RawGivenDigit "${candidateRawGivenDigit}" in test setup.`,
     );
 
-  return candidateRawStartingDigit;
+  return candidateRawGivenDigit;
 };
 
 const getTargetCellStateFromBoardState = (
@@ -94,30 +91,30 @@ const getTargetCellStateFromBoardState = (
   return candidateCellState;
 };
 
-const expectTargetCellToContainPlayerDigit = (
+const expectTargetCellToContainEnteredDigit = (
   boardState: BoardState,
   cellNumber: CellNumber,
-  expectedPlayerDigit: SudokuDigit | "",
+  expectedEnteredDigit: SudokuDigit | "",
 ) => {
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
-  expect(isPlayerDigitInCellContent(cellState.cellContent)).toBe(true);
+  expect(isEnteredDigitInCellContent(cellState.cellContent)).toBe(true);
 
-  if (isPlayerDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.playerDigit).toBe(expectedPlayerDigit);
+  if (isEnteredDigitInCellContent(cellState.cellContent))
+    expect(cellState.cellContent.enteredDigit).toBe(expectedEnteredDigit);
 };
 
-const expectTargetCellToContainStartingDigit = (
+const expectTargetCellToContainGivenDigit = (
   boardState: BoardState,
   cellNumber: CellNumber,
-  expectedStartingDigit: SudokuDigit,
+  expectedGivenDigit: SudokuDigit,
 ) => {
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
-  expect(isStartingDigitInCellContent(cellState.cellContent)).toBe(true);
+  expect(isGivenDigitInCellContent(cellState.cellContent)).toBe(true);
 
-  if (isStartingDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.startingDigit).toBe(expectedStartingDigit);
+  if (isGivenDigitInCellContent(cellState.cellContent))
+    expect(cellState.cellContent.givenDigit).toBe(expectedGivenDigit);
 };
 
 const expectTargetCellToHaveCoordinates = (
@@ -190,18 +187,18 @@ describe("Puzzle String Transforms", () => {
   describe("getRawPuzzleStringFromRawBoardState", () => {
     it("serializes a raw board into its raw puzzle-string format", () => {
       // Arrange
-      const rawBoardState = getRawBoardStateWithStartingDigitsInTargetCells([
+      const rawBoardState = getRawBoardStateWithGivenDigitsInTargetCells([
         {
           cellNumber: getBrandedCellNumber(1),
-          rawStartingDigit: getBrandedRawStartingDigit(0),
+          rawGivenDigit: getBrandedRawGivenDigit(0),
         },
         {
           cellNumber: getBrandedCellNumber(2),
-          rawStartingDigit: getBrandedRawStartingDigit(4),
+          rawGivenDigit: getBrandedRawGivenDigit(4),
         },
         {
           cellNumber: getBrandedCellNumber(3),
-          rawStartingDigit: getBrandedRawStartingDigit(8),
+          rawGivenDigit: getBrandedRawGivenDigit(8),
         },
       ]);
 
@@ -213,7 +210,7 @@ describe("Puzzle String Transforms", () => {
       expect(rawPuzzleString).toBe(`159${"0".repeat(78)}`);
     });
 
-    it("serializes an empty board as a puzzle string with no starting digits", () => {
+    it("serializes an empty board as a puzzle string with no given digits", () => {
       // Arrange
       const rawBoardState = getEmptyRawBoardState();
 
@@ -271,32 +268,32 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToContainPlayerDigit(
+      expectTargetCellToContainEnteredDigit(
         boardState,
         getBrandedCellNumber(1),
         "",
       );
-      expectTargetCellToContainPlayerDigit(
+      expectTargetCellToContainEnteredDigit(
         boardState,
         getBrandedCellNumber(81),
         "",
       );
     });
 
-    it("treats provided starting digits as starting digits in the board state", () => {
+    it("treats provided given digits as given digits in the board state", () => {
       // Arrange
-      const rawBoardState = getRawBoardStateWithStartingDigitsInTargetCells([
+      const rawBoardState = getRawBoardStateWithGivenDigitsInTargetCells([
         {
           cellNumber: getBrandedCellNumber(1),
-          rawStartingDigit: getBrandedRawStartingDigit(0),
+          rawGivenDigit: getBrandedRawGivenDigit(0),
         },
         {
           cellNumber: getBrandedCellNumber(2),
-          rawStartingDigit: getBrandedRawStartingDigit(4),
+          rawGivenDigit: getBrandedRawGivenDigit(4),
         },
         {
           cellNumber: getBrandedCellNumber(3),
-          rawStartingDigit: getBrandedRawStartingDigit(8),
+          rawGivenDigit: getBrandedRawGivenDigit(8),
         },
       ]);
 
@@ -304,17 +301,17 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToContainStartingDigit(
+      expectTargetCellToContainGivenDigit(
         boardState,
         getBrandedCellNumber(1),
         getBrandedSudokuDigit("1"),
       );
-      expectTargetCellToContainStartingDigit(
+      expectTargetCellToContainGivenDigit(
         boardState,
         getBrandedCellNumber(2),
         getBrandedSudokuDigit("5"),
       );
-      expectTargetCellToContainStartingDigit(
+      expectTargetCellToContainGivenDigit(
         boardState,
         getBrandedCellNumber(3),
         getBrandedSudokuDigit("9"),
@@ -442,27 +439,27 @@ describe("Board State Transform", () => {
 });
 
 describe("Digit Accessor", () => {
-  it("returns the starting digit when a cell contains a starting digit", () => {
+  it("returns the given digit when a cell contains a given digit", () => {
     // Arrange
     const cellContent: CellContent = {
-      startingDigit: getBrandedSudokuDigit("8"),
+      givenDigit: getBrandedSudokuDigit("8"),
     };
 
     // Act
-    const digitInCell = getStartingOrPlayerDigitInCellIfPresent(cellContent);
+    const digitInCell = getGivenOrEnteredDigitInCellIfPresent(cellContent);
 
     // Assert
     expect(digitInCell).toBe(getBrandedSudokuDigit("8"));
   });
 
-  it("returns the entered digit when a cell contains a player digit", () => {
+  it("returns the entered digit when a cell contains an entered digit", () => {
     // Arrange
     const cellContent: CellContent = {
-      playerDigit: getBrandedSudokuDigit("6"),
+      enteredDigit: getBrandedSudokuDigit("6"),
     };
 
     // Act
-    const digitInCell = getStartingOrPlayerDigitInCellIfPresent(cellContent);
+    const digitInCell = getGivenOrEnteredDigitInCellIfPresent(cellContent);
 
     // Assert
     expect(digitInCell).toBe(getBrandedSudokuDigit("6"));
@@ -471,11 +468,11 @@ describe("Digit Accessor", () => {
   it("returns an empty string when an editable cell is still blank", () => {
     // Arrange
     const cellContent: CellContent = {
-      playerDigit: "",
+      enteredDigit: "",
     };
 
     // Act
-    const digitInCell = getStartingOrPlayerDigitInCellIfPresent(cellContent);
+    const digitInCell = getGivenOrEnteredDigitInCellIfPresent(cellContent);
 
     // Assert
     expect(digitInCell).toBe("");
@@ -489,7 +486,7 @@ describe("Digit Accessor", () => {
     };
 
     // Act
-    const digitInCell = getStartingOrPlayerDigitInCellIfPresent(cellContent);
+    const digitInCell = getGivenOrEnteredDigitInCellIfPresent(cellContent);
 
     // Assert
     expect(digitInCell).toBe("");

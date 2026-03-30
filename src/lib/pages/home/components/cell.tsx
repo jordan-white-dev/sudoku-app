@@ -14,14 +14,14 @@ import {
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings";
 import { markupColors } from "@/lib/pages/home/model/constants";
 import {
+  isEnteredDigitInCellContent,
+  isGivenDigitInCellContent,
+  isGivenOrEnteredDigitInCellContent,
   isMarkupDigitsInCellContent,
-  isPlayerDigitInCellContent,
-  isStartingDigitInCellContent,
-  isStartingOrPlayerDigitInCellContent,
 } from "@/lib/pages/home/model/guards";
 import {
   getCurrentBoardStateFromPuzzleHistory,
-  getStartingOrPlayerDigitInCellIfPresent,
+  getGivenOrEnteredDigitInCellIfPresent,
 } from "@/lib/pages/home/model/transforms";
 import {
   type BoardState,
@@ -648,7 +648,7 @@ const getCellBackground = ({
 
 // #region Other Cell Styles
 const getFontSize = (cellContent: CellContent): ButtonProps["fontSize"] => {
-  if (isStartingOrPlayerDigitInCellContent(cellContent)) return DIGIT_FONT_SIZE;
+  if (isGivenOrEnteredDigitInCellContent(cellContent)) return DIGIT_FONT_SIZE;
   else if (isMarkupDigitsInCellContent(cellContent)) {
     const centerMarkupsCount = cellContent.centerMarkups.length;
 
@@ -848,9 +848,12 @@ const isArrayOfMarkupColors = (
 const isEmptyEditableCellWithoutMarkup = (cellState: CellState) => {
   const { cellContent } = cellState;
 
-  if (isStartingDigitInCellContent(cellContent)) return false;
+  if (isGivenDigitInCellContent(cellContent)) return false;
 
-  if (isPlayerDigitInCellContent(cellContent) && cellContent.playerDigit !== "")
+  if (
+    isEnteredDigitInCellContent(cellContent) &&
+    cellContent.enteredDigit !== ""
+  )
     return false;
 
   if (
@@ -1020,11 +1023,11 @@ const doesMarkupDigitsCellContentMatchExactly = (
   return doesMarkupDigitsCellContentMatchExactly;
 };
 
-const doesCellContentContainStartingOrPlayerDigit = (
+const doesCellContentContainGivenOrEnteredDigit = (
   cellContent: CellContent,
 ): boolean =>
-  isStartingOrPlayerDigitInCellContent(cellContent) &&
-  getStartingOrPlayerDigitInCellIfPresent(cellContent) !== "";
+  isGivenOrEnteredDigitInCellContent(cellContent) &&
+  getGivenOrEnteredDigitInCellIfPresent(cellContent) !== "";
 
 const doesCellContentContainMarkupDigits = (
   cellContent: CellContent,
@@ -1037,11 +1040,11 @@ const doCellsContainOnlyMarkupColors = (
   sourceCellContent: CellContent,
   candidateCellContent: CellContent,
 ): boolean => {
-  const doesSourceCellContainStartingOrPlayerDigit =
-    doesCellContentContainStartingOrPlayerDigit(sourceCellContent);
+  const doesSourceCellContainGivenOrEnteredDigit =
+    doesCellContentContainGivenOrEnteredDigit(sourceCellContent);
 
-  const doesCandidateCellContainStartingOrPlayerDigit =
-    doesCellContentContainStartingOrPlayerDigit(candidateCellContent);
+  const doesCandidateCellContainGivenOrEnteredDigit =
+    doesCellContentContainGivenOrEnteredDigit(candidateCellContent);
 
   const doesSourceCellContainMarkupDigits =
     doesCellContentContainMarkupDigits(sourceCellContent);
@@ -1050,8 +1053,8 @@ const doCellsContainOnlyMarkupColors = (
     doesCellContentContainMarkupDigits(candidateCellContent);
 
   const doCellsContainOnlyMarkupColors = !(
-    doesSourceCellContainStartingOrPlayerDigit ||
-    doesCandidateCellContainStartingOrPlayerDigit ||
+    doesSourceCellContainGivenOrEnteredDigit ||
+    doesCandidateCellContainGivenOrEnteredDigit ||
     doesSourceCellContainMarkupDigits ||
     doesCandidateCellContainMarkupDigits
   );
@@ -1076,18 +1079,18 @@ const getSelectedCellStateWithStrictMatching = (
   const sourceCellContent = sourceCellState.cellContent;
   const candidateCellContent = candidateCellState.cellContent;
 
-  const sourceStartingOrPlayerDigit =
-    getStartingOrPlayerDigitInCellIfPresent(sourceCellContent);
+  const sourceGivenOrEnteredDigit =
+    getGivenOrEnteredDigitInCellIfPresent(sourceCellContent);
 
-  const candidateStartingOrPlayerDigit =
-    getStartingOrPlayerDigitInCellIfPresent(candidateCellContent);
+  const candidateGivenOrEnteredDigit =
+    getGivenOrEnteredDigitInCellIfPresent(candidateCellContent);
 
-  const doStartingOrPlayerDigitsMatchExactly =
-    isStartingOrPlayerDigitInCellContent(sourceCellContent) &&
-    isStartingOrPlayerDigitInCellContent(candidateCellContent) &&
-    sourceStartingOrPlayerDigit === candidateStartingOrPlayerDigit &&
-    sourceStartingOrPlayerDigit !== "" &&
-    candidateStartingOrPlayerDigit !== "";
+  const doGivenOrEnteredDigitsMatchExactly =
+    isGivenOrEnteredDigitInCellContent(sourceCellContent) &&
+    isGivenOrEnteredDigitInCellContent(candidateCellContent) &&
+    sourceGivenOrEnteredDigit === candidateGivenOrEnteredDigit &&
+    sourceGivenOrEnteredDigit !== "" &&
+    candidateGivenOrEnteredDigit !== "";
 
   const doMarkupDigitsMatchExactlyBetweenCells =
     isMarkupDigitsInCellContent(sourceCellContent) &&
@@ -1101,7 +1104,7 @@ const getSelectedCellStateWithStrictMatching = (
     doCellsContainOnlyMarkupColors(sourceCellContent, candidateCellContent);
 
   if (
-    doStartingOrPlayerDigitsMatchExactly ||
+    doGivenOrEnteredDigitsMatchExactly ||
     doMarkupDigitsMatchExactlyBetweenCells ||
     doCellsContainOnlyMarkupColorsAndMatchExactly
   ) {
@@ -1146,18 +1149,18 @@ const getSelectedCellStateWithPartialMatching = (
       candidateCellState,
     );
 
-  const sourceStartingOrPlayerDigit =
-    getStartingOrPlayerDigitInCellIfPresent(sourceCellContent);
+  const sourceGivenOrEnteredDigit =
+    getGivenOrEnteredDigitInCellIfPresent(sourceCellContent);
 
-  const candidateStartingOrPlayerDigit =
-    getStartingOrPlayerDigitInCellIfPresent(candidateCellContent);
+  const candidateGivenOrEnteredDigit =
+    getGivenOrEnteredDigitInCellIfPresent(candidateCellContent);
 
   if (
-    isStartingOrPlayerDigitInCellContent(sourceCellContent) &&
-    isStartingOrPlayerDigitInCellContent(candidateCellContent) &&
-    sourceStartingOrPlayerDigit === candidateStartingOrPlayerDigit &&
-    sourceStartingOrPlayerDigit !== "" &&
-    candidateStartingOrPlayerDigit !== ""
+    isGivenOrEnteredDigitInCellContent(sourceCellContent) &&
+    isGivenOrEnteredDigitInCellContent(candidateCellContent) &&
+    sourceGivenOrEnteredDigit === candidateGivenOrEnteredDigit &&
+    sourceGivenOrEnteredDigit !== "" &&
+    candidateGivenOrEnteredDigit !== ""
   ) {
     const nextCellState = {
       ...candidateCellState,
@@ -1210,10 +1213,9 @@ const handleCellDoubleClick = (
 // #endregion
 
 const getNonCornerCellDigits = (cellContent: CellContent): string => {
-  if (isStartingDigitInCellContent(cellContent))
-    return cellContent.startingDigit;
-  else if (isPlayerDigitInCellContent(cellContent))
-    return cellContent.playerDigit;
+  if (isGivenDigitInCellContent(cellContent)) return cellContent.givenDigit;
+  else if (isEnteredDigitInCellContent(cellContent))
+    return cellContent.enteredDigit;
   else if (isMarkupDigitsInCellContent(cellContent))
     return [...cellContent.centerMarkups].sort().join("");
 
@@ -1288,7 +1290,7 @@ export const Cell = memo(
         })}
         borderColor="black"
         borderRadius="0"
-        color={isStartingDigitInCellContent(cellContent) ? "black" : "#1212f0"}
+        color={isGivenDigitInCellContent(cellContent) ? "black" : "#1212f0"}
         data-cell-number={cellNumber}
         fontSize={getFontSize(cellContent)}
         height={CELL_SIZE}

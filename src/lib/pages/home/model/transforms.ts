@@ -1,6 +1,6 @@
 import {
-  isPlayerDigitInCellContent,
-  isStartingDigitInCellContent,
+  isEnteredDigitInCellContent,
+  isGivenDigitInCellContent,
 } from "@/lib/pages/home/model/guards";
 import {
   type BoardState,
@@ -10,11 +10,11 @@ import {
   type CellState,
   type ColumnNumber,
   type EncodedPuzzleString,
-  type PlayerDigitCellContent,
+  type EnteredDigitCellContent,
   type PuzzleHistory,
   type RawBoardState,
+  type RawGivenDigit,
   type RawPuzzleString,
-  type RawStartingDigit,
   type RowNumber,
   type SudokuDigit,
 } from "@/lib/pages/home/model/types";
@@ -117,21 +117,21 @@ export const getBrandedRowNumber = (candidateRowNumber: number): RowNumber => {
 };
 // #endregion
 
-const getStartingDigitCellContentFromRawStartingDigit = (
-  rawStartingDigit: RawStartingDigit,
+const getGivenDigitCellContentFromRawGivenDigit = (
+  rawGivenDigit: RawGivenDigit,
 ): CellContent => {
-  const candidateSudokuDigit = (rawStartingDigit + 1).toString();
+  const candidateSudokuDigit = (rawGivenDigit + 1).toString();
 
   if (isSudokuDigit(candidateSudokuDigit)) {
-    const startingDigitCellContent = {
-      startingDigit: candidateSudokuDigit,
+    const givenDigitCellContent = {
+      givenDigit: candidateSudokuDigit,
     };
 
-    return startingDigitCellContent;
+    return givenDigitCellContent;
   }
 
   throw Error(
-    `Failed to get a starting SudokuDigit from the RawStartingDigit "${rawStartingDigit}".`,
+    `Failed to get a given SudokuDigit from the RawGivenDigit "${rawGivenDigit}".`,
   );
 };
 
@@ -159,14 +159,14 @@ export const getBoardStateFromRawBoardState = (
 
     const rawCellState = rawBoardState[candidateCellNumber - 1];
 
-    const emptyPlayerDigitCellContent: PlayerDigitCellContent = {
-      playerDigit: "",
+    const emptyEnteredDigitCellContent: EnteredDigitCellContent = {
+      enteredDigit: "",
     };
 
     const cellContent: CellContent =
       rawCellState === null
-        ? emptyPlayerDigitCellContent
-        : getStartingDigitCellContentFromRawStartingDigit(rawCellState);
+        ? emptyEnteredDigitCellContent
+        : getGivenDigitCellContentFromRawGivenDigit(rawCellState);
 
     const cellState: CellState = {
       boxNumber,
@@ -212,13 +212,12 @@ export const getBoardStateWithNoCellsSelected = (
 // #endregion
 
 // #region Digit Accessor
-export const getStartingOrPlayerDigitInCellIfPresent = (
+export const getGivenOrEnteredDigitInCellIfPresent = (
   cellContent: CellContent,
 ): SudokuDigit | "" => {
-  if (isStartingDigitInCellContent(cellContent))
-    return cellContent.startingDigit;
-  else if (isPlayerDigitInCellContent(cellContent))
-    return cellContent.playerDigit;
+  if (isGivenDigitInCellContent(cellContent)) return cellContent.givenDigit;
+  else if (isEnteredDigitInCellContent(cellContent))
+    return cellContent.enteredDigit;
   else return "";
 };
 // #endregion

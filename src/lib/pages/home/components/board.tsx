@@ -14,7 +14,7 @@ import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings";
 import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleHistory,
-  getStartingOrPlayerDigitInCellIfPresent,
+  getGivenOrEnteredDigitInCellIfPresent,
 } from "@/lib/pages/home/model/transforms";
 import {
   type BoardState,
@@ -96,7 +96,7 @@ const getConflictedCellNumbers = (boardState: BoardState): Set<CellNumber> => {
   const sudokuDigitOccurrencesByRow = getEmptyDigitOccurrencesByRegion();
 
   for (const cellState of boardState) {
-    const sudokuDigit = getStartingOrPlayerDigitInCellIfPresent(
+    const sudokuDigit = getGivenOrEnteredDigitInCellIfPresent(
       cellState.cellContent,
     );
 

@@ -27,10 +27,10 @@ export const [isEncodedPuzzleString, BrandedEncodedPuzzleString] = branded(
 );
 // #endregion
 
-// #region Raw Starting Digit Validator
-export const [isRawStartingDigit, BrandedRawStartingDigit] = branded(
+// #region Raw Given Digit Validator
+export const [isRawGivenDigit, BrandedRawGivenDigit] = branded(
   (input: number) => Number.isInteger(input) && input >= 0 && input <= 8,
-  "RawStartingDigit",
+  "RawGivenDigit",
 );
 // #endregion
 

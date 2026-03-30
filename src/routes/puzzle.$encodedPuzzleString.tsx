@@ -10,8 +10,8 @@ import {
 } from "@/lib/pages/home/model/types";
 import {
   isEncodedPuzzleString,
+  isRawGivenDigit,
   isRawPuzzleString,
-  isRawStartingDigit,
 } from "@/lib/pages/home/model/validators";
 
 const getRawPuzzleStringFromEncodedPuzzleString = (
@@ -52,14 +52,14 @@ const getRawBoardStateFromRawPuzzleString = (
   const rawBoardState = [...rawPuzzleString].map((character) => {
     if (character === "0") return null;
 
-    const candidateRawStartingDigit = Number(character) - 1;
+    const candidateRawGivenDigit = Number(character) - 1;
 
-    if (!isRawStartingDigit(candidateRawStartingDigit))
+    if (!isRawGivenDigit(candidateRawGivenDigit))
       throw Error(
-        `Failed to get a RawBoardState from the RawPuzzleString "${rawPuzzleString}". An invalid RawStartingDigit was encountered: "${candidateRawStartingDigit}".`,
+        `Failed to get a RawBoardState from the RawPuzzleString "${rawPuzzleString}". An invalid RawGivenDigit was encountered: "${candidateRawGivenDigit}".`,
       );
 
-    return candidateRawStartingDigit;
+    return candidateRawGivenDigit;
   });
 
   return rawBoardState;

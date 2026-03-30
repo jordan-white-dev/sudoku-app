@@ -1,18 +1,17 @@
 import { type CellContent } from "@/lib/pages/home/model/types";
 
 // #region Cell Content Guards
-export const isStartingDigitInCellContent = (cellContent: CellContent) =>
-  "startingDigit" in cellContent;
+export const isGivenDigitInCellContent = (cellContent: CellContent) =>
+  "givenDigit" in cellContent;
 
-export const isPlayerDigitInCellContent = (cellContent: CellContent) =>
-  "playerDigit" in cellContent;
+export const isEnteredDigitInCellContent = (cellContent: CellContent) =>
+  "enteredDigit" in cellContent;
 
 export const isMarkupDigitsInCellContent = (cellContent: CellContent) =>
   "centerMarkups" in cellContent && "cornerMarkups" in cellContent;
 
-export const isStartingOrPlayerDigitInCellContent = (
-  cellContent: CellContent,
-) => "playerDigit" in cellContent || "startingDigit" in cellContent;
+export const isGivenOrEnteredDigitInCellContent = (cellContent: CellContent) =>
+  "enteredDigit" in cellContent || "givenDigit" in cellContent;
 // #endregion
 
 // #region Exhaustive Guard

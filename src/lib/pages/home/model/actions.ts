@@ -2,9 +2,9 @@ import { type Dispatch, type SetStateAction } from "react";
 
 import { markupColors } from "@/lib/pages/home/model/constants";
 import {
+  isEnteredDigitInCellContent,
+  isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
-  isPlayerDigitInCellContent,
-  isStartingDigitInCellContent,
 } from "@/lib/pages/home/model/guards";
 import { getCurrentBoardStateFromPuzzleHistory } from "@/lib/pages/home/model/transforms";
 import {
@@ -46,48 +46,48 @@ const addBoardStateToPuzzleHistory = (
 };
 
 // #region Digit Input Action
-const areAllSelectedCellsStartingOrContainSudokuDigitAsPlayerDigit = (
+const areAllSelectedCellsGivenOrContainSudokuDigitAsEnteredDigit = (
   currentBoardState: BoardState,
   sudokuDigit: SudokuDigit,
 ): boolean =>
   currentBoardState.every(
     (currentCellState) =>
       !currentCellState.isSelected ||
-      isStartingDigitInCellContent(currentCellState.cellContent) ||
-      (isPlayerDigitInCellContent(currentCellState.cellContent) &&
-        currentCellState.cellContent.playerDigit === sudokuDigit),
+      isGivenDigitInCellContent(currentCellState.cellContent) ||
+      (isEnteredDigitInCellContent(currentCellState.cellContent) &&
+        currentCellState.cellContent.enteredDigit === sudokuDigit),
   );
 
-const getPlayerDigitCellState = (
+const getEnteredDigitCellState = (
   currentCellState: CellState,
-  shouldPlayerDigitBeRemoved: boolean,
+  shouldEnteredDigitBeRemoved: boolean,
   sudokuDigit: SudokuDigit,
 ): CellState => {
   const isValidInputCell =
     currentCellState.isSelected &&
-    !isStartingDigitInCellContent(currentCellState.cellContent);
+    !isGivenDigitInCellContent(currentCellState.cellContent);
 
   if (!isValidInputCell) return currentCellState;
 
-  if (shouldPlayerDigitBeRemoved) {
-    const emptyPlayerDigitCellState: CellState = {
+  if (shouldEnteredDigitBeRemoved) {
+    const emptyEnteredDigitCellState: CellState = {
       ...currentCellState,
       cellContent: {
-        playerDigit: "",
+        enteredDigit: "",
       },
     };
 
-    return emptyPlayerDigitCellState;
+    return emptyEnteredDigitCellState;
   }
 
-  const addedPlayerDigitCellState: CellState = {
+  const addedEnteredDigitCellState: CellState = {
     ...currentCellState,
     cellContent: {
-      playerDigit: sudokuDigit,
+      enteredDigit: sudokuDigit,
     },
   };
 
-  return addedPlayerDigitCellState;
+  return addedEnteredDigitCellState;
 };
 
 export const handleDigitInput = (
@@ -98,16 +98,16 @@ export const handleDigitInput = (
   const currentBoardState =
     getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
 
-  const shouldPlayerDigitBeRemoved =
-    areAllSelectedCellsStartingOrContainSudokuDigitAsPlayerDigit(
+  const shouldEnteredDigitBeRemoved =
+    areAllSelectedCellsGivenOrContainSudokuDigitAsEnteredDigit(
       currentBoardState,
       sudokuDigit,
     );
 
   const nextBoardState: BoardState = currentBoardState.map((currentCellState) =>
-    getPlayerDigitCellState(
+    getEnteredDigitCellState(
       currentCellState,
-      shouldPlayerDigitBeRemoved,
+      shouldEnteredDigitBeRemoved,
       sudokuDigit,
     ),
   );
@@ -121,7 +121,7 @@ export const handleDigitInput = (
 // #endregion
 
 // #region Markup Digit Input Actions
-const areAllSelectedCellsStartingPlayerOrContainSudokuDigitAsMarkup = (
+const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
   currentBoardState: BoardState,
   markupType: "Center" | "Corner",
   sudokuDigit: SudokuDigit,
@@ -131,12 +131,13 @@ const areAllSelectedCellsStartingPlayerOrContainSudokuDigitAsMarkup = (
 
     if (!currentCellState.isSelected) return true;
 
-    if (isStartingDigitInCellContent(cellContent)) return true;
+    if (isGivenDigitInCellContent(cellContent)) return true;
 
-    const isNonEmptyPlayerDigit =
-      isPlayerDigitInCellContent(cellContent) && cellContent.playerDigit !== "";
+    const isNonEmptyEnteredDigit =
+      isEnteredDigitInCellContent(cellContent) &&
+      cellContent.enteredDigit !== "";
 
-    if (isNonEmptyPlayerDigit) return true;
+    if (isNonEmptyEnteredDigit) return true;
 
     const doesContainSudokuDigitAsMarkup =
       isMarkupDigitsInCellContent(cellContent) &&
@@ -256,15 +257,15 @@ const getMarkupDigitsCellState = (
 
   const currentCellContent = currentCellState.cellContent;
 
-  const isNotAStartingDigit = !isStartingDigitInCellContent(currentCellContent);
+  const isNotAGivenDigit = !isGivenDigitInCellContent(currentCellContent);
 
-  const isAnEmptyPlayerDigit =
-    isPlayerDigitInCellContent(currentCellContent) &&
-    currentCellContent.playerDigit === "";
+  const isAnEmptyEnteredDigit =
+    isEnteredDigitInCellContent(currentCellContent) &&
+    currentCellContent.enteredDigit === "";
 
   const isValidInputCell =
-    isNotAStartingDigit &&
-    (isAnEmptyPlayerDigit || isMarkupDigitsInCellContent(currentCellContent));
+    isNotAGivenDigit &&
+    (isAnEmptyEnteredDigit || isMarkupDigitsInCellContent(currentCellContent));
 
   if (!isValidInputCell) return currentCellState;
 
@@ -288,7 +289,7 @@ const getMarkupDigitsCellState = (
       markupType,
       sudokuDigit,
     );
-  } else if (isPlayerDigitInCellContent(currentCellContent))
+  } else if (isEnteredDigitInCellContent(currentCellContent))
     return getCellStateWithAnEmptyMarkupType(
       currentCellState,
       markupType,
@@ -308,7 +309,7 @@ export const handleCenterMarkupInput = (
     getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
 
   const shouldMarkupDigitBeRemoved =
-    areAllSelectedCellsStartingPlayerOrContainSudokuDigitAsMarkup(
+    areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup(
       currentBoardState,
       "Center",
       sudokuDigit,
@@ -341,7 +342,7 @@ export const handleCornerMarkupInput = (
     getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
 
   const shouldMarkupDigitBeRemoved =
-    areAllSelectedCellsStartingPlayerOrContainSudokuDigitAsMarkup(
+    areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup(
       currentBoardState,
       "Corner",
       sudokuDigit,
@@ -498,7 +499,7 @@ export const handleClearCell = (
     (currentCellState) => {
       if (!currentCellState.isSelected) return currentCellState;
 
-      if (isStartingDigitInCellContent(currentCellState.cellContent)) {
+      if (isGivenDigitInCellContent(currentCellState.cellContent)) {
         const nextCellState: CellState = {
           ...currentCellState,
           markupColors: [""],
@@ -510,7 +511,7 @@ export const handleClearCell = (
       const nextCellState: CellState = {
         ...currentCellState,
         cellContent: {
-          playerDigit: "",
+          enteredDigit: "",
         },
         markupColors: [""],
       };

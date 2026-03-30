@@ -7,8 +7,8 @@ import {
   type BrandedCellNumber,
   type BrandedColumnNumber,
   type BrandedEncodedPuzzleString,
+  type BrandedRawGivenDigit,
   type BrandedRawPuzzleString,
-  type BrandedRawStartingDigit,
   type BrandedRowNumber,
   type BrandedSudokuDigit,
 } from "@/lib/pages/home/model/validators";
@@ -26,9 +26,9 @@ export type EncodedPuzzleString = typeof BrandedEncodedPuzzleString;
 // #region Raw Types
 export type RawPuzzleString = typeof BrandedRawPuzzleString;
 
-export type RawStartingDigit = typeof BrandedRawStartingDigit;
+export type RawGivenDigit = typeof BrandedRawGivenDigit;
 type RawEmptyCell = null;
-type RawCellState = RawStartingDigit | RawEmptyCell;
+type RawCellState = RawGivenDigit | RawEmptyCell;
 
 export type RawBoardState = Array<RawCellState>;
 // #endregion
@@ -36,9 +36,9 @@ export type RawBoardState = Array<RawCellState>;
 // #region Cell Content Types
 export type SudokuDigit = typeof BrandedSudokuDigit;
 
-type StartingDigitCellContent = { startingDigit: SudokuDigit };
+type GivenDigitCellContent = { givenDigit: SudokuDigit };
 
-export type PlayerDigitCellContent = { playerDigit: SudokuDigit | "" };
+export type EnteredDigitCellContent = { enteredDigit: SudokuDigit | "" };
 
 export type MarkupDigits = [""] | Array<SudokuDigit>;
 export type MarkupDigitsCellContent = {
@@ -47,7 +47,7 @@ export type MarkupDigitsCellContent = {
 };
 
 export type CellContent = Prettify<
-  StartingDigitCellContent | PlayerDigitCellContent | MarkupDigitsCellContent
+  GivenDigitCellContent | EnteredDigitCellContent | MarkupDigitsCellContent
 >;
 // #endregion
 

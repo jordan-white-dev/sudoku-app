@@ -30,8 +30,8 @@ import {
   getBoardStateFromRawBoardState,
   getCurrentBoardStateFromPuzzleHistory,
   getEncodedPuzzleStringFromRawPuzzleString,
+  getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
-  getStartingOrPlayerDigitInCellIfPresent,
 } from "@/lib/pages/home/model/transforms";
 import {
   type BoardState,
@@ -288,22 +288,22 @@ const getIsPuzzleSolved = (boardState: BoardState): boolean => {
   const boxes: Array<Set<string>> = Array.from({ length: 9 }, () => new Set());
 
   for (const cellState of boardState) {
-    const startingOrPlayerDigit = getStartingOrPlayerDigitInCellIfPresent(
+    const givenOrEnteredDigit = getGivenOrEnteredDigitInCellIfPresent(
       cellState.cellContent,
     );
-    if (startingOrPlayerDigit === "") return false;
+    if (givenOrEnteredDigit === "") return false;
 
     const boxIndex = cellState.boxNumber - 1;
     const columnIndex = cellState.columnNumber - 1;
     const rowIndex = cellState.rowNumber - 1;
 
-    if (boxes[boxIndex].has(startingOrPlayerDigit)) return false;
-    if (columns[columnIndex].has(startingOrPlayerDigit)) return false;
-    if (rows[rowIndex].has(startingOrPlayerDigit)) return false;
+    if (boxes[boxIndex].has(givenOrEnteredDigit)) return false;
+    if (columns[columnIndex].has(givenOrEnteredDigit)) return false;
+    if (rows[rowIndex].has(givenOrEnteredDigit)) return false;
 
-    boxes[boxIndex].add(startingOrPlayerDigit);
-    columns[columnIndex].add(startingOrPlayerDigit);
-    rows[rowIndex].add(startingOrPlayerDigit);
+    boxes[boxIndex].add(givenOrEnteredDigit);
+    columns[columnIndex].add(givenOrEnteredDigit);
+    rows[rowIndex].add(givenOrEnteredDigit);
   }
 
   return true;
