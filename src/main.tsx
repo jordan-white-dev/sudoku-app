@@ -7,7 +7,7 @@ import { Provider } from "@/lib/components/ui/provider";
 import Page404 from "@/lib/pages/not-found";
 import { routeTree } from "@/routeTree.gen";
 
-import "@fontsource-variable/plus-jakarta-sans";
+import "@fontsource-variable/plus-jakarta-sans/wght.css";
 
 const queryClient = new QueryClient();
 

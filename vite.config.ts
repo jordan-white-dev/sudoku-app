@@ -4,26 +4,60 @@ import babel from "@rolldown/plugin-babel";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
 import react, { reactCompilerPreset } from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+import { defineConfig, type UserConfig } from "vite";
 import checker from "vite-plugin-checker";
-import tsconfigPaths from "vite-tsconfig-paths";
 
-const getChunkGroupName = (moduleId: string): string | null => {
-  if (!moduleId.includes("node_modules")) return null;
-  if (moduleId.includes("@chakra-ui") || moduleId.includes("@emotion/"))
-    return "chakra";
-  if (moduleId.includes("@tanstack/")) return "tanstack";
-  if (moduleId.includes("react-icons")) return "icons";
-  if (moduleId.includes("/sudoku/")) return "sudoku";
-  if (moduleId.includes("/react/") || moduleId.includes("/scheduler/"))
-    return "react-vendor";
-  return "vendor";
-};
+const CHAKRA_GROUP_REGEX = /node_modules[\\/](?:@chakra-ui|@emotion[\\/])/;
+const TANSTACK_GROUP_REGEX = /node_modules[\\/]@tanstack[\\/]/;
+const ICONS_GROUP_REGEX = /node_modules[\\/]react-icons[\\/]/;
+const SUDOKU_GROUP_REGEX = /node_modules[\\/]sudoku[\\/]/;
+const REACT_VENDOR_GROUP_REGEX = /node_modules[\\/](?:react|scheduler)[\\/]/;
+const VENDOR_GROUP_REGEX = /node_modules/;
+
+const chunkSplittingOutput = {
+  codeSplitting: {
+    groups: [
+      {
+        name: "chakra",
+        test: CHAKRA_GROUP_REGEX,
+        priority: 50,
+      },
+      {
+        name: "tanstack",
+        test: TANSTACK_GROUP_REGEX,
+        priority: 40,
+      },
+      {
+        name: "icons",
+        test: ICONS_GROUP_REGEX,
+        priority: 30,
+      },
+      {
+        name: "sudoku",
+        test: SUDOKU_GROUP_REGEX,
+        priority: 25,
+      },
+      {
+        name: "react-vendor",
+        test: REACT_VENDOR_GROUP_REGEX,
+        priority: 20,
+      },
+      {
+        name: "vendor",
+        test: VENDOR_GROUP_REGEX,
+        priority: 10,
+      },
+    ],
+  },
+} as NonNullable<NonNullable<UserConfig["build"]>["rolldownOptions"]>["output"];
 
 export default defineConfig(({ mode }) => {
   const isCheckDisabled = mode === "production" || !!process.env.VITEST;
 
   return {
+    resolve: {
+      tsconfigPaths: true,
+    },
     plugins: [
       mode === "development" ? [devtools()] : [],
       babel({
@@ -38,21 +72,10 @@ export default defineConfig(({ mode }) => {
             }),
           ]
         : []),
-      tsconfigPaths(),
     ],
     build: {
       rolldownOptions: {
-        output: {
-          advancedChunks: {
-            groups: [
-              {
-                name(moduleId) {
-                  return getChunkGroupName(moduleId);
-                },
-              },
-            ],
-          },
-        },
+        output: chunkSplittingOutput,
       },
     },
     server: {
