@@ -39,42 +39,6 @@ import {
 } from "@/lib/pages/home/model/types";
 
 // #region Shared Test Functions
-const getBoardStateWithSequentialTransformsApplied = (
-  startingBoardState: BoardState,
-  boardStateTransformFunctions: Array<
-    (currentBoardState: BoardState) => BoardState
-  >,
-): BoardState => {
-  const transformedBoardState = boardStateTransformFunctions.reduce(
-    (currentBoardState, transformBoardState) => {
-      const nextBoardState = transformBoardState(currentBoardState);
-
-      return nextBoardState;
-    },
-    startingBoardState,
-  );
-
-  return transformedBoardState;
-};
-
-const getBoardStateWithTargetCellsSelected = (
-  boardState: BoardState,
-  cellNumbers: Array<number>,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const shouldBeSelected = cellNumbers.includes(cellState.cellNumber);
-
-    const nextCellState = {
-      ...cellState,
-      isSelected: shouldBeSelected,
-    };
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
-};
-
 const getEmptyRawBoardState = () =>
   Array.from({ length: 81 }, () => null) as Array<null>;
 
@@ -86,13 +50,6 @@ const getStartingEmptyBoardState = () => {
 
   return startingEmptyBoardState;
 };
-
-const getStartingPuzzleHistoryFromBoardState = (
-  startingBoardState: BoardState,
-): PuzzleHistory => ({
-  currentBoardStateIndex: 0,
-  boardStateHistory: [startingBoardState],
-});
 
 const getPuzzleHistoryAfterStateUpdate = (
   startingPuzzleHistory: PuzzleHistory,
@@ -116,6 +73,83 @@ const getPuzzleHistoryAfterStateUpdate = (
   return nextPuzzleHistory;
 };
 
+const getBoardStateWithSequentialTransformsApplied = (
+  startingBoardState: BoardState,
+  boardStateTransformFunctions: Array<
+    (currentBoardState: BoardState) => BoardState
+  >,
+): BoardState => {
+  const transformedBoardState = boardStateTransformFunctions.reduce(
+    (currentBoardState, transformBoardState) => {
+      const nextBoardState = transformBoardState(currentBoardState);
+
+      return nextBoardState;
+    },
+    startingBoardState,
+  );
+
+  return transformedBoardState;
+};
+
+const getStartingPuzzleHistoryFromBoardState = (
+  startingBoardState: BoardState,
+): PuzzleHistory => ({
+  currentBoardStateIndex: 0,
+  boardStateHistory: [startingBoardState],
+});
+
+const getStartingPuzzleHistoryWithSequentialTransformsApplied = (
+  boardStateTransformFunctions: Array<
+    (currentBoardState: BoardState) => BoardState
+  > = [],
+): PuzzleHistory => {
+  const startingBoardState = getBoardStateWithSequentialTransformsApplied(
+    getStartingEmptyBoardState(),
+    boardStateTransformFunctions,
+  );
+
+  const startingPuzzleHistory =
+    getStartingPuzzleHistoryFromBoardState(startingBoardState);
+
+  return startingPuzzleHistory;
+};
+
+const getBoardStateWithTargetCellsSelected = (
+  boardState: BoardState,
+  cellNumbers: Array<number>,
+): BoardState => {
+  const nextBoardState: BoardState = boardState.map((cellState) => {
+    const shouldBeSelected = cellNumbers.includes(cellState.cellNumber);
+
+    const nextCellState = {
+      ...cellState,
+      isSelected: shouldBeSelected,
+    };
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
+};
+
+const getPuzzleHistoryAfterDigitInput = (
+  puzzleHistory: PuzzleHistory,
+  sudokuDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
+): PuzzleHistory => {
+  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
+    puzzleHistory,
+    (setPuzzleHistory) => {
+      handleDigitInput(
+        puzzleHistory,
+        getBrandedSudokuDigit(sudokuDigit),
+        setPuzzleHistory,
+      );
+    },
+  );
+
+  return nextPuzzleHistory;
+};
+
 const getTargetCellStateFromBoardState = (
   boardState: BoardState,
   cellNumber: number,
@@ -130,28 +164,17 @@ const getTargetCellStateFromBoardState = (
   return candidateCellState;
 };
 
-const bsd = (candidateString: string) => getBrandedSudokuDigit(candidateString);
-
-const getBoardStateWithStartingDigitInTargetCell = (
+const expectTargetCellToContainPlayerDigit = (
   boardState: BoardState,
   cellNumber: number,
-  startingDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState =
-      cellState.cellNumber === cellNumber
-        ? {
-            ...cellState,
-            cellContent: {
-              startingDigit: bsd(startingDigit),
-            },
-          }
-        : cellState;
+  expectedPlayerDigit: "" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
+) => {
+  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
-    return nextCellState;
-  });
+  expect(isPlayerDigitInCellContent(cellState.cellContent)).toBe(true);
 
-  return nextBoardState;
+  if (isPlayerDigitInCellContent(cellState.cellContent))
+    expect(cellState.cellContent.playerDigit).toBe(expectedPlayerDigit);
 };
 
 const getBoardStateWithPlayerDigitInTargetCell = (
@@ -165,7 +188,38 @@ const getBoardStateWithPlayerDigitInTargetCell = (
         ? {
             ...cellState,
             cellContent: {
-              playerDigit: playerDigit === "" ? "" : bsd(playerDigit),
+              playerDigit:
+                playerDigit === "" ? "" : getBrandedSudokuDigit(playerDigit),
+            },
+          }
+        : cellState;
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
+};
+
+const getBoardStateWithMarkupDigitsInTargetCell = (
+  boardState: BoardState,
+  cellNumber: number,
+  centerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
+  cornerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
+): BoardState => {
+  const nextBoardState: BoardState = boardState.map((cellState) => {
+    const nextCellState: CellState =
+      cellState.cellNumber === cellNumber
+        ? {
+            ...cellState,
+            cellContent: {
+              centerMarkups:
+                centerMarkups.length > 0
+                  ? centerMarkups.map(getBrandedSudokuDigit)
+                  : [""],
+              cornerMarkups:
+                cornerMarkups.length > 0
+                  ? cornerMarkups.map(getBrandedSudokuDigit)
+                  : [""],
             },
           }
         : cellState;
@@ -196,20 +250,28 @@ const getBoardStateWithMarkupColorsInTargetCell = (
   return nextBoardState;
 };
 
-const getBoardStateWithCenterMarkupsInTargetCell = (
+const expectTargetCellToContainMarkupColors = (
   boardState: BoardState,
   cellNumber: number,
-  centerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
+  expectedMarkupColors: Array<MarkupColor | "">,
+) => {
+  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+
+  expect(cellState.markupColors).toEqual(expectedMarkupColors);
+};
+
+const getBoardStateWithStartingDigitInTargetCell = (
+  boardState: BoardState,
+  cellNumber: number,
+  startingDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
+    const nextCellState =
       cellState.cellNumber === cellNumber
         ? {
             ...cellState,
             cellContent: {
-              centerMarkups:
-                centerMarkups.length > 0 ? centerMarkups.map(bsd) : [""],
-              cornerMarkups: [""],
+              startingDigit: getBrandedSudokuDigit(startingDigit),
             },
           }
         : cellState;
@@ -220,80 +282,41 @@ const getBoardStateWithCenterMarkupsInTargetCell = (
   return nextBoardState;
 };
 
-const getBoardStateWithCornerMarkupsInTargetCell = (
+const expectTargetCellToContainStartingDigit = (
   boardState: BoardState,
   cellNumber: number,
-  cornerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
-        ? {
-            ...cellState,
-            cellContent: {
-              centerMarkups: [""],
-              cornerMarkups:
-                cornerMarkups.length > 0 ? cornerMarkups.map(bsd) : [""],
-            },
-          }
-        : cellState;
+  expectedStartingDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
+) => {
+  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
-    return nextCellState;
-  });
+  expect(isStartingDigitInCellContent(cellState.cellContent)).toBe(true);
 
-  return nextBoardState;
+  if (isStartingDigitInCellContent(cellState.cellContent))
+    expect(cellState.cellContent.startingDigit).toBe(expectedStartingDigit);
 };
 
-const getBoardStateWithMarkupDigitsInTargetCell = (
-  boardState: BoardState,
-  cellNumber: number,
-  centerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
-  cornerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
-        ? {
-            ...cellState,
-            cellContent: {
-              centerMarkups:
-                centerMarkups.length > 0 ? centerMarkups.map(bsd) : [""],
-              cornerMarkups:
-                cornerMarkups.length > 0 ? cornerMarkups.map(bsd) : [""],
-            },
-          }
-        : cellState;
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
-};
-
-const getStartingPuzzleHistoryWithSequentialTransformsApplied = (
-  boardStateTransformFunctions: Array<
-    (currentBoardState: BoardState) => BoardState
-  > = [],
-): PuzzleHistory => {
-  const startingBoardState = getBoardStateWithSequentialTransformsApplied(
-    getStartingEmptyBoardState(),
-    boardStateTransformFunctions,
+const expectPuzzleHistoryToMatchItsStartingState = (
+  nextPuzzleHistory: PuzzleHistory,
+  startingPuzzleHistory: PuzzleHistory,
+) => {
+  const currentBoardState =
+    getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+  const startingBoardState = getCurrentBoardStateFromPuzzleHistory(
+    startingPuzzleHistory,
   );
 
-  const startingPuzzleHistory =
-    getStartingPuzzleHistoryFromBoardState(startingBoardState);
-
-  return startingPuzzleHistory;
+  expect(nextPuzzleHistory.currentBoardStateIndex).toBe(0);
+  expect(nextPuzzleHistory.boardStateHistory).toHaveLength(1);
+  expect(currentBoardState).toEqual(startingBoardState);
 };
 
-const getPuzzleHistoryAfterDigitInput = (
+const getPuzzleHistoryAfterUndoingMove = (
   puzzleHistory: PuzzleHistory,
-  sudokuDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
 ): PuzzleHistory => {
   const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
     puzzleHistory,
     (setPuzzleHistory) => {
-      handleDigitInput(puzzleHistory, bsd(sudokuDigit), setPuzzleHistory);
+      handleUndoMove(setPuzzleHistory);
     },
   );
 
@@ -309,13 +332,69 @@ const getPuzzleHistoryAfterCenterMarkupInput = (
     (setPuzzleHistory) => {
       handleCenterMarkupInput(
         puzzleHistory,
-        bsd(sudokuDigit),
+        getBrandedSudokuDigit(sudokuDigit),
         setPuzzleHistory,
       );
     },
   );
 
   return nextPuzzleHistory;
+};
+
+const expectTargetCellToContainCenterMarkups = (
+  boardState: BoardState,
+  cellNumber: number,
+  expectedCenterMarkups: Array<
+    "" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+  >,
+) => {
+  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+
+  expect(isMarkupDigitsInCellContent(cellState.cellContent)).toBe(true);
+
+  if (isMarkupDigitsInCellContent(cellState.cellContent))
+    expect(cellState.cellContent.centerMarkups).toEqual(expectedCenterMarkups);
+};
+
+const expectTargetCellToContainCornerMarkups = (
+  boardState: BoardState,
+  cellNumber: number,
+  expectedCornerMarkups: Array<
+    "" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
+  >,
+) => {
+  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+
+  expect(isMarkupDigitsInCellContent(cellState.cellContent)).toBe(true);
+
+  if (isMarkupDigitsInCellContent(cellState.cellContent))
+    expect(cellState.cellContent.cornerMarkups).toEqual(expectedCornerMarkups);
+};
+
+const getBoardStateWithCenterMarkupsInTargetCell = (
+  boardState: BoardState,
+  cellNumber: number,
+  centerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
+): BoardState => {
+  const nextBoardState: BoardState = boardState.map((cellState) => {
+    const nextCellState: CellState =
+      cellState.cellNumber === cellNumber
+        ? {
+            ...cellState,
+            cellContent: {
+              centerMarkups:
+                centerMarkups.length > 0
+                  ? centerMarkups.map(getBrandedSudokuDigit)
+                  : [""],
+              cornerMarkups: [""],
+            },
+          }
+        : cellState;
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
 };
 
 const getPuzzleHistoryAfterCornerMarkupInput = (
@@ -327,13 +406,39 @@ const getPuzzleHistoryAfterCornerMarkupInput = (
     (setPuzzleHistory) => {
       handleCornerMarkupInput(
         puzzleHistory,
-        bsd(sudokuDigit),
+        getBrandedSudokuDigit(sudokuDigit),
         setPuzzleHistory,
       );
     },
   );
 
   return nextPuzzleHistory;
+};
+
+const getBoardStateWithCornerMarkupsInTargetCell = (
+  boardState: BoardState,
+  cellNumber: number,
+  cornerMarkups: Array<"1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9">,
+): BoardState => {
+  const nextBoardState: BoardState = boardState.map((cellState) => {
+    const nextCellState: CellState =
+      cellState.cellNumber === cellNumber
+        ? {
+            ...cellState,
+            cellContent: {
+              centerMarkups: [""],
+              cornerMarkups:
+                cornerMarkups.length > 0
+                  ? cornerMarkups.map(getBrandedSudokuDigit)
+                  : [""],
+            },
+          }
+        : cellState;
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
 };
 
 const colorShortcutDigits = [
@@ -364,7 +469,7 @@ const getColorPadInputValueFromMarkupValue = (
   markupValue: MarkupColor | ColorShortcutDigit,
 ) => {
   if (isDigitStringAColorShortcutDigit(markupValue)) {
-    const sudokuDigit = bsd(markupValue);
+    const sudokuDigit = getBrandedSudokuDigit(markupValue);
 
     return sudokuDigit;
   }
@@ -406,19 +511,6 @@ const getPuzzleHistoryAfterClearingSelectedCells = (
   return nextPuzzleHistory;
 };
 
-const getPuzzleHistoryAfterUndoingMove = (
-  puzzleHistory: PuzzleHistory,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
-      handleUndoMove(setPuzzleHistory);
-    },
-  );
-
-  return nextPuzzleHistory;
-};
-
 const getPuzzleHistoryAfterRedoingMove = (
   puzzleHistory: PuzzleHistory,
 ): PuzzleHistory => {
@@ -430,87 +522,6 @@ const getPuzzleHistoryAfterRedoingMove = (
   );
 
   return nextPuzzleHistory;
-};
-
-const expectPuzzleHistoryToMatchItsStartingState = (
-  nextPuzzleHistory: PuzzleHistory,
-  startingPuzzleHistory: PuzzleHistory,
-) => {
-  const currentBoardState =
-    getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
-  const startingBoardState = getCurrentBoardStateFromPuzzleHistory(
-    startingPuzzleHistory,
-  );
-
-  expect(nextPuzzleHistory.currentBoardStateIndex).toBe(0);
-  expect(nextPuzzleHistory.boardStateHistory).toHaveLength(1);
-  expect(currentBoardState).toEqual(startingBoardState);
-};
-
-const expectTargetCellToContainPlayerDigit = (
-  boardState: BoardState,
-  cellNumber: number,
-  expectedPlayerDigit: "" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
-
-  expect(isPlayerDigitInCellContent(cellState.cellContent)).toBe(true);
-
-  if (isPlayerDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.playerDigit).toBe(expectedPlayerDigit);
-};
-
-const expectTargetCellToContainStartingDigit = (
-  boardState: BoardState,
-  cellNumber: number,
-  expectedStartingDigit: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9",
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
-
-  expect(isStartingDigitInCellContent(cellState.cellContent)).toBe(true);
-
-  if (isStartingDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.startingDigit).toBe(expectedStartingDigit);
-};
-
-const expectTargetCellToContainCenterMarkups = (
-  boardState: BoardState,
-  cellNumber: number,
-  expectedCenterMarkups: Array<
-    "" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-  >,
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
-
-  expect(isMarkupDigitsInCellContent(cellState.cellContent)).toBe(true);
-
-  if (isMarkupDigitsInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.centerMarkups).toEqual(expectedCenterMarkups);
-};
-
-const expectTargetCellToContainCornerMarkups = (
-  boardState: BoardState,
-  cellNumber: number,
-  expectedCornerMarkups: Array<
-    "" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9"
-  >,
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
-
-  expect(isMarkupDigitsInCellContent(cellState.cellContent)).toBe(true);
-
-  if (isMarkupDigitsInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.cornerMarkups).toEqual(expectedCornerMarkups);
-};
-
-const expectTargetCellToContainMarkupColors = (
-  boardState: BoardState,
-  cellNumber: number,
-  expectedMarkupColors: Array<MarkupColor | "">,
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
-
-  expect(cellState.markupColors).toEqual(expectedMarkupColors);
 };
 // #endregion
 
@@ -1025,7 +1036,7 @@ describe("Center markup entry", () => {
                   ? {
                       ...cellState,
                       cellContent: {
-                        centerMarkups: [bsd("7")],
+                        centerMarkups: [getBrandedSudokuDigit("7")],
                         cornerMarkups: [""],
                       },
                     }
@@ -1469,7 +1480,7 @@ describe("Corner markup entry", () => {
                       ...cellState,
                       cellContent: {
                         centerMarkups: [""],
-                        cornerMarkups: [bsd("3")],
+                        cornerMarkups: [getBrandedSudokuDigit("3")],
                       },
                     }
                   : cellState;

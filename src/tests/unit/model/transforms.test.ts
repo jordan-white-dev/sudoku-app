@@ -37,27 +37,6 @@ import {
 } from "@/lib/pages/home/model/validators";
 
 // #region Shared Test Functions
-
-const bbn = (candidateNumber: number) => getBrandedBoxNumber(candidateNumber);
-const bcen = (candidateNumber: number) => getBrandedCellNumber(candidateNumber);
-const bcon = (candidateNumber: number) =>
-  getBrandedColumnNumber(candidateNumber);
-const bsd = (candidateString: string) => getBrandedSudokuDigit(candidateString);
-const brd = (candidateNumber: number) => getBrandedRowNumber(candidateNumber);
-
-const getBrandedRawStartingDigit = (
-  candidateRawStartingDigit: number,
-): RawStartingDigit => {
-  if (!isRawStartingDigit(candidateRawStartingDigit))
-    throw Error(
-      `Invalid RawStartingDigit "${candidateRawStartingDigit}" in test setup.`,
-    );
-
-  return candidateRawStartingDigit;
-};
-const brsd = (candidateNumber: number) =>
-  getBrandedRawStartingDigit(candidateNumber);
-
 const getBrandedRawPuzzleString = (
   candidateRawPuzzleString: string,
 ): RawPuzzleString => {
@@ -90,34 +69,15 @@ const getRawBoardStateWithStartingDigitsInTargetCells = (
   return rawBoardState;
 };
 
-const getBoardStateWithTargetCellsSelected = (
-  boardState: BoardState,
-  cellNumbers: Array<CellNumber>,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const shouldBeSelected = cellNumbers.includes(cellState.cellNumber);
+const getBrandedRawStartingDigit = (
+  candidateRawStartingDigit: number,
+): RawStartingDigit => {
+  if (!isRawStartingDigit(candidateRawStartingDigit))
+    throw Error(
+      `Invalid RawStartingDigit "${candidateRawStartingDigit}" in test setup.`,
+    );
 
-    const nextCellState: CellState = {
-      ...cellState,
-      isSelected: shouldBeSelected,
-    };
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
-};
-
-const getPuzzleHistoryFromBoardStates = (
-  boardStates: Array<BoardState>,
-  currentBoardStateIndex: number,
-): PuzzleHistory => {
-  const puzzleHistory: PuzzleHistory = {
-    currentBoardStateIndex,
-    boardStateHistory: boardStates,
-  };
-
-  return puzzleHistory;
+  return candidateRawStartingDigit;
 };
 
 const getTargetCellStateFromBoardState = (
@@ -177,6 +137,35 @@ const expectTargetCellToHaveCoordinates = (
   expect(cellState.boxNumber).toBe(expectedCoordinates.boxNumber);
 };
 
+const getBoardStateWithTargetCellsSelected = (
+  boardState: BoardState,
+  cellNumbers: Array<CellNumber>,
+): BoardState => {
+  const nextBoardState: BoardState = boardState.map((cellState) => {
+    const shouldBeSelected = cellNumbers.includes(cellState.cellNumber);
+
+    const nextCellState: CellState = {
+      ...cellState,
+      isSelected: shouldBeSelected,
+    };
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
+};
+
+const getPuzzleHistoryFromBoardStates = (
+  boardStates: Array<BoardState>,
+  currentBoardStateIndex: number,
+): PuzzleHistory => {
+  const puzzleHistory: PuzzleHistory = {
+    currentBoardStateIndex,
+    boardStateHistory: boardStates,
+  };
+
+  return puzzleHistory;
+};
 // #endregion
 
 describe("Puzzle String Transforms", () => {
@@ -203,16 +192,16 @@ describe("Puzzle String Transforms", () => {
       // Arrange
       const rawBoardState = getRawBoardStateWithStartingDigitsInTargetCells([
         {
-          cellNumber: bcen(1),
-          rawStartingDigit: brsd(0),
+          cellNumber: getBrandedCellNumber(1),
+          rawStartingDigit: getBrandedRawStartingDigit(0),
         },
         {
-          cellNumber: bcen(2),
-          rawStartingDigit: brsd(4),
+          cellNumber: getBrandedCellNumber(2),
+          rawStartingDigit: getBrandedRawStartingDigit(4),
         },
         {
-          cellNumber: bcen(3),
-          rawStartingDigit: brsd(8),
+          cellNumber: getBrandedCellNumber(3),
+          rawStartingDigit: getBrandedRawStartingDigit(8),
         },
       ]);
 
@@ -244,7 +233,7 @@ describe("Sudoku Digit Transform", () => {
     const candidateSudokuDigit = "7";
 
     // Act
-    const sudokuDigit = bsd(candidateSudokuDigit);
+    const sudokuDigit = getBrandedSudokuDigit(candidateSudokuDigit);
 
     // Assert
     expect(sudokuDigit).toBe("7");
@@ -252,7 +241,7 @@ describe("Sudoku Digit Transform", () => {
 
   it("rejects a string that is not a valid sudoku digit", () => {
     // Arrange
-    const getInvalidSudokuDigit = () => bsd("0");
+    const getInvalidSudokuDigit = () => getBrandedSudokuDigit("0");
 
     // Act / Assert
     expect(getInvalidSudokuDigit).toThrow(
@@ -282,24 +271,32 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToContainPlayerDigit(boardState, bcen(1), "");
-      expectTargetCellToContainPlayerDigit(boardState, bcen(81), "");
+      expectTargetCellToContainPlayerDigit(
+        boardState,
+        getBrandedCellNumber(1),
+        "",
+      );
+      expectTargetCellToContainPlayerDigit(
+        boardState,
+        getBrandedCellNumber(81),
+        "",
+      );
     });
 
     it("treats provided starting digits as starting digits in the board state", () => {
       // Arrange
       const rawBoardState = getRawBoardStateWithStartingDigitsInTargetCells([
         {
-          cellNumber: bcen(1),
-          rawStartingDigit: brsd(0),
+          cellNumber: getBrandedCellNumber(1),
+          rawStartingDigit: getBrandedRawStartingDigit(0),
         },
         {
-          cellNumber: bcen(2),
-          rawStartingDigit: brsd(4),
+          cellNumber: getBrandedCellNumber(2),
+          rawStartingDigit: getBrandedRawStartingDigit(4),
         },
         {
-          cellNumber: bcen(3),
-          rawStartingDigit: brsd(8),
+          cellNumber: getBrandedCellNumber(3),
+          rawStartingDigit: getBrandedRawStartingDigit(8),
         },
       ]);
 
@@ -307,9 +304,21 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToContainStartingDigit(boardState, bcen(1), bsd("1"));
-      expectTargetCellToContainStartingDigit(boardState, bcen(2), bsd("5"));
-      expectTargetCellToContainStartingDigit(boardState, bcen(3), bsd("9"));
+      expectTargetCellToContainStartingDigit(
+        boardState,
+        getBrandedCellNumber(1),
+        getBrandedSudokuDigit("1"),
+      );
+      expectTargetCellToContainStartingDigit(
+        boardState,
+        getBrandedCellNumber(2),
+        getBrandedSudokuDigit("5"),
+      );
+      expectTargetCellToContainStartingDigit(
+        boardState,
+        getBrandedCellNumber(3),
+        getBrandedSudokuDigit("9"),
+      );
     });
 
     it("places each cell in the correct row, column, and box", () => {
@@ -320,30 +329,30 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToHaveCoordinates(boardState, bcen(1), {
-        rowNumber: brd(1),
-        columnNumber: bcon(1),
-        boxNumber: bbn(1),
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(1), {
+        rowNumber: getBrandedRowNumber(1),
+        columnNumber: getBrandedColumnNumber(1),
+        boxNumber: getBrandedBoxNumber(1),
       });
-      expectTargetCellToHaveCoordinates(boardState, bcen(9), {
-        rowNumber: brd(1),
-        columnNumber: bcon(9),
-        boxNumber: bbn(3),
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(9), {
+        rowNumber: getBrandedRowNumber(1),
+        columnNumber: getBrandedColumnNumber(9),
+        boxNumber: getBrandedBoxNumber(3),
       });
-      expectTargetCellToHaveCoordinates(boardState, bcen(10), {
-        rowNumber: brd(2),
-        columnNumber: bcon(1),
-        boxNumber: bbn(1),
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(10), {
+        rowNumber: getBrandedRowNumber(2),
+        columnNumber: getBrandedColumnNumber(1),
+        boxNumber: getBrandedBoxNumber(1),
       });
-      expectTargetCellToHaveCoordinates(boardState, bcen(41), {
-        rowNumber: brd(5),
-        columnNumber: bcon(5),
-        boxNumber: bbn(5),
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(41), {
+        rowNumber: getBrandedRowNumber(5),
+        columnNumber: getBrandedColumnNumber(5),
+        boxNumber: getBrandedBoxNumber(5),
       });
-      expectTargetCellToHaveCoordinates(boardState, bcen(81), {
-        rowNumber: brd(9),
-        columnNumber: bcon(9),
-        boxNumber: bbn(9),
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(81), {
+        rowNumber: getBrandedRowNumber(9),
+        columnNumber: getBrandedColumnNumber(9),
+        boxNumber: getBrandedBoxNumber(9),
       });
     });
 
@@ -370,11 +379,15 @@ describe("Board State Transform", () => {
       );
       const secondBoardState = getBoardStateWithTargetCellsSelected(
         firstBoardState,
-        [bcen(1), bcen(2), bcen(3)],
+        [
+          getBrandedCellNumber(1),
+          getBrandedCellNumber(2),
+          getBrandedCellNumber(3),
+        ],
       );
       const thirdBoardState = getBoardStateWithTargetCellsSelected(
         firstBoardState,
-        [bcen(9)],
+        [getBrandedCellNumber(9)],
       );
       const puzzleHistory = getPuzzleHistoryFromBoardStates(
         [firstBoardState, secondBoardState, thirdBoardState],
@@ -395,7 +408,11 @@ describe("Board State Transform", () => {
       // Arrange
       const startingBoardState = getBoardStateWithTargetCellsSelected(
         getBoardStateFromRawBoardState(getEmptyRawBoardState()),
-        [bcen(1), bcen(5), bcen(9)],
+        [
+          getBrandedCellNumber(1),
+          getBrandedCellNumber(5),
+          getBrandedCellNumber(9),
+        ],
       );
 
       // Act
@@ -428,27 +445,27 @@ describe("Digit Accessor", () => {
   it("returns the starting digit when a cell contains a starting digit", () => {
     // Arrange
     const cellContent: CellContent = {
-      startingDigit: bsd("8"),
+      startingDigit: getBrandedSudokuDigit("8"),
     };
 
     // Act
     const digitInCell = getStartingOrPlayerDigitInCellIfPresent(cellContent);
 
     // Assert
-    expect(digitInCell).toBe(bsd("8"));
+    expect(digitInCell).toBe(getBrandedSudokuDigit("8"));
   });
 
   it("returns the entered digit when a cell contains a player digit", () => {
     // Arrange
     const cellContent: CellContent = {
-      playerDigit: bsd("6"),
+      playerDigit: getBrandedSudokuDigit("6"),
     };
 
     // Act
     const digitInCell = getStartingOrPlayerDigitInCellIfPresent(cellContent);
 
     // Assert
-    expect(digitInCell).toBe(bsd("6"));
+    expect(digitInCell).toBe(getBrandedSudokuDigit("6"));
   });
 
   it("returns an empty string when an editable cell is still blank", () => {
@@ -467,8 +484,8 @@ describe("Digit Accessor", () => {
   it("returns an empty string when a cell contains only markup digits", () => {
     // Arrange
     const cellContent: CellContent = {
-      centerMarkups: [bsd("2"), bsd("7")],
-      cornerMarkups: [bsd("3"), bsd("5")],
+      centerMarkups: [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
+      cornerMarkups: [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
     };
 
     // Act
