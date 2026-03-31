@@ -9,7 +9,7 @@ import {
   handleDigitInput,
   handleRedoMove,
   handleUndoMove,
-} from "@/lib/pages/home/model/actions";
+} from "@/lib/pages/home/model/actions/actions";
 import {
   MARKUP_COLOR_BLUE,
   MARKUP_COLOR_GRAY,
@@ -32,7 +32,7 @@ import {
   getBrandedCellNumber,
   getBrandedSudokuDigit,
   getCurrentBoardStateFromPuzzleHistory,
-} from "@/lib/pages/home/model/transforms";
+} from "@/lib/pages/home/model/transforms/transforms";
 import {
   type BoardState,
   type CellNumber,

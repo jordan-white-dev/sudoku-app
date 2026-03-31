@@ -26,7 +26,7 @@ import {
   isRawPuzzleString,
   isRowNumber,
   isSudokuDigit,
-} from "@/lib/pages/home/model/validators";
+} from "@/lib/pages/home/model/validators/validators";
 
 // #region Puzzle String Transforms
 export const getEncodedPuzzleStringFromRawPuzzleString = (

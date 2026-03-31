@@ -2,7 +2,7 @@ import { createFileRoute, notFound } from "@tanstack/react-router";
 import { solvepuzzle } from "sudoku";
 
 import Home from "@/lib/pages/home";
-import { getBoardStateFromRawBoardState } from "@/lib/pages/home/model/transforms";
+import { getBoardStateFromRawBoardState } from "@/lib/pages/home/model/transforms/transforms";
 import {
   type EncodedPuzzleString,
   type RawBoardState,
@@ -12,7 +12,7 @@ import {
   isEncodedPuzzleString,
   isRawGivenDigit,
   isRawPuzzleString,
-} from "@/lib/pages/home/model/validators";
+} from "@/lib/pages/home/model/validators/validators";
 
 const getRawPuzzleStringFromEncodedPuzzleString = (
   encodedPuzzleString: EncodedPuzzleString,

@@ -16,7 +16,7 @@
     "fix": "pnpm biome:check --write",
     "biome:ci": "biome ci",
     "type:check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "test:ui": "vitest --ui --coverage",
     "test:coverage": "vitest --coverage run",
     "check": "pnpm biome:check && pnpm type:check && pnpm test && pnpm build && pnpm knip",

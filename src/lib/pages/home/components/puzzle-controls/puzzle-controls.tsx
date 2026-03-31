@@ -9,9 +9,9 @@ import {
 } from "react";
 import useSessionStorageState from "use-session-storage-state";
 
-import { Keypad } from "@/lib/pages/home/components/keypad";
-import { KeypadModeSelector } from "@/lib/pages/home/components/keypad-mode-selector";
-import { PuzzleActions } from "@/lib/pages/home/components/puzzle-actions";
+import { Keypad } from "@/lib/pages/home/components/keypad/keypad";
+import { KeypadModeSelector } from "@/lib/pages/home/components/keypad-mode-selector/keypad-mode-selector";
+import { PuzzleActions } from "@/lib/pages/home/components/puzzle-actions/puzzle-actions";
 import {
   handleCenterMarkupInput,
   handleClearCell,
@@ -20,16 +20,16 @@ import {
   handleDigitInput,
   handleRedoMove,
   handleUndoMove,
-} from "@/lib/pages/home/model/actions";
+} from "@/lib/pages/home/model/actions/actions";
 import { exhaustiveGuard } from "@/lib/pages/home/model/guards";
-import { getBrandedSudokuDigit } from "@/lib/pages/home/model/transforms";
+import { getBrandedSudokuDigit } from "@/lib/pages/home/model/transforms/transforms";
 import {
   type KeypadMode,
   type PuzzleHistory,
   type RawBoardState,
   type SudokuDigit,
 } from "@/lib/pages/home/model/types";
-import { isSudokuDigit } from "@/lib/pages/home/model/validators";
+import { isSudokuDigit } from "@/lib/pages/home/model/validators/validators";
 
 type ModifierKeyboardKey = "Control" | "Shift" | "Alt";
 const modifierKeyboardKeys = ["Control", "Shift", "Alt"] as const;

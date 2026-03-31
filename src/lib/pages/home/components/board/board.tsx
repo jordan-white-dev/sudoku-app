@@ -9,13 +9,13 @@ import {
   useRef,
 } from "react";
 
-import { Cell } from "@/lib/pages/home/components/cell";
-import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings";
+import { Cell } from "@/lib/pages/home/components/cell/cell";
+import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleHistory,
   getGivenOrEnteredDigitInCellIfPresent,
-} from "@/lib/pages/home/model/transforms";
+} from "@/lib/pages/home/model/transforms/transforms";
 import {
   type BoardState,
   type CellNumber,
@@ -29,7 +29,7 @@ import {
   isCellNumber,
   isColumnNumber,
   isRowNumber,
-} from "@/lib/pages/home/model/validators";
+} from "@/lib/pages/home/model/validators/validators";
 
 // #region Arrow Key Direction
 type ArrowKeyDirection = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";

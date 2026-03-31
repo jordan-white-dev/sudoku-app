@@ -7,7 +7,7 @@ import {
   isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/model/guards";
-import { getCurrentBoardStateFromPuzzleHistory } from "@/lib/pages/home/model/transforms";
+import { getCurrentBoardStateFromPuzzleHistory } from "@/lib/pages/home/model/transforms/transforms";
 import {
   type BoardState,
   type CellState,
@@ -16,7 +16,7 @@ import {
   type PuzzleHistory,
   type SudokuDigit,
 } from "@/lib/pages/home/model/types";
-import { isSudokuDigit } from "@/lib/pages/home/model/validators";
+import { isSudokuDigit } from "@/lib/pages/home/model/validators/validators";
 
 // #region Input Actions
 const addBoardStateToPuzzleHistory = (

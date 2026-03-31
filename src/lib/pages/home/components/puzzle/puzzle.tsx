@@ -8,12 +8,12 @@ import {
 } from "react";
 import useSessionStorageState from "use-session-storage-state";
 
-import { Board } from "@/lib/pages/home/components/board";
-import { PuzzleControls } from "@/lib/pages/home/components/puzzle-controls";
+import { Board } from "@/lib/pages/home/components/board/board";
+import { PuzzleControls } from "@/lib/pages/home/components/puzzle-controls/puzzle-controls";
 import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleHistory,
-} from "@/lib/pages/home/model/transforms";
+} from "@/lib/pages/home/model/transforms/transforms";
 import {
   type BoardState,
   type PuzzleHistory,

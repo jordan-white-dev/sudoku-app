@@ -11,7 +11,7 @@ import {
   type SetStateAction,
 } from "react";
 
-import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings";
+import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { markupColors } from "@/lib/pages/home/model/constants";
 import {
   isEnteredDigitInCellContent,
@@ -22,7 +22,7 @@ import {
 import {
   getCurrentBoardStateFromPuzzleHistory,
   getGivenOrEnteredDigitInCellIfPresent,
-} from "@/lib/pages/home/model/transforms";
+} from "@/lib/pages/home/model/transforms/transforms";
 import {
   type BoardState,
   type CellContent,
@@ -36,7 +36,7 @@ import {
   type RowNumber,
   type SudokuDigit,
 } from "@/lib/pages/home/model/types";
-import { isSudokuDigit } from "@/lib/pages/home/model/validators";
+import { isSudokuDigit } from "@/lib/pages/home/model/validators/validators";
 
 // #region CSS Properties
 

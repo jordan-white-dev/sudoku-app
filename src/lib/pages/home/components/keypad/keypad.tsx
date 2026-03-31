@@ -16,14 +16,14 @@ import { FiDelete } from "react-icons/fi";
 import { GrCheckbox, GrMultiple } from "react-icons/gr";
 
 import { Tooltip } from "@/lib/pages/home/components/tooltip";
-import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings";
+import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   handleCenterMarkupInput,
   handleClearCell,
   handleColorPadInput,
   handleCornerMarkupInput,
   handleDigitInput,
-} from "@/lib/pages/home/model/actions";
+} from "@/lib/pages/home/model/actions/actions";
 import {
   flippedColors,
   flippedDigits,
@@ -40,7 +40,7 @@ import {
   sudokuDigits,
 } from "@/lib/pages/home/model/constants";
 import { exhaustiveGuard } from "@/lib/pages/home/model/guards";
-import { getBrandedSudokuDigit } from "@/lib/pages/home/model/transforms";
+import { getBrandedSudokuDigit } from "@/lib/pages/home/model/transforms/transforms";
 import {
   type KeypadMode,
   type MarkupColor,

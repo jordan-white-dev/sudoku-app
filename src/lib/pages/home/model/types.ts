@@ -11,7 +11,7 @@ import {
   type BrandedRawPuzzleString,
   type BrandedRowNumber,
   type BrandedSudokuDigit,
-} from "@/lib/pages/home/model/validators";
+} from "@/lib/pages/home/model/validators/validators";
 
 // #region Utility Types
 type Prettify<TypeIntersectionToPrettify> = {

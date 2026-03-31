@@ -16,7 +16,7 @@ import {
   getEncodedPuzzleStringFromRawPuzzleString,
   getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
-} from "@/lib/pages/home/model/transforms";
+} from "@/lib/pages/home/model/transforms/transforms";
 import {
   type BoardState,
   type BoxNumber,
@@ -34,7 +34,7 @@ import {
 import {
   isRawGivenDigit,
   isRawPuzzleString,
-} from "@/lib/pages/home/model/validators";
+} from "@/lib/pages/home/model/validators/validators";
 
 // #region Shared Test Functions
 const getBrandedRawPuzzleString = (

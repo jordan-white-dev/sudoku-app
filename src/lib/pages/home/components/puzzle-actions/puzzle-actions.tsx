@@ -23,16 +23,19 @@ import { MdOutlineFiberNew, MdRestartAlt } from "react-icons/md";
 import { makepuzzle } from "sudoku";
 
 import { Tooltip } from "@/lib/pages/home/components/tooltip";
-import { useSudokuStopwatch } from "@/lib/pages/home/hooks/use-sudoku-stopwatch";
-import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings";
-import { handleRedoMove, handleUndoMove } from "@/lib/pages/home/model/actions";
+import { useSudokuStopwatch } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
+import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import {
+  handleRedoMove,
+  handleUndoMove,
+} from "@/lib/pages/home/model/actions/actions";
 import {
   getBoardStateFromRawBoardState,
   getCurrentBoardStateFromPuzzleHistory,
   getEncodedPuzzleStringFromRawPuzzleString,
   getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
-} from "@/lib/pages/home/model/transforms";
+} from "@/lib/pages/home/model/transforms/transforms";
 import {
   type BoardState,
   type PuzzleHistory,
