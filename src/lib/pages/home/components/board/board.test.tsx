@@ -6,7 +6,13 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import { Board } from "@/lib/pages/home/components/board/board";
 import {
-  getBoardStateFromRawBoardState,
+  getBoardStateWithEnteredDigitInTargetCell,
+  getBoardStateWithGivenDigitInTargetCell,
+  getStartingEmptyBoardState,
+  getStartingPuzzleHistoryFromBoardState,
+  waitForReactToFinishUpdating,
+} from "@/lib/pages/home/utils/testing";
+import {
   getBrandedCellNumber,
   getBrandedSudokuDigit,
 } from "@/lib/pages/home/utils/transforms/transforms";
@@ -14,8 +20,6 @@ import {
   type BoardState,
   type CellNumber,
   type PuzzleHistory,
-  type RawBoardState,
-  type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 
 // #region Test Doubles and Module Mocks
@@ -45,19 +49,6 @@ const CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN = "179%2c%2058%2c%2058";
 // #endregion
 
 // #region Board State Builders and Test Data Factories
-const getEmptyRawBoardState = (): RawBoardState =>
-  Array.from({ length: 81 }, () => null) as RawBoardState;
-
-const getStartingEmptyBoardState = (): BoardState =>
-  getBoardStateFromRawBoardState(getEmptyRawBoardState());
-
-const getStartingPuzzleHistoryFromBoardState = (
-  startingBoardState: BoardState,
-): PuzzleHistory => ({
-  currentBoardStateIndex: 0,
-  boardStateHistory: [startingBoardState],
-});
-
 const getBoardStateWithSelectedCells = (
   boardState: BoardState,
   selectedCellNumbers: Array<CellNumber>,
@@ -66,38 +57,6 @@ const getBoardStateWithSelectedCells = (
     ...cellState,
     isSelected: selectedCellNumbers.includes(cellState.cellNumber),
   }));
-
-const getBoardStateWithEnteredDigitInTargetCell = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-  enteredDigit: SudokuDigit,
-): BoardState =>
-  boardState.map((cellState) =>
-    Number(cellState.cellNumber) === cellNumber
-      ? {
-          ...cellState,
-          cellContent: {
-            enteredDigit,
-          },
-        }
-      : cellState,
-  );
-
-const getBoardStateWithGivenDigitInTargetCell = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-  givenDigit: SudokuDigit,
-): BoardState =>
-  boardState.map((cellState) =>
-    Number(cellState.cellNumber) === cellNumber
-      ? {
-          ...cellState,
-          cellContent: {
-            givenDigit,
-          },
-        }
-      : cellState,
-  );
 // #endregion
 
 // #region Board Accessibility and Element Lookup Helpers
@@ -160,12 +119,6 @@ const getBoardElementContainingAllCells = async (
 // #endregion
 
 // #region Render and Async Update Helpers
-const waitForReactToFinishUpdating = async () => {
-  await Promise.resolve();
-  await new Promise<void>((resolve) => setTimeout(resolve, 0));
-  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-};
-
 const renderBoard = async ({
   initialBoardState,
   isMultiselectMode = false,

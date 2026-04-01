@@ -4,6 +4,7 @@ import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { KeypadModeSelector } from "@/lib/pages/home/components/keypad-mode-selector/keypad-mode-selector";
+import { waitForReactToFinishUpdating } from "@/lib/pages/home/utils/testing";
 import { type KeypadMode } from "@/lib/pages/home/utils/types";
 
 // #region Shared Test Types
@@ -11,12 +12,6 @@ type RenderedKeypadModeSelector = Awaited<ReturnType<typeof render>>;
 // #endregion
 
 // #region Render and Async Update Helpers
-const waitForReactToFinishUpdating = async () => {
-  await Promise.resolve();
-  await new Promise<void>((resolve) => setTimeout(resolve, 0));
-  await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-};
-
 const renderKeypadModeSelector = async ({
   startingKeypadMode = "Digit",
 }: {

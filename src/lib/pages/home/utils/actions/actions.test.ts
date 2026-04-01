@@ -22,13 +22,20 @@ import {
   MARKUP_COLOR_YELLOW,
 } from "@/lib/pages/home/utils/constants";
 import {
-  isEmptyCellContent,
   isEnteredDigitInCellContent,
-  isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/utils/guards";
 import {
-  getBoardStateFromRawBoardState,
+  expectTargetCellToContainEmptyCellContent,
+  expectTargetCellToContainGivenDigit,
+  getBoardStateWithEnteredDigitInTargetCell,
+  getBoardStateWithGivenDigitInTargetCell,
+  getBoardStateWithTargetCellsSelected,
+  getStartingEmptyBoardState,
+  getStartingPuzzleHistoryFromBoardState,
+  getTargetCellStateFromBoardState,
+} from "@/lib/pages/home/utils/testing";
+import {
   getBrandedCellNumber,
   getBrandedSudokuDigit,
   getCurrentBoardStateFromPuzzleHistory,
@@ -43,18 +50,6 @@ import {
 } from "@/lib/pages/home/utils/types";
 
 // #region Shared Test Functions
-const getEmptyRawBoardState = () =>
-  Array.from({ length: 81 }, () => null) as Array<null>;
-
-const getStartingEmptyBoardState = () => {
-  const emptyRawBoardState = getEmptyRawBoardState();
-
-  const startingEmptyBoardState =
-    getBoardStateFromRawBoardState(emptyRawBoardState);
-
-  return startingEmptyBoardState;
-};
-
 const getPuzzleHistoryAfterStateUpdate = (
   startingPuzzleHistory: PuzzleHistory,
   invokePuzzleHistoryUpdate: (
@@ -95,13 +90,6 @@ const getBoardStateWithSequentialTransformsApplied = (
   return transformedBoardState;
 };
 
-const getStartingPuzzleHistoryFromBoardState = (
-  startingBoardState: BoardState,
-): PuzzleHistory => ({
-  currentBoardStateIndex: 0,
-  boardStateHistory: [startingBoardState],
-});
-
 const getStartingPuzzleHistoryWithSequentialTransformsApplied = (
   boardStateTransformFunctions: Array<
     (currentBoardState: BoardState) => BoardState
@@ -116,24 +104,6 @@ const getStartingPuzzleHistoryWithSequentialTransformsApplied = (
     getStartingPuzzleHistoryFromBoardState(startingBoardState);
 
   return startingPuzzleHistory;
-};
-
-const getBoardStateWithTargetCellsSelected = (
-  boardState: BoardState,
-  cellNumbers: Array<CellNumber>,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const shouldBeSelected = cellNumbers.includes(cellState.cellNumber);
-
-    const nextCellState = {
-      ...cellState,
-      isSelected: shouldBeSelected,
-    };
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
 };
 
 const getPuzzleHistoryAfterDigitInput = (
@@ -152,29 +122,6 @@ const getPuzzleHistoryAfterDigitInput = (
   );
 
   return nextPuzzleHistory;
-};
-
-const getTargetCellStateFromBoardState = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-): CellState => {
-  const candidateCellState = boardState.find(
-    (cellState) => cellState.cellNumber === cellNumber,
-  );
-
-  if (!candidateCellState)
-    throw Error(`Missing cellState for cell number ${cellNumber}`);
-
-  return candidateCellState;
-};
-
-const expectTargetCellToContainEmptyCellContent = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
-
-  expect(isEmptyCellContent(cellState.cellContent)).toBe(true);
 };
 
 const expectTargetCellToContainEnteredDigit = (
@@ -201,28 +148,6 @@ const getBoardStateWithEmptyCellContentInTargetCell = (
             ...cellState,
             cellContent: {
               emptyCell: "",
-            },
-          }
-        : cellState;
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
-};
-
-const getBoardStateWithEnteredDigitInTargetCell = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-  enteredDigit: SudokuDigit,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
-        ? {
-            ...cellState,
-            cellContent: {
-              enteredDigit: getBrandedSudokuDigit(enteredDigit),
             },
           }
         : cellState;
@@ -291,41 +216,6 @@ const expectTargetCellToContainMarkupColors = (
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
   expect(cellState.markupColors).toEqual(expectedMarkupColors);
-};
-
-const getBoardStateWithGivenDigitInTargetCell = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-  givenDigit: SudokuDigit,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState =
-      cellState.cellNumber === cellNumber
-        ? {
-            ...cellState,
-            cellContent: {
-              givenDigit: getBrandedSudokuDigit(givenDigit),
-            },
-          }
-        : cellState;
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
-};
-
-const expectTargetCellToContainGivenDigit = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-  expectedGivenDigit: SudokuDigit,
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
-
-  expect(isGivenDigitInCellContent(cellState.cellContent)).toBe(true);
-
-  if (isGivenDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.givenDigit).toBe(expectedGivenDigit);
 };
 
 const expectPuzzleHistoryToMatchItsStartingState = (

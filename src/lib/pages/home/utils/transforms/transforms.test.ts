@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  isEmptyCellContent,
-  isGivenDigitInCellContent,
-} from "@/lib/pages/home/utils/guards";
+  expectTargetCellToContainEmptyCellContent,
+  expectTargetCellToContainGivenDigit,
+  getBoardStateWithTargetCellsSelected,
+  getEmptyRawBoardState,
+  getTargetCellStateFromBoardState,
+} from "@/lib/pages/home/utils/testing";
 import {
   getBoardStateFromRawBoardState,
   getBoardStateWithNoCellsSelected,
@@ -22,14 +25,12 @@ import {
   type BoxNumber,
   type CellContent,
   type CellNumber,
-  type CellState,
   type ColumnNumber,
   type PuzzleHistory,
   type RawBoardState,
   type RawGivenDigit,
   type RawPuzzleString,
   type RowNumber,
-  type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 import {
   isRawGivenDigit,
@@ -47,9 +48,6 @@ const getBrandedRawPuzzleString = (
 
   return candidateRawPuzzleString;
 };
-
-const getEmptyRawBoardState = (): RawBoardState =>
-  Array.from({ length: 81 }, () => null) as RawBoardState;
 
 const getRawBoardStateWithGivenDigitsInTargetCells = (
   targetCellsAndRawGivenDigits: Array<{
@@ -77,42 +75,6 @@ const getBrandedRawGivenDigit = (
   return candidateRawGivenDigit;
 };
 
-const getTargetCellStateFromBoardState = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-): CellState => {
-  const candidateCellState = boardState.find(
-    (cellState) => cellState.cellNumber === cellNumber,
-  );
-
-  if (!candidateCellState)
-    throw Error(`Missing cellState for cell number ${cellNumber}`);
-
-  return candidateCellState;
-};
-
-const expectTargetCellToContainEmptyCellContent = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
-
-  expect(isEmptyCellContent(cellState.cellContent)).toBe(true);
-};
-
-const expectTargetCellToContainGivenDigit = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-  expectedGivenDigit: SudokuDigit,
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
-
-  expect(isGivenDigitInCellContent(cellState.cellContent)).toBe(true);
-
-  if (isGivenDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.givenDigit).toBe(expectedGivenDigit);
-};
-
 const expectTargetCellToHaveCoordinates = (
   boardState: BoardState,
   cellNumber: CellNumber,
@@ -128,24 +90,6 @@ const expectTargetCellToHaveCoordinates = (
   expect(cellState.rowNumber).toBe(expectedCoordinates.rowNumber);
   expect(cellState.columnNumber).toBe(expectedCoordinates.columnNumber);
   expect(cellState.boxNumber).toBe(expectedCoordinates.boxNumber);
-};
-
-const getBoardStateWithTargetCellsSelected = (
-  boardState: BoardState,
-  cellNumbers: Array<CellNumber>,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const shouldBeSelected = cellNumbers.includes(cellState.cellNumber);
-
-    const nextCellState: CellState = {
-      ...cellState,
-      isSelected: shouldBeSelected,
-    };
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
 };
 
 const getPuzzleHistoryFromBoardStates = (
