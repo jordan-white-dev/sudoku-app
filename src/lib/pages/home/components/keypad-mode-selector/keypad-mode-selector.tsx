@@ -120,7 +120,13 @@ const KeypadModeSelectorCard = ({
   tooltipText,
   ...props
 }: KeypadModeSelectorCardProps) => (
-  <RadioCard.Item alignItems="center" padding="0" value={keypadMode} {...props}>
+  <RadioCard.Item
+    alignItems="center"
+    aria-label={`${keypadMode} keypad mode`}
+    padding="0"
+    value={keypadMode}
+    {...props}
+  >
     <RadioCard.ItemHiddenInput />
     <Tooltip content={tooltipText} positioning={{ placement: "right-start" }}>
       <RadioCard.ItemControl padding="0">
@@ -160,6 +166,7 @@ export const KeypadModeSelector = ({
 }: KeypadModeSelectorProps) => {
   return (
     <RadioCard.Root
+      aria-label="Keypad mode selector"
       align="center"
       colorPalette="yellow"
       defaultValue="Digit"
