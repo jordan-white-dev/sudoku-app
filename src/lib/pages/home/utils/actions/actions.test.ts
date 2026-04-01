@@ -49,7 +49,7 @@ import {
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 
-// #region Shared Test Functions
+// #region Puzzle History Update Helpers
 const getPuzzleHistoryAfterStateUpdate = (
   startingPuzzleHistory: PuzzleHistory,
   invokePuzzleHistoryUpdate: (
@@ -72,6 +72,34 @@ const getPuzzleHistoryAfterStateUpdate = (
   return nextPuzzleHistory;
 };
 
+const getPuzzleHistoryAfterUndoingMove = (
+  puzzleHistory: PuzzleHistory,
+): PuzzleHistory => {
+  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
+    puzzleHistory,
+    (setPuzzleHistory) => {
+      handleUndoMove(setPuzzleHistory);
+    },
+  );
+
+  return nextPuzzleHistory;
+};
+
+const getPuzzleHistoryAfterRedoingMove = (
+  puzzleHistory: PuzzleHistory,
+): PuzzleHistory => {
+  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
+    puzzleHistory,
+    (setPuzzleHistory) => {
+      handleRedoMove(setPuzzleHistory);
+    },
+  );
+
+  return nextPuzzleHistory;
+};
+// #endregion
+
+// #region Board State Composition Helpers
 const getBoardStateWithSequentialTransformsApplied = (
   startingBoardState: BoardState,
   boardStateTransformFunctions: Array<
@@ -105,7 +133,9 @@ const getStartingPuzzleHistoryWithSequentialTransformsApplied = (
 
   return startingPuzzleHistory;
 };
+// #endregion
 
+// #region Action Invocation Helpers
 const getPuzzleHistoryAfterDigitInput = (
   puzzleHistory: PuzzleHistory,
   sudokuDigit: SudokuDigit,
@@ -124,19 +154,70 @@ const getPuzzleHistoryAfterDigitInput = (
   return nextPuzzleHistory;
 };
 
-const expectTargetCellToContainEnteredDigit = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-  expectedEnteredDigit: SudokuDigit,
-) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+const getPuzzleHistoryAfterCenterMarkupInput = (
+  puzzleHistory: PuzzleHistory,
+  sudokuDigit: SudokuDigit,
+): PuzzleHistory => {
+  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
+    puzzleHistory,
+    (setPuzzleHistory) => {
+      handleCenterMarkupInput(
+        puzzleHistory,
+        getBrandedSudokuDigit(sudokuDigit),
+        setPuzzleHistory,
+      );
+    },
+  );
 
-  expect(isEnteredDigitInCellContent(cellState.cellContent)).toBe(true);
-
-  if (isEnteredDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.enteredDigit).toBe(expectedEnteredDigit);
+  return nextPuzzleHistory;
 };
 
+const getPuzzleHistoryAfterCornerMarkupInput = (
+  puzzleHistory: PuzzleHistory,
+  sudokuDigit: SudokuDigit,
+): PuzzleHistory => {
+  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
+    puzzleHistory,
+    (setPuzzleHistory) => {
+      handleCornerMarkupInput(
+        puzzleHistory,
+        getBrandedSudokuDigit(sudokuDigit),
+        setPuzzleHistory,
+      );
+    },
+  );
+
+  return nextPuzzleHistory;
+};
+
+const getPuzzleHistoryAfterColorPadInput = (
+  puzzleHistory: PuzzleHistory,
+  markupValue: MarkupColor | SudokuDigit,
+): PuzzleHistory => {
+  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
+    puzzleHistory,
+    (setPuzzleHistory) =>
+      handleColorPadInput(puzzleHistory, markupValue, setPuzzleHistory),
+  );
+
+  return nextPuzzleHistory;
+};
+
+const getPuzzleHistoryAfterClearingSelectedCells = (
+  puzzleHistory: PuzzleHistory,
+): PuzzleHistory => {
+  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
+    puzzleHistory,
+    (setPuzzleHistory) => {
+      handleClearCell(puzzleHistory, setPuzzleHistory);
+    },
+  );
+
+  return nextPuzzleHistory;
+};
+// #endregion
+
+// #region Board State Cell Content Builders
 const getBoardStateWithEmptyCellContentInTargetCell = (
   boardState: BoardState,
   cellNumber: CellNumber,
@@ -188,6 +269,60 @@ const getBoardStateWithMarkupDigitsInTargetCell = (
   return nextBoardState;
 };
 
+const getBoardStateWithCenterMarkupsInTargetCell = (
+  boardState: BoardState,
+  cellNumber: CellNumber,
+  centerMarkups: Array<SudokuDigit>,
+): BoardState => {
+  const nextBoardState: BoardState = boardState.map((cellState) => {
+    const nextCellState: CellState =
+      cellState.cellNumber === cellNumber
+        ? {
+            ...cellState,
+            cellContent: {
+              centerMarkups:
+                centerMarkups.length > 0
+                  ? centerMarkups.map(getBrandedSudokuDigit)
+                  : [""],
+              cornerMarkups: [""],
+            },
+          }
+        : cellState;
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
+};
+
+const getBoardStateWithCornerMarkupsInTargetCell = (
+  boardState: BoardState,
+  cellNumber: CellNumber,
+  cornerMarkups: Array<SudokuDigit>,
+): BoardState => {
+  const nextBoardState: BoardState = boardState.map((cellState) => {
+    const nextCellState: CellState =
+      cellState.cellNumber === cellNumber
+        ? {
+            ...cellState,
+            cellContent: {
+              centerMarkups: [""],
+              cornerMarkups:
+                cornerMarkups.length > 0
+                  ? cornerMarkups.map(getBrandedSudokuDigit)
+                  : [""],
+            },
+          }
+        : cellState;
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
+};
+// #endregion
+
+// #region Board State Color Builders
 const getBoardStateWithMarkupColorsInTargetCell = (
   boardState: BoardState,
   cellNumber: CellNumber,
@@ -207,61 +342,20 @@ const getBoardStateWithMarkupColorsInTargetCell = (
 
   return nextBoardState;
 };
+// #endregion
 
-const expectTargetCellToContainMarkupColors = (
+// #region Cell Content Assertions
+const expectTargetCellToContainEnteredDigit = (
   boardState: BoardState,
   cellNumber: CellNumber,
-  expectedMarkupColors: [""] | Array<MarkupColor>,
+  expectedEnteredDigit: SudokuDigit,
 ) => {
   const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
-  expect(cellState.markupColors).toEqual(expectedMarkupColors);
-};
+  expect(isEnteredDigitInCellContent(cellState.cellContent)).toBe(true);
 
-const expectPuzzleHistoryToMatchItsStartingState = (
-  nextPuzzleHistory: PuzzleHistory,
-  startingPuzzleHistory: PuzzleHistory,
-) => {
-  const currentBoardState =
-    getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
-  const startingBoardState = getCurrentBoardStateFromPuzzleHistory(
-    startingPuzzleHistory,
-  );
-
-  expect(nextPuzzleHistory.currentBoardStateIndex).toBe(0);
-  expect(nextPuzzleHistory.boardStateHistory).toHaveLength(1);
-  expect(currentBoardState).toEqual(startingBoardState);
-};
-
-const getPuzzleHistoryAfterUndoingMove = (
-  puzzleHistory: PuzzleHistory,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
-      handleUndoMove(setPuzzleHistory);
-    },
-  );
-
-  return nextPuzzleHistory;
-};
-
-const getPuzzleHistoryAfterCenterMarkupInput = (
-  puzzleHistory: PuzzleHistory,
-  sudokuDigit: SudokuDigit,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
-      handleCenterMarkupInput(
-        puzzleHistory,
-        getBrandedSudokuDigit(sudokuDigit),
-        setPuzzleHistory,
-      );
-    },
-  );
-
-  return nextPuzzleHistory;
+  if (isEnteredDigitInCellContent(cellState.cellContent))
+    expect(cellState.cellContent.enteredDigit).toBe(expectedEnteredDigit);
 };
 
 const expectTargetCellToContainCenterMarkups = (
@@ -290,113 +384,31 @@ const expectTargetCellToContainCornerMarkups = (
     expect(cellState.cellContent.cornerMarkups).toEqual(expectedCornerMarkups);
 };
 
-const getBoardStateWithCenterMarkupsInTargetCell = (
+const expectTargetCellToContainMarkupColors = (
   boardState: BoardState,
   cellNumber: CellNumber,
-  centerMarkups: Array<SudokuDigit>,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
-        ? {
-            ...cellState,
-            cellContent: {
-              centerMarkups:
-                centerMarkups.length > 0
-                  ? centerMarkups.map(getBrandedSudokuDigit)
-                  : [""],
-              cornerMarkups: [""],
-            },
-          }
-        : cellState;
+  expectedMarkupColors: [""] | Array<MarkupColor>,
+) => {
+  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
 
-    return nextCellState;
-  });
-
-  return nextBoardState;
+  expect(cellState.markupColors).toEqual(expectedMarkupColors);
 };
+// #endregion
 
-const getPuzzleHistoryAfterCornerMarkupInput = (
-  puzzleHistory: PuzzleHistory,
-  sudokuDigit: SudokuDigit,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
-      handleCornerMarkupInput(
-        puzzleHistory,
-        getBrandedSudokuDigit(sudokuDigit),
-        setPuzzleHistory,
-      );
-    },
+// #region Puzzle History Assertions
+const expectPuzzleHistoryToMatchItsStartingState = (
+  nextPuzzleHistory: PuzzleHistory,
+  startingPuzzleHistory: PuzzleHistory,
+) => {
+  const currentBoardState =
+    getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+  const startingBoardState = getCurrentBoardStateFromPuzzleHistory(
+    startingPuzzleHistory,
   );
 
-  return nextPuzzleHistory;
-};
-
-const getBoardStateWithCornerMarkupsInTargetCell = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-  cornerMarkups: Array<SudokuDigit>,
-): BoardState => {
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
-        ? {
-            ...cellState,
-            cellContent: {
-              centerMarkups: [""],
-              cornerMarkups:
-                cornerMarkups.length > 0
-                  ? cornerMarkups.map(getBrandedSudokuDigit)
-                  : [""],
-            },
-          }
-        : cellState;
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
-};
-
-const getPuzzleHistoryAfterColorPadInput = (
-  puzzleHistory: PuzzleHistory,
-  markupValue: MarkupColor | SudokuDigit,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) =>
-      handleColorPadInput(puzzleHistory, markupValue, setPuzzleHistory),
-  );
-
-  return nextPuzzleHistory;
-};
-
-const getPuzzleHistoryAfterClearingSelectedCells = (
-  puzzleHistory: PuzzleHistory,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
-      handleClearCell(puzzleHistory, setPuzzleHistory);
-    },
-  );
-
-  return nextPuzzleHistory;
-};
-
-const getPuzzleHistoryAfterRedoingMove = (
-  puzzleHistory: PuzzleHistory,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
-      handleRedoMove(setPuzzleHistory);
-    },
-  );
-
-  return nextPuzzleHistory;
+  expect(nextPuzzleHistory.currentBoardStateIndex).toBe(0);
+  expect(nextPuzzleHistory.boardStateHistory).toHaveLength(1);
+  expect(currentBoardState).toEqual(startingBoardState);
 };
 // #endregion
 
