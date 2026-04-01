@@ -9,7 +9,7 @@ import {
   isRawPuzzleString,
   isRowNumber,
   isSudokuDigit,
-} from "@/lib/pages/home/model/validators/validators";
+} from "@/lib/pages/home/utils/validators/validators";
 
 describe("Puzzle String Validators", () => {
   describe("isRawPuzzleString", () => {

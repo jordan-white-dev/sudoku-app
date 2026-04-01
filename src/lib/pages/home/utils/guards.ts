@@ -1,4 +1,4 @@
-import { type CellContent } from "@/lib/pages/home/model/types";
+import { type CellContent } from "@/lib/pages/home/utils/types";
 
 // #region Cell Content Guards
 export const isGivenDigitInCellContent = (cellContent: CellContent) =>

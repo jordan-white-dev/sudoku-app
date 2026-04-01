@@ -12,17 +12,17 @@ import {
 } from "react";
 
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
-import { markupColors } from "@/lib/pages/home/model/constants";
+import { markupColors } from "@/lib/pages/home/utils/constants";
 import {
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
   isGivenOrEnteredDigitInCellContent,
   isMarkupDigitsInCellContent,
-} from "@/lib/pages/home/model/guards";
+} from "@/lib/pages/home/utils/guards";
 import {
   getCurrentBoardStateFromPuzzleHistory,
   getGivenOrEnteredDigitInCellIfPresent,
-} from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellContent,
@@ -35,8 +35,8 @@ import {
   type PuzzleHistory,
   type RowNumber,
   type SudokuDigit,
-} from "@/lib/pages/home/model/types";
-import { isSudokuDigit } from "@/lib/pages/home/model/validators/validators";
+} from "@/lib/pages/home/utils/types";
+import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region CSS Properties
 

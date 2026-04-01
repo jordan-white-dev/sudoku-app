@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   isEmptyCellContent,
   isGivenDigitInCellContent,
-} from "@/lib/pages/home/model/guards";
+} from "@/lib/pages/home/utils/guards";
 import {
   getBoardStateFromRawBoardState,
   getBoardStateWithNoCellsSelected,
@@ -16,7 +16,7 @@ import {
   getEncodedPuzzleStringFromRawPuzzleString,
   getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
-} from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type BoxNumber,
@@ -30,11 +30,11 @@ import {
   type RawPuzzleString,
   type RowNumber,
   type SudokuDigit,
-} from "@/lib/pages/home/model/types";
+} from "@/lib/pages/home/utils/types";
 import {
   isRawGivenDigit,
   isRawPuzzleString,
-} from "@/lib/pages/home/model/validators/validators";
+} from "@/lib/pages/home/utils/validators/validators";
 
 // #region Shared Test Functions
 const getBrandedRawPuzzleString = (

@@ -23,8 +23,8 @@ import {
   MARKUP_COLOR_RED,
   MARKUP_COLOR_WHITE,
   MARKUP_COLOR_YELLOW,
-} from "@/lib/pages/home/model/constants";
-import { type KeypadMode } from "@/lib/pages/home/model/types";
+} from "@/lib/pages/home/utils/constants";
+import { type KeypadMode } from "@/lib/pages/home/utils/types";
 
 // #region SVG Definitions
 

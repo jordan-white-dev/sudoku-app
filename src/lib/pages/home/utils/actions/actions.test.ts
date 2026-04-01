@@ -9,7 +9,7 @@ import {
   handleDigitInput,
   handleRedoMove,
   handleUndoMove,
-} from "@/lib/pages/home/model/actions/actions";
+} from "@/lib/pages/home/utils/actions/actions";
 import {
   MARKUP_COLOR_BLUE,
   MARKUP_COLOR_GRAY,
@@ -20,19 +20,19 @@ import {
   MARKUP_COLOR_RED,
   MARKUP_COLOR_WHITE,
   MARKUP_COLOR_YELLOW,
-} from "@/lib/pages/home/model/constants";
+} from "@/lib/pages/home/utils/constants";
 import {
   isEmptyCellContent,
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
-} from "@/lib/pages/home/model/guards";
+} from "@/lib/pages/home/utils/guards";
 import {
   getBoardStateFromRawBoardState,
   getBrandedCellNumber,
   getBrandedSudokuDigit,
   getCurrentBoardStateFromPuzzleHistory,
-} from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellNumber,
@@ -40,7 +40,7 @@ import {
   type MarkupColor,
   type PuzzleHistory,
   type SudokuDigit,
-} from "@/lib/pages/home/model/types";
+} from "@/lib/pages/home/utils/types";
 
 // #region Shared Test Functions
 const getEmptyRawBoardState = () =>

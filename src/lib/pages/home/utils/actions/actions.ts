@@ -1,13 +1,13 @@
 import { type Dispatch, type SetStateAction } from "react";
 
-import { markupColors } from "@/lib/pages/home/model/constants";
+import { markupColors } from "@/lib/pages/home/utils/constants";
 import {
   isEmptyCellContent,
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
-} from "@/lib/pages/home/model/guards";
-import { getCurrentBoardStateFromPuzzleHistory } from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/guards";
+import { getCurrentBoardStateFromPuzzleHistory } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellState,
@@ -15,8 +15,8 @@ import {
   type MarkupDigitsCellContent,
   type PuzzleHistory,
   type SudokuDigit,
-} from "@/lib/pages/home/model/types";
-import { isSudokuDigit } from "@/lib/pages/home/model/validators/validators";
+} from "@/lib/pages/home/utils/types";
+import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region Input Actions
 const addBoardStateToPuzzleHistory = (

@@ -13,12 +13,12 @@ import { PuzzleControls } from "@/lib/pages/home/components/puzzle-controls/puzz
 import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleHistory,
-} from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type PuzzleHistory,
   type RawBoardState,
-} from "@/lib/pages/home/model/types";
+} from "@/lib/pages/home/utils/types";
 
 const handleClearAllSelections = (
   setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,

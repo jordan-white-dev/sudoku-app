@@ -1,7 +1,7 @@
 import SuperExpressive from "super-expressive";
 
-import { branded } from "@/lib/pages/home/model/branding";
-import { sudokuDigits } from "@/lib/pages/home/model/constants";
+import { branded } from "@/lib/pages/home/utils/branding";
+import { sudokuDigits } from "@/lib/pages/home/utils/constants";
 
 // #region Puzzle String Validators
 

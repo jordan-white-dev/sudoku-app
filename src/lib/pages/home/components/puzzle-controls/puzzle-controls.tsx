@@ -20,16 +20,16 @@ import {
   handleDigitInput,
   handleRedoMove,
   handleUndoMove,
-} from "@/lib/pages/home/model/actions/actions";
-import { exhaustiveGuard } from "@/lib/pages/home/model/guards";
-import { getBrandedSudokuDigit } from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/actions/actions";
+import { exhaustiveGuard } from "@/lib/pages/home/utils/guards";
+import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type KeypadMode,
   type PuzzleHistory,
   type RawBoardState,
   type SudokuDigit,
-} from "@/lib/pages/home/model/types";
-import { isSudokuDigit } from "@/lib/pages/home/model/validators/validators";
+} from "@/lib/pages/home/utils/types";
+import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 type ModifierKeyboardKey = "Control" | "Shift" | "Alt";
 const modifierKeyboardKeys = ["Control", "Shift", "Alt"] as const;

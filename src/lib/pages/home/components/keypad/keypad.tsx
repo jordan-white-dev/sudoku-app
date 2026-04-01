@@ -23,7 +23,7 @@ import {
   handleColorPadInput,
   handleCornerMarkupInput,
   handleDigitInput,
-} from "@/lib/pages/home/model/actions/actions";
+} from "@/lib/pages/home/utils/actions/actions";
 import {
   flippedColors,
   flippedDigits,
@@ -38,15 +38,15 @@ import {
   MARKUP_COLOR_YELLOW,
   markupColors,
   sudokuDigits,
-} from "@/lib/pages/home/model/constants";
-import { exhaustiveGuard } from "@/lib/pages/home/model/guards";
-import { getBrandedSudokuDigit } from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/constants";
+import { exhaustiveGuard } from "@/lib/pages/home/utils/guards";
+import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type KeypadMode,
   type MarkupColor,
   type PuzzleHistory,
   type SudokuDigit,
-} from "@/lib/pages/home/model/types";
+} from "@/lib/pages/home/utils/types";
 
 // #region CSS Properties
 const COLOR_SWATCH_SIZE: IconProps["width"] = {

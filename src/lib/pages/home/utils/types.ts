@@ -1,7 +1,7 @@
 import {
   type keypadModes,
   type markupColors,
-} from "@/lib/pages/home/model/constants";
+} from "@/lib/pages/home/utils/constants";
 import {
   type BrandedBoxNumber,
   type BrandedCellNumber,
@@ -11,7 +11,7 @@ import {
   type BrandedRawPuzzleString,
   type BrandedRowNumber,
   type BrandedSudokuDigit,
-} from "@/lib/pages/home/model/validators/validators";
+} from "@/lib/pages/home/utils/validators/validators";
 
 // #region Utility Types
 type Prettify<TypeIntersectionToPrettify> = {

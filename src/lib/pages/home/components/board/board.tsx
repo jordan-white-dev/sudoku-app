@@ -15,7 +15,7 @@ import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleHistory,
   getGivenOrEnteredDigitInCellIfPresent,
-} from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellNumber,
@@ -24,12 +24,12 @@ import {
   type PuzzleHistory,
   type RowNumber,
   type SudokuDigit,
-} from "@/lib/pages/home/model/types";
+} from "@/lib/pages/home/utils/types";
 import {
   isCellNumber,
   isColumnNumber,
   isRowNumber,
-} from "@/lib/pages/home/model/validators/validators";
+} from "@/lib/pages/home/utils/validators/validators";
 
 // #region Arrow Key Direction
 type ArrowKeyDirection = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";

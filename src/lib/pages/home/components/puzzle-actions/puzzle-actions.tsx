@@ -28,19 +28,19 @@ import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-us
 import {
   handleRedoMove,
   handleUndoMove,
-} from "@/lib/pages/home/model/actions/actions";
+} from "@/lib/pages/home/utils/actions/actions";
 import {
   getBoardStateFromRawBoardState,
   getCurrentBoardStateFromPuzzleHistory,
   getEncodedPuzzleStringFromRawPuzzleString,
   getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
-} from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type PuzzleHistory,
   type RawBoardState,
-} from "@/lib/pages/home/model/types";
+} from "@/lib/pages/home/utils/types";
 
 // #region CSS Properties
 const ICON_BUTTON_HEIGHT: IconButtonProps["height"] = {

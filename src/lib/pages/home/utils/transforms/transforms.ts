@@ -1,7 +1,7 @@
 import {
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
-} from "@/lib/pages/home/model/guards";
+} from "@/lib/pages/home/utils/guards";
 import {
   type BoardState,
   type BoxNumber,
@@ -17,7 +17,7 @@ import {
   type RawPuzzleString,
   type RowNumber,
   type SudokuDigit,
-} from "@/lib/pages/home/model/types";
+} from "@/lib/pages/home/utils/types";
 import {
   isBoxNumber,
   isCellNumber,
@@ -26,7 +26,7 @@ import {
   isRawPuzzleString,
   isRowNumber,
   isSudokuDigit,
-} from "@/lib/pages/home/model/validators/validators";
+} from "@/lib/pages/home/utils/validators/validators";
 
 // #region Puzzle String Transforms
 export const getEncodedPuzzleStringFromRawPuzzleString = (

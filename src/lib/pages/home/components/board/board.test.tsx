@@ -9,14 +9,14 @@ import {
   getBoardStateFromRawBoardState,
   getBrandedCellNumber,
   getBrandedSudokuDigit,
-} from "@/lib/pages/home/model/transforms/transforms";
+} from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellNumber,
   type PuzzleHistory,
   type RawBoardState,
   type SudokuDigit,
-} from "@/lib/pages/home/model/types";
+} from "@/lib/pages/home/utils/types";
 
 // #region Test Doubles and Module Mocks
 const mockUseUserSettings = vi.fn();
