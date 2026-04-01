@@ -16,7 +16,7 @@
     "fix": "pnpm biome:check --write",
     "biome:ci": "biome ci",
     "type:check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --passWithNoTests --browser.headless",
     "test:browser": "vitest --browser=chromium",
     "test:coverage": "vitest --coverage run",
     "test:watch": "vitest",
