@@ -17,8 +17,10 @@
     "biome:ci": "biome ci",
     "type:check": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "test": "vitest run --passWithNoTests",
-    "test:ui": "vitest --ui --coverage",
+    "test:browser": "vitest --browser=chromium",
     "test:coverage": "vitest --coverage run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
     "check": "pnpm biome:check && pnpm type:check && pnpm test && pnpm build && pnpm knip",
     "knip": "knip",
     "prepare": "husky"

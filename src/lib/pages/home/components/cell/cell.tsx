@@ -1270,6 +1270,7 @@ export const Cell = memo(
 
     return (
       <Button
+        aria-label={`Cell ${cellNumber} located in row ${rowNumber}, column ${columnNumber}`}
         background={getCellBackground({
           cellMarkupColors,
           columnNumber,
@@ -1288,6 +1289,7 @@ export const Cell = memo(
         borderRadius="0"
         color={isGivenDigitInCellContent(cellContent) ? "black" : "#1212f0"}
         data-cell-number={cellNumber}
+        data-selected={isSelected}
         fontSize={getFontSize(cellContent)}
         height={CELL_SIZE}
         minWidth={CELL_SIZE}
