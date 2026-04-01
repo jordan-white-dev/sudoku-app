@@ -37,7 +37,7 @@ import {
   isRawPuzzleString,
 } from "@/lib/pages/home/utils/validators/validators";
 
-// #region Shared Test Functions
+// #region Branded Test Value Helpers
 const getBrandedRawPuzzleString = (
   candidateRawPuzzleString: string,
 ): RawPuzzleString => {
@@ -49,6 +49,19 @@ const getBrandedRawPuzzleString = (
   return candidateRawPuzzleString;
 };
 
+const getBrandedRawGivenDigit = (
+  candidateRawGivenDigit: number,
+): RawGivenDigit => {
+  if (!isRawGivenDigit(candidateRawGivenDigit))
+    throw Error(
+      `Invalid RawGivenDigit "${candidateRawGivenDigit}" in test setup.`,
+    );
+
+  return candidateRawGivenDigit;
+};
+// #endregion
+
+// #region Raw Board State Builders
 const getRawBoardStateWithGivenDigitsInTargetCells = (
   targetCellsAndRawGivenDigits: Array<{
     cellNumber: CellNumber;
@@ -63,18 +76,23 @@ const getRawBoardStateWithGivenDigitsInTargetCells = (
 
   return rawBoardState;
 };
+// #endregion
 
-const getBrandedRawGivenDigit = (
-  candidateRawGivenDigit: number,
-): RawGivenDigit => {
-  if (!isRawGivenDigit(candidateRawGivenDigit))
-    throw Error(
-      `Invalid RawGivenDigit "${candidateRawGivenDigit}" in test setup.`,
-    );
+// #region Puzzle History Builders
+const getPuzzleHistoryFromBoardStates = (
+  boardStates: Array<BoardState>,
+  currentBoardStateIndex: number,
+): PuzzleHistory => {
+  const puzzleHistory: PuzzleHistory = {
+    currentBoardStateIndex,
+    boardStateHistory: boardStates,
+  };
 
-  return candidateRawGivenDigit;
+  return puzzleHistory;
 };
+// #endregion
 
+// #region Board State Assertions
 const expectTargetCellToHaveCoordinates = (
   boardState: BoardState,
   cellNumber: CellNumber,
@@ -90,18 +108,6 @@ const expectTargetCellToHaveCoordinates = (
   expect(cellState.rowNumber).toBe(expectedCoordinates.rowNumber);
   expect(cellState.columnNumber).toBe(expectedCoordinates.columnNumber);
   expect(cellState.boxNumber).toBe(expectedCoordinates.boxNumber);
-};
-
-const getPuzzleHistoryFromBoardStates = (
-  boardStates: Array<BoardState>,
-  currentBoardStateIndex: number,
-): PuzzleHistory => {
-  const puzzleHistory: PuzzleHistory = {
-    currentBoardStateIndex,
-    boardStateHistory: boardStates,
-  };
-
-  return puzzleHistory;
 };
 // #endregion
 
