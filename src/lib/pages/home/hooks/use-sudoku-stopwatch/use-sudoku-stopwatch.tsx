@@ -171,13 +171,20 @@ export const SudokuStopwatchProvider = ({
     return `${formattedMinutes}:${formattedSeconds}`;
   }, [hours, minutes, seconds, totalSeconds]);
 
+  const setIsStopwatchDisabled = useCallback(
+    (nextIsStopwatchDisabled: boolean) => {
+      setUserSettings((currentUserSettings) => ({
+        ...currentUserSettings,
+        isStopwatchDisabled: nextIsStopwatchDisabled,
+      }));
+    },
+    [setUserSettings],
+  );
+
   const pauseStopwatchAndDisable = useCallback(() => {
     pauseStopwatch();
-    setUserSettings((currentUserSettings) => ({
-      ...currentUserSettings,
-      isStopwatchDisabled: true,
-    }));
-  }, [pauseStopwatch, setUserSettings]);
+    setIsStopwatchDisabled(true);
+  }, [pauseStopwatch, setIsStopwatchDisabled]);
 
   const resetStopwatch = useCallback(() => {
     reset(getOffsetTimestampFromTotalSeconds(0), true);
@@ -186,11 +193,8 @@ export const SudokuStopwatchProvider = ({
 
   const resumeStopwatchAndEnable = useCallback(() => {
     start();
-    setUserSettings((currentUserSettings) => ({
-      ...currentUserSettings,
-      isStopwatchDisabled: false,
-    }));
-  }, [setUserSettings, start]);
+    setIsStopwatchDisabled(false);
+  }, [setIsStopwatchDisabled, start]);
 
   const startStopwatch = useCallback(() => start(), [start]);
 

@@ -296,8 +296,8 @@ const getMarkupDigitsCellState = (
   return currentCellState;
 };
 
-// #region Center Markup Input Action
-export const handleCenterMarkupInput = (
+const handleMarkupInput = (
+  markupType: MarkupType,
   puzzleHistory: PuzzleHistory,
   sudokuDigit: SudokuDigit,
   setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
@@ -308,13 +308,13 @@ export const handleCenterMarkupInput = (
   const shouldMarkupDigitBeRemoved =
     areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup(
       currentBoardState,
-      "Center",
+      markupType,
       sudokuDigit,
     );
 
   const nextBoardState: BoardState = currentBoardState.map((currentCellState) =>
     getMarkupDigitsCellState(
-      "Center",
+      markupType,
       currentCellState,
       shouldMarkupDigitBeRemoved,
       sudokuDigit,
@@ -327,6 +327,13 @@ export const handleCenterMarkupInput = (
     setPuzzleHistory,
   );
 };
+
+// #region Center Markup Input Action
+export const handleCenterMarkupInput = (
+  puzzleHistory: PuzzleHistory,
+  sudokuDigit: SudokuDigit,
+  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+) => handleMarkupInput("Center", puzzleHistory, sudokuDigit, setPuzzleHistory);
 // #endregion
 
 // #region Corner Markup Input Action
@@ -334,32 +341,7 @@ export const handleCornerMarkupInput = (
   puzzleHistory: PuzzleHistory,
   sudokuDigit: SudokuDigit,
   setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
-) => {
-  const currentBoardState =
-    getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
-
-  const shouldMarkupDigitBeRemoved =
-    areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup(
-      currentBoardState,
-      "Corner",
-      sudokuDigit,
-    );
-
-  const nextBoardState: BoardState = currentBoardState.map((currentCellState) =>
-    getMarkupDigitsCellState(
-      "Corner",
-      currentCellState,
-      shouldMarkupDigitBeRemoved,
-      sudokuDigit,
-    ),
-  );
-
-  commitBoardStateToHistoryIfChanged(
-    currentBoardState,
-    nextBoardState,
-    setPuzzleHistory,
-  );
-};
+) => handleMarkupInput("Corner", puzzleHistory, sudokuDigit, setPuzzleHistory);
 // #endregion
 
 // #endregion
