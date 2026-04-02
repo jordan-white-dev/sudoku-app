@@ -31,6 +31,9 @@ const StopwatchDialogTrigger = () => {
         </Text>
         <IconButton
           alignSelf="center"
+          aria-label={
+            isStopwatchRunning ? "Pause stopwatch" : "Resume stopwatch"
+          }
           color="white"
           cursor="pointer"
           onClick={pauseStopwatch}
