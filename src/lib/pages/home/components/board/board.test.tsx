@@ -1248,6 +1248,104 @@ describe("Changing all selected cells with keyboard shortcuts", () => {
       false,
     );
   });
+
+  it('does not clear the current selection when Ctrl+Shift+"a" is pressed with Meta', async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithTargetCellsSelected(
+      getStartingEmptyBoardState(),
+      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+    );
+
+    const renderedBoard = await renderBoard({
+      initialBoardState: startingBoardState,
+    });
+
+    // Act
+    await dispatchWindowKeyDown({
+      ctrlKey: true,
+      shiftKey: true,
+      key: "a",
+      metaKey: true,
+    });
+
+    // Assert
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(1), true);
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(2), true);
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(3), false);
+  });
+
+  it('does not clear the current selection when Ctrl+Shift+"A" is pressed with Meta', async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithTargetCellsSelected(
+      getStartingEmptyBoardState(),
+      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+    );
+
+    const renderedBoard = await renderBoard({
+      initialBoardState: startingBoardState,
+    });
+
+    // Act
+    await dispatchWindowKeyDown({
+      ctrlKey: true,
+      shiftKey: true,
+      key: "A",
+      metaKey: true,
+    });
+
+    // Assert
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(1), true);
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(2), true);
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(3), false);
+  });
+
+  it('does not invert the current selection when Ctrl+"i" is pressed with Meta', async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithTargetCellsSelected(
+      getStartingEmptyBoardState(),
+      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+    );
+
+    const renderedBoard = await renderBoard({
+      initialBoardState: startingBoardState,
+    });
+
+    // Act
+    await dispatchWindowKeyDown({
+      ctrlKey: true,
+      key: "i",
+      metaKey: true,
+    });
+
+    // Assert
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(1), true);
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(2), true);
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(3), false);
+  });
+
+  it('does not invert the current selection when Ctrl+"I" is pressed with Meta', async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithTargetCellsSelected(
+      getStartingEmptyBoardState(),
+      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+    );
+
+    const renderedBoard = await renderBoard({
+      initialBoardState: startingBoardState,
+    });
+
+    // Act
+    await dispatchWindowKeyDown({
+      ctrlKey: true,
+      key: "I",
+      metaKey: true,
+    });
+
+    // Assert
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(1), true);
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(2), true);
+    await expectCellToBeSelected(renderedBoard, getBrandedCellNumber(3), false);
+  });
 });
 
 describe("Selecting cells by dragging across the board", () => {

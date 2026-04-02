@@ -72,6 +72,29 @@ const getRectTagsFromSvgLayer = (svgLayer: string): Array<string> => {
   return rectTagMatches ?? [];
 };
 
+const getCenterMarkupsOfLength = (length: number): CellState["cellContent"] => {
+  const centerMarkups = Array.from({ length }, (_, index) => {
+    const digit = ((index % 9) + 1).toString();
+
+    return getBrandedSudokuDigit(digit);
+  });
+
+  return {
+    centerMarkups,
+    cornerMarkups: [""],
+  };
+};
+
+const getCellFontSizeInPixels = (cellElement: HTMLButtonElement): number => {
+  const computedFontSize = window.getComputedStyle(cellElement).fontSize;
+  const parsedFontSize = Number.parseFloat(computedFontSize);
+
+  if (Number.isNaN(parsedFontSize))
+    throw Error(`Failed to parse font size from "${computedFontSize}".`);
+
+  return parsedFontSize;
+};
+
 const getBoardStateWithUpdatedTargetCell = (
   boardState: BoardState,
   cellNumber: CellNumber,
@@ -528,6 +551,175 @@ describe("Text color", () => {
   });
 });
 
+describe("Font size", () => {
+  it("uses progressively smaller center-markup font sizes as the center markup count increases", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(10);
+    const baseBoardState = getStartingEmptyBoardState();
+
+    const boardStateWithFiveCenterMarkups = getBoardStateWithUpdatedTargetCell(
+      baseBoardState,
+      targetCellNumber,
+      {
+        cellContent: getCenterMarkupsOfLength(5),
+      },
+    );
+    const boardStateWithSixCenterMarkups = getBoardStateWithUpdatedTargetCell(
+      baseBoardState,
+      targetCellNumber,
+      {
+        cellContent: getCenterMarkupsOfLength(6),
+      },
+    );
+    const boardStateWithSevenCenterMarkups = getBoardStateWithUpdatedTargetCell(
+      baseBoardState,
+      targetCellNumber,
+      {
+        cellContent: getCenterMarkupsOfLength(7),
+      },
+    );
+    const boardStateWithEightCenterMarkups = getBoardStateWithUpdatedTargetCell(
+      baseBoardState,
+      targetCellNumber,
+      {
+        cellContent: getCenterMarkupsOfLength(8),
+      },
+    );
+    const boardStateWithNineCenterMarkups = getBoardStateWithUpdatedTargetCell(
+      baseBoardState,
+      targetCellNumber,
+      {
+        cellContent: getCenterMarkupsOfLength(9),
+      },
+    );
+
+    // Act
+    const renderedCellWithFiveCenterMarkups = await renderCell({
+      boardState: boardStateWithFiveCenterMarkups,
+      cellState: getTargetCellStateFromBoardState(
+        boardStateWithFiveCenterMarkups,
+        targetCellNumber,
+      ),
+    });
+    const renderedCellWithSixCenterMarkups = await renderCell({
+      boardState: boardStateWithSixCenterMarkups,
+      cellState: getTargetCellStateFromBoardState(
+        boardStateWithSixCenterMarkups,
+        targetCellNumber,
+      ),
+    });
+    const renderedCellWithSevenCenterMarkups = await renderCell({
+      boardState: boardStateWithSevenCenterMarkups,
+      cellState: getTargetCellStateFromBoardState(
+        boardStateWithSevenCenterMarkups,
+        targetCellNumber,
+      ),
+    });
+    const renderedCellWithEightCenterMarkups = await renderCell({
+      boardState: boardStateWithEightCenterMarkups,
+      cellState: getTargetCellStateFromBoardState(
+        boardStateWithEightCenterMarkups,
+        targetCellNumber,
+      ),
+    });
+    const renderedCellWithNineCenterMarkups = await renderCell({
+      boardState: boardStateWithNineCenterMarkups,
+      cellState: getTargetCellStateFromBoardState(
+        boardStateWithNineCenterMarkups,
+        targetCellNumber,
+      ),
+    });
+
+    const fontSizeWithFiveCenterMarkups = getCellFontSizeInPixels(
+      await getCellElement(renderedCellWithFiveCenterMarkups, targetCellNumber),
+    );
+    const fontSizeWithSixCenterMarkups = getCellFontSizeInPixels(
+      await getCellElement(renderedCellWithSixCenterMarkups, targetCellNumber),
+    );
+    const fontSizeWithSevenCenterMarkups = getCellFontSizeInPixels(
+      await getCellElement(
+        renderedCellWithSevenCenterMarkups,
+        targetCellNumber,
+      ),
+    );
+    const fontSizeWithEightCenterMarkups = getCellFontSizeInPixels(
+      await getCellElement(
+        renderedCellWithEightCenterMarkups,
+        targetCellNumber,
+      ),
+    );
+    const fontSizeWithNineCenterMarkups = getCellFontSizeInPixels(
+      await getCellElement(renderedCellWithNineCenterMarkups, targetCellNumber),
+    );
+
+    // Assert
+    expect(fontSizeWithFiveCenterMarkups).toBeGreaterThan(
+      fontSizeWithSixCenterMarkups,
+    );
+    expect(fontSizeWithSixCenterMarkups).toBeGreaterThan(
+      fontSizeWithSevenCenterMarkups,
+    );
+    expect(fontSizeWithSevenCenterMarkups).toBeGreaterThan(
+      fontSizeWithEightCenterMarkups,
+    );
+    expect(fontSizeWithEightCenterMarkups).toBeGreaterThan(
+      fontSizeWithNineCenterMarkups,
+    );
+  });
+});
+
+describe("Text shadow", () => {
+  it("uses no text shadow for center markup content and uses text shadow for given digits", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(10);
+    const baseBoardState = getStartingEmptyBoardState();
+
+    const boardStateWithCenterMarkup = getBoardStateWithUpdatedTargetCell(
+      baseBoardState,
+      targetCellNumber,
+      {
+        cellContent: getCenterMarkupsOfLength(2),
+      },
+    );
+    const boardStateWithGivenDigit = getBoardStateWithUpdatedTargetCell(
+      baseBoardState,
+      targetCellNumber,
+      {
+        cellContent: {
+          givenDigit: getBrandedSudokuDigit("5"),
+        },
+      },
+    );
+
+    // Act
+    const renderedCellWithCenterMarkup = await renderCell({
+      boardState: boardStateWithCenterMarkup,
+      cellState: getTargetCellStateFromBoardState(
+        boardStateWithCenterMarkup,
+        targetCellNumber,
+      ),
+    });
+    const renderedCellWithGivenDigit = await renderCell({
+      boardState: boardStateWithGivenDigit,
+      cellState: getTargetCellStateFromBoardState(
+        boardStateWithGivenDigit,
+        targetCellNumber,
+      ),
+    });
+
+    const textShadowWithCenterMarkup = window.getComputedStyle(
+      await getCellElement(renderedCellWithCenterMarkup, targetCellNumber),
+    ).textShadow;
+    const textShadowWithGivenDigit = window.getComputedStyle(
+      await getCellElement(renderedCellWithGivenDigit, targetCellNumber),
+    ).textShadow;
+
+    // Assert
+    expect(textShadowWithCenterMarkup).toBe("none");
+    expect(textShadowWithGivenDigit).not.toBe("none");
+  });
+});
+
 describe("Row and column labels", () => {
   it("shows a row number label for a cell in column 1 when row and column labels are enabled", async () => {
     // Arrange
@@ -590,9 +782,10 @@ describe("Row and column labels", () => {
 
     // Act
     const renderedCell = await renderCell({ boardState, cellState });
+    const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
-    expect(renderedCell.container.textContent ?? "").not.toContain("2");
+    expect(cellElement.textContent?.trim() ?? "").toBe("");
   });
 
   it("does not show a row label for a cell not in column 1", async () => {
@@ -613,14 +806,15 @@ describe("Row and column labels", () => {
         isShowRowAndColumnLabelsEnabled: true,
       },
     });
+    const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
-    expect(renderedCell.container.textContent ?? "").not.toContain("2");
+    expect(cellElement.textContent?.trim() ?? "").toBe("");
   });
 
   it("does not show a column label for a cell not in row 1", async () => {
     // Arrange
-    const targetCellNumber = getBrandedCellNumber(10);
+    const targetCellNumber = getBrandedCellNumber(11);
     const boardState = getStartingEmptyBoardState();
     const cellState = getTargetCellStateFromBoardState(
       boardState,
@@ -636,9 +830,10 @@ describe("Row and column labels", () => {
         isShowRowAndColumnLabelsEnabled: true,
       },
     });
+    const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
-    expect(renderedCell.container.textContent ?? "").not.toContain("1");
+    expect(cellElement.textContent?.trim() ?? "").toBe("");
   });
 });
 
@@ -708,6 +903,78 @@ describe("Border styles", () => {
 
     // Assert
     expect(window.getComputedStyle(cellElement).borderRightStyle).toBe("solid");
+  });
+
+  it("uses 2px left border width on left box edges and 0 elsewhere", async () => {
+    // Arrange
+    const leftEdgeCellNumber = getBrandedCellNumber(10);
+    const interiorCellNumber = getBrandedCellNumber(11);
+    const boardState = getStartingEmptyBoardState();
+
+    // Act
+    const renderedLeftEdgeCell = await renderCell({
+      boardState,
+      cellState: getTargetCellStateFromBoardState(
+        boardState,
+        leftEdgeCellNumber,
+      ),
+    });
+    const renderedInteriorCell = await renderCell({
+      boardState,
+      cellState: getTargetCellStateFromBoardState(
+        boardState,
+        interiorCellNumber,
+      ),
+    });
+
+    const leftEdgeCell = await getCellElement(
+      renderedLeftEdgeCell,
+      leftEdgeCellNumber,
+    );
+    const interiorCell = await getCellElement(
+      renderedInteriorCell,
+      interiorCellNumber,
+    );
+
+    // Assert
+    expect(window.getComputedStyle(leftEdgeCell).borderLeftWidth).toBe("2px");
+    expect(window.getComputedStyle(interiorCell).borderLeftWidth).toBe("0px");
+  });
+
+  it("uses 2px top border width on top box edges and 0 elsewhere", async () => {
+    // Arrange
+    const topEdgeCellNumber = getBrandedCellNumber(2);
+    const interiorCellNumber = getBrandedCellNumber(11);
+    const boardState = getStartingEmptyBoardState();
+
+    // Act
+    const renderedTopEdgeCell = await renderCell({
+      boardState,
+      cellState: getTargetCellStateFromBoardState(
+        boardState,
+        topEdgeCellNumber,
+      ),
+    });
+    const renderedInteriorCell = await renderCell({
+      boardState,
+      cellState: getTargetCellStateFromBoardState(
+        boardState,
+        interiorCellNumber,
+      ),
+    });
+
+    const topEdgeCell = await getCellElement(
+      renderedTopEdgeCell,
+      topEdgeCellNumber,
+    );
+    const interiorCell = await getCellElement(
+      renderedInteriorCell,
+      interiorCellNumber,
+    );
+
+    // Assert
+    expect(window.getComputedStyle(topEdgeCell).borderTopWidth).toBe("2px");
+    expect(window.getComputedStyle(interiorCell).borderTopWidth).toBe("0px");
   });
 });
 
