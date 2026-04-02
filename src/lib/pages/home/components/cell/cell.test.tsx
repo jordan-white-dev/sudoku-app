@@ -43,6 +43,35 @@ vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
 
 const SELECTED_CELL_HIGHLIGHT_COLOR_TOKEN = "4ca4ff";
 
+const getSvgLayersFromBackgroundImage = (
+  backgroundImage: string,
+): Array<string> => {
+  const svgUrlMatches = backgroundImage.matchAll(
+    /url\("data:image\/svg\+xml,([^"]+)"\)/g,
+  );
+
+  return [...svgUrlMatches].map((svgUrlMatch) =>
+    decodeURIComponent(svgUrlMatch[1]),
+  );
+};
+
+const getSvgLayerContainingToken = (
+  backgroundImage: string,
+  token: string,
+): string | undefined => {
+  const svgLayers = getSvgLayersFromBackgroundImage(backgroundImage);
+
+  return svgLayers.find((svgLayer) =>
+    svgLayer.toLowerCase().includes(token.toLowerCase()),
+  );
+};
+
+const getRectTagsFromSvgLayer = (svgLayer: string): Array<string> => {
+  const rectTagMatches = svgLayer.match(/<rect\b[^>]*>/g);
+
+  return rectTagMatches ?? [];
+};
+
 const getBoardStateWithUpdatedTargetCell = (
   boardState: BoardState,
   cellNumber: CellNumber,
@@ -958,6 +987,359 @@ describe("Background state: seen cells", () => {
       renderedCell,
       targetCellNumber,
       false,
+    );
+  });
+
+  it("uses a single full-cell seen rectangle when row, column, and box highlights all apply", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(40);
+    const boardState = getStartingEmptyBoardState();
+    const cellState = getTargetCellStateFromBoardState(
+      boardState,
+      targetCellNumber,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      boardState,
+      cellState,
+      isSeenInBox: true,
+      isSeenInColumn: true,
+      isSeenInRow: true,
+      selectedColumnNumber: getBrandedColumnNumber(5),
+      selectedRowNumber: getBrandedRowNumber(5),
+      userSettings: {
+        ...defaultUserSettings,
+        isShowSeenCellsEnabled: true,
+      },
+    });
+    const backgroundImage = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellNumber),
+    ).backgroundImage;
+    const seenCellSvgLayer = getSvgLayerContainingToken(
+      backgroundImage,
+      "#ffd700",
+    );
+
+    // Assert
+    expect(seenCellSvgLayer).toBeDefined();
+
+    if (!seenCellSvgLayer)
+      throw Error("Expected a seen-cell SVG layer for full seen highlighting.");
+
+    const rectTags = getRectTagsFromSvgLayer(seenCellSvgLayer);
+
+    expect(rectTags).toHaveLength(1);
+    expect(rectTags[0]).toContain('x="0"');
+    expect(rectTags[0]).toContain('y="0"');
+    expect(rectTags[0]).toContain('width="100"');
+    expect(rectTags[0]).toContain('height="100"');
+  });
+
+  it("suppresses the seen-column band at puzzle top edge when the cell is inside the selected box", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(2);
+    const boardState = getStartingEmptyBoardState();
+    const cellState = getTargetCellStateFromBoardState(
+      boardState,
+      targetCellNumber,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      boardState,
+      cellState,
+      isSeenInColumn: true,
+      selectedColumnNumber: getBrandedColumnNumber(2),
+      selectedRowNumber: getBrandedRowNumber(2),
+      userSettings: {
+        ...defaultUserSettings,
+        isShowSeenCellsEnabled: true,
+      },
+    });
+    const backgroundImage = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellNumber),
+    ).backgroundImage;
+
+    // Assert
+    expect(getSvgLayerContainingToken(backgroundImage, "#ffd700")).toBe(
+      undefined,
+    );
+  });
+
+  it("suppresses the seen-row band at puzzle left edge when the cell is inside the selected box", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(10);
+    const boardState = getStartingEmptyBoardState();
+    const cellState = getTargetCellStateFromBoardState(
+      boardState,
+      targetCellNumber,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      boardState,
+      cellState,
+      isSeenInRow: true,
+      selectedColumnNumber: getBrandedColumnNumber(2),
+      selectedRowNumber: getBrandedRowNumber(2),
+      userSettings: {
+        ...defaultUserSettings,
+        isShowSeenCellsEnabled: true,
+      },
+    });
+    const backgroundImage = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellNumber),
+    ).backgroundImage;
+
+    // Assert
+    expect(getSvgLayerContainingToken(backgroundImage, "#ffd700")).toBe(
+      undefined,
+    );
+  });
+
+  it("insets the seen-box rectangle along the top and left box edges", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(1);
+    const boardState = getStartingEmptyBoardState();
+    const cellState = getTargetCellStateFromBoardState(
+      boardState,
+      targetCellNumber,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      boardState,
+      cellState,
+      isSeenInBox: true,
+      selectedColumnNumber: getBrandedColumnNumber(2),
+      selectedRowNumber: getBrandedRowNumber(2),
+      userSettings: {
+        ...defaultUserSettings,
+        isShowSeenCellsEnabled: true,
+      },
+    });
+    const backgroundImage = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellNumber),
+    ).backgroundImage;
+    const seenCellSvgLayer = getSvgLayerContainingToken(
+      backgroundImage,
+      "#ffd700",
+    );
+
+    // Assert
+    expect(seenCellSvgLayer).toBeDefined();
+
+    if (!seenCellSvgLayer)
+      throw Error("Expected a seen-cell SVG layer for seen-box highlighting.");
+
+    const rectTags = getRectTagsFromSvgLayer(seenCellSvgLayer);
+
+    expect(rectTags).toHaveLength(1);
+    expect(rectTags[0]).toContain('x="8"');
+    expect(rectTags[0]).toContain('y="8"');
+    expect(rectTags[0]).toContain('width="92"');
+    expect(rectTags[0]).toContain('height="92"');
+  });
+});
+
+describe("Background state: selected outline geometry", () => {
+  it("draws four outline segments for an isolated selected cell", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(40);
+    const baseBoardState = getStartingEmptyBoardState();
+    const boardState = getBoardStateWithUpdatedTargetCell(
+      baseBoardState,
+      targetCellNumber,
+      { isSelected: true },
+    );
+    const cellState = getTargetCellStateFromBoardState(
+      boardState,
+      targetCellNumber,
+    );
+
+    // Act
+    const renderedCell = await renderCell({ boardState, cellState });
+    const backgroundImage = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellNumber),
+    ).backgroundImage;
+    const selectedCellSvgLayer = getSvgLayerContainingToken(
+      backgroundImage,
+      "#4ca4ff",
+    );
+
+    // Assert
+    expect(selectedCellSvgLayer).toBeDefined();
+
+    if (!selectedCellSvgLayer)
+      throw Error("Expected a selected-cell SVG layer for selected outlines.");
+
+    const rectTags = getRectTagsFromSvgLayer(selectedCellSvgLayer);
+
+    expect(rectTags).toHaveLength(4);
+  });
+
+  it("removes the left outline segment when the cell to the left is also selected", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(40);
+    let boardState = getStartingEmptyBoardState();
+
+    boardState = getBoardStateWithUpdatedTargetCell(
+      boardState,
+      targetCellNumber,
+      {
+        isSelected: true,
+      },
+    );
+    boardState = getBoardStateWithUpdatedTargetCell(
+      boardState,
+      getBrandedCellNumber(39),
+      {
+        isSelected: true,
+      },
+    );
+
+    const cellState = getTargetCellStateFromBoardState(
+      boardState,
+      targetCellNumber,
+    );
+
+    // Act
+    const renderedCell = await renderCell({ boardState, cellState });
+    const backgroundImage = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellNumber),
+    ).backgroundImage;
+    const selectedCellSvgLayer = getSvgLayerContainingToken(
+      backgroundImage,
+      "#4ca4ff",
+    );
+
+    // Assert
+    expect(selectedCellSvgLayer).toBeDefined();
+
+    if (!selectedCellSvgLayer)
+      throw Error("Expected a selected-cell SVG layer for selected outlines.");
+
+    const rectTags = getRectTagsFromSvgLayer(selectedCellSvgLayer);
+
+    expect(rectTags).toHaveLength(3);
+    expect(
+      rectTags.some(
+        (rectTag) =>
+          rectTag.includes('x="0"') &&
+          rectTag.includes('y="0"') &&
+          rectTag.includes('width="8"') &&
+          rectTag.includes('height="100"'),
+      ),
+    ).toBe(false);
+  });
+
+  it("adds a top-left corner patch when top and left neighbors are selected but top-left is not", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(40);
+    let boardState = getStartingEmptyBoardState();
+
+    boardState = getBoardStateWithUpdatedTargetCell(
+      boardState,
+      targetCellNumber,
+      {
+        isSelected: true,
+      },
+    );
+    boardState = getBoardStateWithUpdatedTargetCell(
+      boardState,
+      getBrandedCellNumber(31),
+      {
+        isSelected: true,
+      },
+    );
+    boardState = getBoardStateWithUpdatedTargetCell(
+      boardState,
+      getBrandedCellNumber(39),
+      {
+        isSelected: true,
+      },
+    );
+
+    const cellState = getTargetCellStateFromBoardState(
+      boardState,
+      targetCellNumber,
+    );
+
+    // Act
+    const renderedCell = await renderCell({ boardState, cellState });
+    const backgroundImage = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellNumber),
+    ).backgroundImage;
+    const selectedCellSvgLayer = getSvgLayerContainingToken(
+      backgroundImage,
+      "#4ca4ff",
+    );
+
+    // Assert
+    expect(selectedCellSvgLayer).toBeDefined();
+
+    if (!selectedCellSvgLayer)
+      throw Error("Expected a selected-cell SVG layer for selected outlines.");
+
+    const rectTags = getRectTagsFromSvgLayer(selectedCellSvgLayer);
+
+    expect(
+      rectTags.some(
+        (rectTag) =>
+          rectTag.includes('x="0"') &&
+          rectTag.includes('y="0"') &&
+          rectTag.includes('width="8"') &&
+          rectTag.includes('height="8"'),
+      ),
+    ).toBe(true);
+  });
+
+  it("removes the selected outline layer completely when all neighboring cells are selected", async () => {
+    // Arrange
+    const targetCellNumber = getBrandedCellNumber(40);
+    let boardState = getStartingEmptyBoardState();
+
+    boardState = getBoardStateWithUpdatedTargetCell(
+      boardState,
+      targetCellNumber,
+      {
+        isSelected: true,
+      },
+    );
+
+    const surroundingSelectedCellNumbers = [
+      getBrandedCellNumber(30),
+      getBrandedCellNumber(31),
+      getBrandedCellNumber(32),
+      getBrandedCellNumber(39),
+      getBrandedCellNumber(41),
+      getBrandedCellNumber(48),
+      getBrandedCellNumber(49),
+      getBrandedCellNumber(50),
+    ];
+
+    for (const surroundingCellNumber of surroundingSelectedCellNumbers)
+      boardState = getBoardStateWithUpdatedTargetCell(
+        boardState,
+        surroundingCellNumber,
+        { isSelected: true },
+      );
+
+    const cellState = getTargetCellStateFromBoardState(
+      boardState,
+      targetCellNumber,
+    );
+
+    // Act
+    const renderedCell = await renderCell({ boardState, cellState });
+    const backgroundImage = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellNumber),
+    ).backgroundImage;
+
+    // Assert
+    expect(getSvgLayerContainingToken(backgroundImage, "#4ca4ff")).toBe(
+      undefined,
     );
   });
 });
