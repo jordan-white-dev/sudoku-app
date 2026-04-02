@@ -50,26 +50,26 @@ const isArrowKeyDirection = (
 // #endregion
 
 // #region Conflict Cell Checking
-const getEmptyDigitOccurrencesByRegion = (): Array<
+const getEmptyDigitOccurrencesByHouse = (): Array<
   Map<SudokuDigit, Array<CellNumber>>
 > => Array.from({ length: 9 }, () => new Map());
 
-const addSudokuDigitOccurrenceToRegion = (
+const addSudokuDigitOccurrenceToHouse = (
   cellNumber: CellNumber,
   sudokuDigit: SudokuDigit,
-  sudokuDigitOccurrencesByRegion: Map<SudokuDigit, Array<CellNumber>>,
+  sudokuDigitOccurrencesByHouse: Map<SudokuDigit, Array<CellNumber>>,
 ): void => {
   const matchingCellNumbers =
-    sudokuDigitOccurrencesByRegion.get(sudokuDigit) ?? [];
+    sudokuDigitOccurrencesByHouse.get(sudokuDigit) ?? [];
   matchingCellNumbers.push(cellNumber);
-  sudokuDigitOccurrencesByRegion.set(sudokuDigit, matchingCellNumbers);
+  sudokuDigitOccurrencesByHouse.set(sudokuDigit, matchingCellNumbers);
 };
 
-const addConflictedCellNumbersFromRegion = (
+const addConflictedCellNumbersFromHouse = (
   conflictedCellNumbers: Set<CellNumber>,
-  sudokuDigitOccurrencesByRegion: Map<SudokuDigit, Array<CellNumber>>,
+  sudokuDigitOccurrencesByHouse: Map<SudokuDigit, Array<CellNumber>>,
 ): void => {
-  for (const matchingCellNumbers of sudokuDigitOccurrencesByRegion.values()) {
+  for (const matchingCellNumbers of sudokuDigitOccurrencesByHouse.values()) {
     if (matchingCellNumbers.length <= 1) continue;
 
     for (const cellNumber of matchingCellNumbers)
@@ -77,23 +77,23 @@ const addConflictedCellNumbersFromRegion = (
   }
 };
 
-const addConflictedCellNumbersFromRegions = (
+const addConflictedCellNumbersFromHouses = (
   conflictedCellNumbers: Set<CellNumber>,
-  sudokuDigitOccurrencesByRegion: Array<Map<SudokuDigit, Array<CellNumber>>>,
+  sudokuDigitOccurrencesByHouse: Array<Map<SudokuDigit, Array<CellNumber>>>,
 ): void => {
-  for (const sudokuDigitOccurrenceByRegion of sudokuDigitOccurrencesByRegion)
-    addConflictedCellNumbersFromRegion(
+  for (const sudokuDigitOccurrenceByHouse of sudokuDigitOccurrencesByHouse)
+    addConflictedCellNumbersFromHouse(
       conflictedCellNumbers,
-      sudokuDigitOccurrenceByRegion,
+      sudokuDigitOccurrenceByHouse,
     );
 };
 
 const getConflictedCellNumbers = (boardState: BoardState): Set<CellNumber> => {
   const conflictedCellNumbers = new Set<CellNumber>();
 
-  const sudokuDigitOccurrencesByBox = getEmptyDigitOccurrencesByRegion();
-  const sudokuDigitOccurrencesByColumn = getEmptyDigitOccurrencesByRegion();
-  const sudokuDigitOccurrencesByRow = getEmptyDigitOccurrencesByRegion();
+  const sudokuDigitOccurrencesByBox = getEmptyDigitOccurrencesByHouse();
+  const sudokuDigitOccurrencesByColumn = getEmptyDigitOccurrencesByHouse();
+  const sudokuDigitOccurrencesByRow = getEmptyDigitOccurrencesByHouse();
 
   for (const cellState of boardState) {
     const sudokuDigit = getGivenOrEnteredDigitInCellIfPresent(
@@ -102,32 +102,32 @@ const getConflictedCellNumbers = (boardState: BoardState): Set<CellNumber> => {
 
     if (sudokuDigit === "") continue;
 
-    addSudokuDigitOccurrenceToRegion(
+    addSudokuDigitOccurrenceToHouse(
       cellState.cellNumber,
       sudokuDigit,
       sudokuDigitOccurrencesByRow[cellState.rowNumber - 1],
     );
-    addSudokuDigitOccurrenceToRegion(
+    addSudokuDigitOccurrenceToHouse(
       cellState.cellNumber,
       sudokuDigit,
       sudokuDigitOccurrencesByColumn[cellState.columnNumber - 1],
     );
-    addSudokuDigitOccurrenceToRegion(
+    addSudokuDigitOccurrenceToHouse(
       cellState.cellNumber,
       sudokuDigit,
       sudokuDigitOccurrencesByBox[cellState.boxNumber - 1],
     );
   }
 
-  addConflictedCellNumbersFromRegions(
+  addConflictedCellNumbersFromHouses(
     conflictedCellNumbers,
     sudokuDigitOccurrencesByRow,
   );
-  addConflictedCellNumbersFromRegions(
+  addConflictedCellNumbersFromHouses(
     conflictedCellNumbers,
     sudokuDigitOccurrencesByColumn,
   );
-  addConflictedCellNumbersFromRegions(
+  addConflictedCellNumbersFromHouses(
     conflictedCellNumbers,
     sudokuDigitOccurrencesByBox,
   );

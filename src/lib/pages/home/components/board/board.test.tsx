@@ -768,7 +768,7 @@ describe("Showing digit conflicts", () => {
     );
   });
 
-  it("highlights every cell that breaks the rule when more than two matching digits appear in the same region", async () => {
+  it("highlights every cell that breaks the rule when more than two matching digits appear in the same house", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
       getBoardStateWithEnteredDigitInTargetCell(
@@ -817,7 +817,7 @@ describe("Showing digit conflicts", () => {
     return;
   });
 
-  it("does not mark cells as conflicting when the digits in the same region are different", async () => {
+  it("does not mark cells as conflicting when the digits in the same house are different", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
       getBoardStateWithEnteredDigitInTargetCell(
