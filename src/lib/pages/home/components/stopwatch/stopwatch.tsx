@@ -13,6 +13,7 @@ import { MdOutlinePauseCircle, MdOutlinePlayCircle } from "react-icons/md";
 import { useSudokuStopwatch } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 
+// #region Dialog Trigger
 const StopwatchDialogTrigger = () => {
   const { formattedStopwatchTime, isStopwatchRunning, pauseStopwatch } =
     useSudokuStopwatch();
@@ -49,7 +50,9 @@ const StopwatchDialogTrigger = () => {
     </Dialog.Trigger>
   );
 };
+// #endregion
 
+// #region Dialog Footer
 const StopwatchDialogFooter = () => {
   const { pauseStopwatchAndDisable, resumeStopwatchAndEnable } =
     useSudokuStopwatch();
@@ -70,7 +73,9 @@ const StopwatchDialogFooter = () => {
     </Dialog.Footer>
   );
 };
+// #endregion
 
+// #region Stopwatch Component
 export const Stopwatch = () => {
   const { userSettings } = useUserSettings();
   const { startStopwatchIfEnabled } = useSudokuStopwatch();
@@ -112,3 +117,4 @@ export const Stopwatch = () => {
     </Flex>
   );
 };
+// #endregion

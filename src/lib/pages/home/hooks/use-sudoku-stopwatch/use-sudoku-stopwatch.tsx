@@ -13,6 +13,7 @@ import useSessionStorageState from "use-session-storage-state";
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { type RawBoardState } from "@/lib/pages/home/utils/types";
 
+// #region Formatting and Offset Utilities
 const getFormattedStopwatchMinutes = (
   hours: number,
   minutes: number,
@@ -38,6 +39,7 @@ const getOffsetTimestampFromTotalSeconds = (totalSeconds: number): Date => {
 
   return offsetTimestamp;
 };
+// #endregion
 
 // #region Context
 type SudokuStopwatchContextValue = {
@@ -57,7 +59,6 @@ const SudokuStopwatchContext = createContext<
 // #endregion
 
 // #region Provider
-
 interface SudokuStopwatchProviderProps extends PropsWithChildren {
   rawBoardState: RawBoardState;
 }

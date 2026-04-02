@@ -8,6 +8,7 @@ import {
 } from "react";
 import useSessionStorageState from "use-session-storage-state";
 
+// #region Context
 export type UserSettings = {
   isConflictCheckerEnabled: boolean;
   isDashedGridEnabled: boolean;
@@ -38,7 +39,9 @@ const defaultSettings: UserSettings = {
 const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(
   undefined,
 );
+// #endregion
 
+// #region Provider
 export const UserSettingsProvider = ({ children }: PropsWithChildren) => {
   const [userSettings, setUserSettings] = useSessionStorageState<UserSettings>(
     "user-settings",
@@ -61,7 +64,9 @@ export const UserSettingsProvider = ({ children }: PropsWithChildren) => {
     </UserSettingsContext.Provider>
   );
 };
+// #endregion
 
+// #region Hook
 export const useUserSettings = () => {
   const context = useContext(UserSettingsContext);
 
@@ -70,3 +75,4 @@ export const useUserSettings = () => {
 
   return context;
 };
+// #endregion

@@ -155,6 +155,7 @@ const isKeypadMode = (
   candidateKeypadMode === "Center" ||
   candidateKeypadMode === "Corner";
 
+// #region Keypad Mode Selector Component
 type KeypadModeSelectorProps = {
   keypadMode: KeypadMode;
   setBaseKeypadMode: Dispatch<SetStateAction<KeypadMode>>;
@@ -229,3 +230,4 @@ export const KeypadModeSelector = ({
     </RadioCard.Root>
   );
 };
+// #endregion

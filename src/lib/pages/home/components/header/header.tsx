@@ -22,6 +22,8 @@ import {
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 
 // #region Shortcuts Menu
+
+// #region Shortcut Tooltip Text Components
 const MoveSelectionTooltipText = () => (
   <>
     <Kbd>Arrows</Kbd>: &nbsp;Move the current selection in the indicated
@@ -148,7 +150,9 @@ const RedoTooltipText = () => (
     move.
   </>
 );
+// #endregion
 
+// #region Shortcut Data
 type ShortcutItem = {
   keyboardShortcut: string | Array<string>;
   shortcutName: string;
@@ -344,7 +348,9 @@ const mobileShortcutItems: Array<ShortcutItem> = [
     value: "highlight-matches",
   },
 ];
+// #endregion
 
+// #region Shortcuts Menu Components
 const ShortcutCommand = ({
   keyboardShortcut,
 }: {
@@ -416,6 +422,8 @@ const ShortcutsMenu = () => (
 );
 // #endregion
 
+// #endregion
+
 // #region Settings Menu
 
 // #region Settings Checkbox
@@ -445,6 +453,7 @@ const SettingsCheckbox = ({
 );
 // #endregion
 
+// #region Settings Menu Component
 const SettingsMenu = () => {
   const { pauseStopwatch, startStopwatch } = useSudokuStopwatch();
   const { userSettings, setUserSettings } = useUserSettings();
@@ -587,6 +596,9 @@ const SettingsMenu = () => {
 };
 // #endregion
 
+// #endregion
+
+// #region Header Component
 export const Header = () => {
   const { userSettings } = useUserSettings();
   return (
@@ -609,3 +621,4 @@ export const Header = () => {
     </Flex>
   );
 };
+// #endregion

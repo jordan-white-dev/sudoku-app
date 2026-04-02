@@ -11,6 +11,7 @@ import { getCurrentBoardStateFromPuzzleHistory } from "@/lib/pages/home/utils/tr
 import {
   type BoardState,
   type CellState,
+  type KeypadMode,
   type MarkupColor,
   type MarkupDigitsCellContent,
   type PuzzleHistory,
@@ -19,7 +20,7 @@ import {
 import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region Input Actions
-const addBoardStateToPuzzleHistory = (
+const commitBoardStateToHistoryIfChanged = (
   currentBoardState: BoardState,
   nextBoardState: BoardState,
   setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
@@ -113,7 +114,7 @@ export const handleDigitInput = (
     ),
   );
 
-  addBoardStateToPuzzleHistory(
+  commitBoardStateToHistoryIfChanged(
     currentBoardState,
     nextBoardState,
     setPuzzleHistory,
@@ -122,9 +123,11 @@ export const handleDigitInput = (
 // #endregion
 
 // #region Markup Digit Input Actions
+type MarkupType = Extract<KeypadMode, "Center" | "Corner">;
+
 const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
   currentBoardState: BoardState,
-  markupType: "Center" | "Corner",
+  markupType: MarkupType,
   sudokuDigit: SudokuDigit,
 ): boolean =>
   currentBoardState.every((currentCellState) => {
@@ -152,7 +155,7 @@ const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
 const getCellStateWithRemovedMarkupDigit = (
   currentCellState: CellState,
   currentMarkups: Array<SudokuDigit>,
-  markupType: "Center" | "Corner",
+  markupType: MarkupType,
   sudokuDigit: SudokuDigit,
 ): CellState => {
   const currentCellContent = currentCellState.cellContent;
@@ -190,7 +193,7 @@ const getCellStateWithRemovedMarkupDigit = (
 const getCellStateWithAddedMarkupDigit = (
   currentCellState: CellState,
   currentMarkups: Array<SudokuDigit>,
-  markupType: "Center" | "Corner",
+  markupType: MarkupType,
   sudokuDigit: SudokuDigit,
 ): CellState => {
   const currentCellContent = currentCellState.cellContent;
@@ -222,7 +225,7 @@ const getCellStateWithAddedMarkupDigit = (
 
 const getCellStateWithAnEmptyMarkupType = (
   currentCellState: CellState,
-  markupType: "Center" | "Corner",
+  markupType: MarkupType,
   sudokuDigit: SudokuDigit,
 ): CellState => {
   const nextMarkupDigitsCellContent: MarkupDigitsCellContent =
@@ -245,7 +248,7 @@ const getCellStateWithAnEmptyMarkupType = (
 };
 
 const getMarkupDigitsCellState = (
-  markupType: "Center" | "Corner",
+  markupType: MarkupType,
   currentCellState: CellState,
   shouldMarkupDigitBeRemoved: boolean,
   sudokuDigit: SudokuDigit,
@@ -258,7 +261,8 @@ const getMarkupDigitsCellState = (
 
   const isValidInputCell =
     isNotAGivenDigit &&
-    (isEmptyCellContent || isMarkupDigitsInCellContent(currentCellContent));
+    (isEmptyCellContent(currentCellContent) ||
+      isMarkupDigitsInCellContent(currentCellContent));
 
   if (!isValidInputCell) return currentCellState;
 
@@ -317,7 +321,7 @@ export const handleCenterMarkupInput = (
     ),
   );
 
-  addBoardStateToPuzzleHistory(
+  commitBoardStateToHistoryIfChanged(
     currentBoardState,
     nextBoardState,
     setPuzzleHistory,
@@ -350,7 +354,7 @@ export const handleCornerMarkupInput = (
     ),
   );
 
-  addBoardStateToPuzzleHistory(
+  commitBoardStateToHistoryIfChanged(
     currentBoardState,
     nextBoardState,
     setPuzzleHistory,
@@ -470,7 +474,7 @@ export const handleColorPadInput = (
     ),
   );
 
-  addBoardStateToPuzzleHistory(
+  commitBoardStateToHistoryIfChanged(
     currentBoardState,
     nextBoardState,
     setPuzzleHistory,
@@ -513,7 +517,7 @@ export const handleClearCell = (
     },
   );
 
-  addBoardStateToPuzzleHistory(
+  commitBoardStateToHistoryIfChanged(
     currentBoardState,
     nextBoardState,
     setPuzzleHistory,

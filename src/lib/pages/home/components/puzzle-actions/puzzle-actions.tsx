@@ -166,6 +166,16 @@ const ActionDialog = ({
 // #endregion
 
 // #region New Puzzle Button
+const handleNewPuzzleConfirmation = (
+  navigateToNewPuzzle: ReturnType<typeof useNavigate>,
+) => {
+  const newRawBoardState: RawBoardState = makepuzzle();
+  const rawPuzzleString = getRawPuzzleStringFromRawBoardState(newRawBoardState);
+  const encodedPuzzleString =
+    getEncodedPuzzleStringFromRawPuzzleString(rawPuzzleString);
+  navigateToNewPuzzle({ to: `/puzzle/${encodedPuzzleString}` });
+};
+
 type NewPuzzleDialogTriggerProps = {
   pauseStopwatch: () => void;
 };
@@ -216,16 +226,6 @@ const NewPuzzleDialogFooter = ({
     </Dialog.ActionTrigger>
   </Dialog.Footer>
 );
-
-const handleNewPuzzleConfirmation = (
-  navigateToNewPuzzle: ReturnType<typeof useNavigate>,
-) => {
-  const newRawBoardState: RawBoardState = makepuzzle();
-  const rawPuzzleString = getRawPuzzleStringFromRawBoardState(newRawBoardState);
-  const encodedPuzzleString =
-    getEncodedPuzzleStringFromRawPuzzleString(rawPuzzleString);
-  navigateToNewPuzzle({ to: `/puzzle/${encodedPuzzleString}` });
-};
 
 const NewPuzzleButton = () => {
   const { pauseStopwatch, startStopwatchIfEnabled } = useSudokuStopwatch();
@@ -564,6 +564,7 @@ const RestartPuzzleButton = ({
 };
 // #endregion
 
+// #region Puzzle Actions Component
 type PuzzleActionsProps = {
   puzzleHistory: PuzzleHistory;
   rawBoardState: RawBoardState;
@@ -599,3 +600,4 @@ export const PuzzleActions = ({
     </SimpleGrid>
   );
 };
+// #endregion

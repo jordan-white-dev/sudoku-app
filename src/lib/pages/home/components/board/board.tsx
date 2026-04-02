@@ -766,6 +766,7 @@ const handleCellPointerDown = (
 };
 // #endregion
 
+// #region Board Component
 type BoardProps = {
   isMultiselectMode: boolean;
   puzzleHistory: PuzzleHistory;
@@ -959,3 +960,4 @@ export const Board = ({
     </SimpleGrid>
   );
 };
+// #endregion

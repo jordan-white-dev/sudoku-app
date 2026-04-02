@@ -31,6 +31,7 @@ import {
 } from "@/lib/pages/home/utils/types";
 import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
+// #region Modifier Key Utilities
 type ModifierKeyboardKey = "Control" | "Shift" | "Alt";
 const modifierKeyboardKeys = ["Control", "Shift", "Alt"] as const;
 
@@ -46,31 +47,6 @@ const keypadModesByModifierKeyboardKey: Record<
   Control: "Center",
   Shift: "Corner",
   Alt: "Color",
-};
-
-const keypadModeByShortcutKey = {
-  z: "Digit",
-  x: "Center",
-  c: "Corner",
-  v: "Color",
-} as const satisfies Record<string, KeypadMode>;
-type KeypadModeShortcutKey = keyof typeof keypadModeByShortcutKey;
-
-const isKeypadModeShortcutKey = (
-  keyboardKey: string,
-): keyboardKey is KeypadModeShortcutKey =>
-  keyboardKey in keypadModeByShortcutKey;
-
-const shiftedNumpadKeyToDigit: Partial<Record<string, SudokuDigit>> = {
-  End: getBrandedSudokuDigit("1"),
-  ArrowDown: getBrandedSudokuDigit("2"),
-  PageDown: getBrandedSudokuDigit("3"),
-  ArrowLeft: getBrandedSudokuDigit("4"),
-  Clear: getBrandedSudokuDigit("5"),
-  ArrowRight: getBrandedSudokuDigit("6"),
-  Home: getBrandedSudokuDigit("7"),
-  ArrowUp: getBrandedSudokuDigit("8"),
-  PageUp: getBrandedSudokuDigit("9"),
 };
 
 const getModifierKeyDownOrderWithAddedModifier = (
@@ -91,6 +67,35 @@ const doModifierKeyDownOrdersMatch = (
       modifierKeyboardKey ===
       secondModifierKeyDownOrder[modifierKeyboardKeyIndex],
   );
+// #endregion
+
+// #region Keypad Mode Shortcut Utilities
+const keypadModeByShortcutKey = {
+  z: "Digit",
+  x: "Center",
+  c: "Corner",
+  v: "Color",
+} as const satisfies Record<string, KeypadMode>;
+type KeypadModeShortcutKey = keyof typeof keypadModeByShortcutKey;
+
+const isKeypadModeShortcutKey = (
+  keyboardKey: string,
+): keyboardKey is KeypadModeShortcutKey =>
+  keyboardKey in keypadModeByShortcutKey;
+// #endregion
+
+// #region Numpad Digit Input Utilities
+const shiftedNumpadKeyToDigit: Partial<Record<string, SudokuDigit>> = {
+  End: getBrandedSudokuDigit("1"),
+  ArrowDown: getBrandedSudokuDigit("2"),
+  PageDown: getBrandedSudokuDigit("3"),
+  ArrowLeft: getBrandedSudokuDigit("4"),
+  Clear: getBrandedSudokuDigit("5"),
+  ArrowRight: getBrandedSudokuDigit("6"),
+  Home: getBrandedSudokuDigit("7"),
+  ArrowUp: getBrandedSudokuDigit("8"),
+  PageUp: getBrandedSudokuDigit("9"),
+};
 
 const isEditableHtmlElement = (eventTarget: EventTarget | null): boolean =>
   eventTarget instanceof HTMLElement &&
@@ -151,7 +156,9 @@ const isShiftIntendedForNumpadKeyboardEvent = (
     millisecondsBetweenShiftKeyUpAndCurrentEvent <= 50
   );
 };
+// #endregion
 
+// #region Effective Keypad Mode
 const getEffectiveKeypadMode = (
   baseKeypadMode: KeypadMode,
   modifierKeyDownOrder: Array<ModifierKeyboardKey>,
@@ -187,6 +194,7 @@ const getEffectiveKeypadModeForKeyboardEvent = (
 
   return getEffectiveKeypadMode(baseKeypadMode, modifierKeyDownOrder);
 };
+// #endregion
 
 const getModifierKeyDownOrderWithRemovedModifier = (
   currentModifierKeyDownOrder: Array<ModifierKeyboardKey>,
@@ -197,6 +205,7 @@ const getModifierKeyDownOrderWithRemovedModifier = (
       modifierKeyboardKey !== modifierKeyboardKeyToRemove,
   );
 
+// #region Puzzle Controls Component
 type PuzzleControlsProps = {
   isMultiselectMode: boolean;
   puzzleHistory: PuzzleHistory;
@@ -504,3 +513,4 @@ export const PuzzleControls = ({
     </Stack>
   );
 };
+// #endregion

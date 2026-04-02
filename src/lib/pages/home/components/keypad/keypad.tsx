@@ -362,6 +362,7 @@ const ClearButton = ({ puzzleHistory, setPuzzleHistory }: ClearButtonProps) => (
 );
 // #endregion
 
+// #region Keypad Component
 type KeypadProps = {
   isMultiselectMode: boolean;
   keypadMode: KeypadMode;
@@ -411,3 +412,4 @@ export const Keypad = ({
     </SimpleGrid>
   );
 };
+// #endregion

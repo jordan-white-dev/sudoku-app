@@ -1218,6 +1218,7 @@ const getNonCornerCellDigits = (cellContent: CellContent): string => {
   return "";
 };
 
+// #region Cell Component
 type CellProps = {
   boardState: BoardState;
   cellState: CellState;
@@ -1323,3 +1324,4 @@ export const Cell = memo(
     );
   },
 );
+// #endregion

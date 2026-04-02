@@ -20,6 +20,7 @@ import {
   type RawBoardState,
 } from "@/lib/pages/home/utils/types";
 
+// #region Outside Click Handler
 const handleClearAllSelections = (
   setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
 ) => {
@@ -43,7 +44,9 @@ const handleClearAllSelections = (
     return nextPuzzleHistory;
   });
 };
+// #endregion
 
+// #region Puzzle Component
 type PuzzleProps = {
   rawBoardState: RawBoardState;
   startingBoardState: BoardState;
@@ -107,3 +110,4 @@ export const Puzzle = memo(
     );
   },
 );
+// #endregion
