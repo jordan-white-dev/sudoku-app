@@ -1,4 +1,5 @@
 import { expect } from "vitest";
+import { type Locator } from "vitest/browser";
 import { type render } from "vitest-browser-react";
 
 import {
@@ -171,7 +172,7 @@ export const getCellAccessibleName = (cellNumber: CellNumber) => {
 export const getCellLocator = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellNumber: CellNumber,
-) =>
+): Promise<Locator> =>
   (await renderedBoard).getByRole("button", {
     name: getCellAccessibleName(cellNumber),
   });
@@ -194,7 +195,7 @@ export const getCellElement = async (
   return candidateCellElement;
 };
 
-const getRenderedCellBackgroundImage = async (
+const getComputedStyleOfRenderedCellBackgroundImage = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellNumber: CellNumber,
 ): Promise<string> => {
@@ -208,24 +209,24 @@ const doesBackgroundImageContainToken = (
   token: string,
 ): boolean => backgroundImage.toLowerCase().includes(token.toLowerCase());
 
-export const expectCellToBeSelected = async (
+export const expectCellToBeSelectedOrNot = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellNumber: CellNumber,
-  shouldBeSelected: boolean,
+  shouldCellBeSelected: boolean,
 ) => {
   const cellElement = await getCellElement(renderedBoard, cellNumber);
 
   expect(cellElement.getAttribute("data-selected")).toBe(
-    String(shouldBeSelected),
+    String(shouldCellBeSelected),
   );
 };
 
-export const expectSeenCellHighlightToBeVisible = async (
+export const expectSeenCellHighlightOrNotInTargetCell = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellNumber: CellNumber,
-  shouldBeVisible: boolean,
+  shouldHighlightBeVisible: boolean,
 ) => {
-  const backgroundImage = await getRenderedCellBackgroundImage(
+  const backgroundImage = await getComputedStyleOfRenderedCellBackgroundImage(
     renderedBoard,
     cellNumber,
   );
@@ -235,15 +236,15 @@ export const expectSeenCellHighlightToBeVisible = async (
       backgroundImage,
       SEEN_CELL_HIGHLIGHT_COLOR_TOKEN,
     ),
-  ).toBe(shouldBeVisible);
+  ).toBe(shouldHighlightBeVisible);
 };
 
-export const expectConflictCellHighlightToBeVisible = async (
+export const expectConflictCellHighlightInTargetCell = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellNumber: CellNumber,
   shouldBeVisible: boolean,
 ) => {
-  const backgroundImage = await getRenderedCellBackgroundImage(
+  const backgroundImage = await getComputedStyleOfRenderedCellBackgroundImage(
     renderedBoard,
     cellNumber,
   );

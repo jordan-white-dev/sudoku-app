@@ -11,8 +11,8 @@ import {
 import {
   CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN,
   defaultUserSettings,
-  expectConflictCellHighlightToBeVisible,
-  expectSeenCellHighlightToBeVisible,
+  expectConflictCellHighlightInTargetCell,
+  expectSeenCellHighlightOrNotInTargetCell,
   getBoardStateWithTargetCellsSelected,
   getCellAccessibleName,
   getCellElement,
@@ -1103,7 +1103,7 @@ describe("Background state: digit conflicts", () => {
     });
 
     // Assert
-    await expectConflictCellHighlightToBeVisible(
+    await expectConflictCellHighlightInTargetCell(
       renderedCell,
       targetCellNumber,
       true,
@@ -1160,7 +1160,7 @@ describe("Background state: seen cells", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightToBeVisible(
+    await expectSeenCellHighlightOrNotInTargetCell(
       renderedCell,
       targetCellNumber,
       true,
@@ -1190,7 +1190,7 @@ describe("Background state: seen cells", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightToBeVisible(
+    await expectSeenCellHighlightOrNotInTargetCell(
       renderedCell,
       targetCellNumber,
       true,
@@ -1220,7 +1220,7 @@ describe("Background state: seen cells", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightToBeVisible(
+    await expectSeenCellHighlightOrNotInTargetCell(
       renderedCell,
       targetCellNumber,
       true,
@@ -1250,7 +1250,7 @@ describe("Background state: seen cells", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightToBeVisible(
+    await expectSeenCellHighlightOrNotInTargetCell(
       renderedCell,
       targetCellNumber,
       false,
