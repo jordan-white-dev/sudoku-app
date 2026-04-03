@@ -2,7 +2,7 @@
 
 ## Code Style
 
-- Use TypeScript with strict typing and the existing `@/*` path alias from `tsconfig.json`.
+- Use TypeScript with strict typing, minimal type assertions, and the existing `@/*` path alias from `tsconfig.json`.
 - Follow Biome rules in `biome.json`: no barrel files, inline `type` imports, generic array syntax, and no default exports except where the existing override allows them such as page `index.tsx` files.
 - Use descriptive names, keep functions small and focused, and colocate `*.test.tsx` files beside their corresponding implementation files.
 - Prefer debuggable longform code over concise inline code. For non-trivial logic, avoid compressed one-liners, nested ternaries, and inline object reconstruction inside callbacks. Instead, introduce well-named intermediate variables and use explicit `return` statements.
