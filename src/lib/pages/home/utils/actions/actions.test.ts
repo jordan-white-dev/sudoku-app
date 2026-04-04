@@ -101,18 +101,20 @@ const getPuzzleHistoryAfterRedoingMove = (
 
 // #region Board State Composition Helpers
 const getBoardStateWithSequentialTransformsApplied = (
-  startingBoardState: BoardState,
   boardStateTransformFunctions: Array<
     (currentBoardState: BoardState) => BoardState
   >,
+  startingBoardState?: BoardState,
 ): BoardState => {
+  const boardState = startingBoardState ?? getStartingEmptyBoardState();
+
   const transformedBoardState = boardStateTransformFunctions.reduce(
     (currentBoardState, transformBoardState) => {
       const nextBoardState = transformBoardState(currentBoardState);
 
       return nextBoardState;
     },
-    startingBoardState,
+    boardState,
   );
 
   return transformedBoardState;
@@ -124,7 +126,6 @@ const getStartingPuzzleHistoryWithSequentialTransformsApplied = (
   > = [],
 ): PuzzleHistory => {
   const startingBoardState = getBoardStateWithSequentialTransformsApplied(
-    getStartingEmptyBoardState(),
     boardStateTransformFunctions,
   );
 
@@ -350,7 +351,7 @@ const expectTargetCellToContainEnteredDigit = (
   cellNumber: CellNumber,
   expectedEnteredDigit: SudokuDigit,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
 
   expect(isEnteredDigitInCellContent(cellState.cellContent)).toBe(true);
 
@@ -363,7 +364,7 @@ const expectTargetCellToContainCenterMarkups = (
   cellNumber: CellNumber,
   expectedCenterMarkups: [""] | Array<SudokuDigit>,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
 
   expect(isMarkupDigitsInCellContent(cellState.cellContent)).toBe(true);
 
@@ -376,7 +377,7 @@ const expectTargetCellToContainCornerMarkups = (
   cellNumber: CellNumber,
   expectedCornerMarkups: [""] | Array<SudokuDigit>,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
 
   expect(isMarkupDigitsInCellContent(cellState.cellContent)).toBe(true);
 
@@ -389,7 +390,7 @@ const expectTargetCellToContainMarkupColors = (
   cellNumber: CellNumber,
   expectedMarkupColors: [""] | Array<MarkupColor>,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
 
   expect(cellState.markupColors).toEqual(expectedMarkupColors);
 };
@@ -418,11 +419,14 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState: BoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-            getBrandedCellNumber(3),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [
+              getBrandedCellNumber(1),
+              getBrandedCellNumber(2),
+              getBrandedCellNumber(3),
+            ],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -455,14 +459,15 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("2"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -493,9 +498,10 @@ describe("Digit entry", () => {
             [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -530,9 +536,10 @@ describe("Digit entry", () => {
             [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -562,15 +569,15 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("9"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -600,21 +607,21 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -640,21 +647,21 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("9"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -683,9 +690,9 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
@@ -695,10 +702,10 @@ describe("Digit entry", () => {
             [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -728,20 +735,21 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("2"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("3"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -789,14 +797,15 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("9"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -817,9 +826,10 @@ describe("Digit entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
@@ -865,9 +875,10 @@ describe("Center markup entry", () => {
             getBrandedCellNumber(1),
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -902,9 +913,10 @@ describe("Center markup entry", () => {
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -940,10 +952,10 @@ describe("Center markup entry", () => {
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -978,15 +990,15 @@ describe("Center markup entry", () => {
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1027,10 +1039,10 @@ describe("Center markup entry", () => {
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1065,15 +1077,15 @@ describe("Center markup entry", () => {
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("4"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1115,15 +1127,15 @@ describe("Center markup entry", () => {
           ),
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("9"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1177,10 +1189,10 @@ describe("Center markup entry", () => {
           return nextBoardState;
         },
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1215,9 +1227,10 @@ describe("Center markup entry", () => {
             [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1248,9 +1261,10 @@ describe("Center markup entry", () => {
             [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("4")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1280,21 +1294,21 @@ describe("Center markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("4"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1324,15 +1338,15 @@ describe("Center markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("4"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
@@ -1341,11 +1355,14 @@ describe("Center markup entry", () => {
             [getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-            getBrandedCellNumber(3),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [
+              getBrandedCellNumber(1),
+              getBrandedCellNumber(2),
+              getBrandedCellNumber(3),
+            ],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1391,9 +1408,10 @@ describe("Center markup entry", () => {
             [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1441,14 +1459,15 @@ describe("Center markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1469,9 +1488,10 @@ describe("Center markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterCenterMarkupInput(
       startingPuzzleHistory,
@@ -1517,9 +1537,10 @@ describe("Corner markup entry", () => {
             getBrandedCellNumber(1),
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1554,9 +1575,10 @@ describe("Corner markup entry", () => {
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1592,10 +1614,10 @@ describe("Corner markup entry", () => {
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1630,15 +1652,15 @@ describe("Corner markup entry", () => {
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1679,10 +1701,10 @@ describe("Corner markup entry", () => {
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1717,15 +1739,15 @@ describe("Corner markup entry", () => {
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("4"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1767,15 +1789,15 @@ describe("Corner markup entry", () => {
           ),
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("9"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1829,9 +1851,10 @@ describe("Corner markup entry", () => {
           return nextBoardState;
         },
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1861,9 +1884,10 @@ describe("Corner markup entry", () => {
             [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1894,9 +1918,10 @@ describe("Corner markup entry", () => {
             [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1926,21 +1951,21 @@ describe("Corner markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("4"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -1970,15 +1995,15 @@ describe("Corner markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("4"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
@@ -1987,11 +2012,14 @@ describe("Corner markup entry", () => {
             [getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-            getBrandedCellNumber(3),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [
+              getBrandedCellNumber(1),
+              getBrandedCellNumber(2),
+              getBrandedCellNumber(3),
+            ],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2037,9 +2065,10 @@ describe("Corner markup entry", () => {
             [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2087,14 +2116,15 @@ describe("Corner markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("5"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2115,9 +2145,10 @@ describe("Corner markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterCornerMarkupInput(
       startingPuzzleHistory,
@@ -2158,10 +2189,10 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2190,9 +2221,10 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2206,8 +2238,8 @@ describe("Color markup entry", () => {
     // Assert
     expect(
       getTargetCellStateFromBoardState(
-        currentBoardState,
         getBrandedCellNumber(1),
+        currentBoardState,
       ).markupColors,
     ).toEqual([MARKUP_COLOR_BLUE]);
   });
@@ -2227,9 +2259,10 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2265,10 +2298,10 @@ describe("Color markup entry", () => {
             [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2303,9 +2336,10 @@ describe("Color markup entry", () => {
             [MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2341,10 +2375,10 @@ describe("Color markup entry", () => {
             [MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2374,14 +2408,15 @@ describe("Color markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("8"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2411,14 +2446,15 @@ describe("Color markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("6"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2454,9 +2490,10 @@ describe("Color markup entry", () => {
             [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2502,9 +2539,10 @@ describe("Color markup entry", () => {
             [MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2551,9 +2589,10 @@ describe("Color markup entry", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterColorPadInput(
       startingPuzzleHistory,
@@ -2595,9 +2634,9 @@ describe("Clearing selected cells", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("6"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
@@ -2620,17 +2659,20 @@ describe("Clearing selected cells", () => {
           ),
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(4),
             getBrandedSudokuDigit("7"),
+            currentBoardState,
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-            getBrandedCellNumber(2),
-            getBrandedCellNumber(3),
-            getBrandedCellNumber(4),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [
+              getBrandedCellNumber(1),
+              getBrandedCellNumber(2),
+              getBrandedCellNumber(3),
+              getBrandedCellNumber(4),
+            ],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2683,9 +2725,9 @@ describe("Clearing selected cells", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("8"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
@@ -2694,9 +2736,10 @@ describe("Clearing selected cells", () => {
             [MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2725,9 +2768,9 @@ describe("Clearing selected cells", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("6"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
@@ -2737,9 +2780,9 @@ describe("Clearing selected cells", () => {
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(2),
             getBrandedSudokuDigit("4"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
@@ -2748,9 +2791,10 @@ describe("Clearing selected cells", () => {
             [MARKUP_COLOR_GREEN],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2789,9 +2833,9 @@ describe("Clearing selected cells", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            currentBoardState,
             getBrandedCellNumber(1),
             getBrandedSudokuDigit("6"),
+            currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
@@ -2813,9 +2857,10 @@ describe("Clearing selected cells", () => {
             [MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2880,9 +2925,10 @@ describe("Clearing selected cells", () => {
             getBrandedCellNumber(1),
           ),
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
 
     // Act
@@ -2902,9 +2948,10 @@ describe("Clearing selected cells", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
@@ -2948,9 +2995,10 @@ describe("Undoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
@@ -2979,9 +3027,10 @@ describe("Undoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
@@ -3040,9 +3089,10 @@ describe("Redoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
@@ -3070,9 +3120,10 @@ describe("Redoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,
@@ -3118,9 +3169,10 @@ describe("Redoing moves", () => {
     const startingPuzzleHistory =
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(currentBoardState, [
-            getBrandedCellNumber(1),
-          ]),
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellNumber(1)],
+            currentBoardState,
+          ),
       ]);
     const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
       startingPuzzleHistory,

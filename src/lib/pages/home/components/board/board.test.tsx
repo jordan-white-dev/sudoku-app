@@ -6,10 +6,12 @@ import { Provider } from "@/lib/components/ui/provider";
 import { Board } from "@/lib/pages/home/components/board/board";
 import {
   defaultUserSettings,
-  expectConflictCellHighlightInTargetCell,
   expectSeenCellHighlightOrNotInTargetCell,
+  expectTargetCellToHaveConflictHighlightOrNot,
   getBoardStateWithEnteredDigitInTargetCell,
+  getBoardStateWithEnteredDigitsInTargetCells,
   getBoardStateWithGivenDigitInTargetCell,
+  getBoardStateWithGivenDigitsInTargetCells,
   getBoardStateWithTargetCellsSelected,
   getCellElement,
   getCellLocator,
@@ -26,6 +28,7 @@ import {
   type BoardState,
   type CellNumber,
   type CellState,
+  type KeypadMode,
   type PuzzleHistory,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
@@ -218,7 +221,7 @@ const getBoxIndex = (cellNumber: CellNumber): number =>
   Math.floor(getRowIndex(cellNumber) / 3) * 3 +
   Math.floor(getColumnIndex(cellNumber) / 3);
 
-const doCellsShareRowColumnOrBox = (
+const doCellsShareBoxColumnOrRow = (
   firstCellNumber: CellNumber,
   secondCellNumber: CellNumber,
 ): boolean =>
@@ -230,7 +233,7 @@ const getCellNumbersSeenByTargetCell = (
   targetCellNumber: CellNumber,
 ): Array<CellNumber> =>
   ALL_CELL_NUMBERS.filter((cellNumber) =>
-    doCellsShareRowColumnOrBox(targetCellNumber, cellNumber),
+    doCellsShareBoxColumnOrRow(targetCellNumber, cellNumber),
   );
 
 const expectTargetCellsToHaveSeenCellHighlightOrNot = async (
@@ -277,6 +280,54 @@ const expectOnlySeenCellsOfTargetCellToBeHighlighted = async (
   await expectTargetCellsToHaveSeenCellHighlightOrNot(
     renderedBoard,
     cellNumbersNotSeenByTargetCell,
+    false,
+  );
+};
+// #endregion
+
+// #region Conflict Cell Expectations
+const expectTargetCellsToHaveConflictHighlightOrNot = async (
+  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
+  targetCellNumbers: Array<CellNumber>,
+  shouldHighlightBeVisible: boolean,
+): Promise<void> => {
+  await Promise.all(
+    targetCellNumbers.map((cellNumber) =>
+      expectTargetCellToHaveConflictHighlightOrNot(
+        renderedBoard,
+        cellNumber,
+        shouldHighlightBeVisible,
+      ),
+    ),
+  );
+};
+
+const expectNoCellsToHaveConflictHighlight = async (
+  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
+) => {
+  await expectTargetCellsToHaveConflictHighlightOrNot(
+    renderedBoard,
+    ALL_CELL_NUMBERS,
+    false,
+  );
+};
+
+const expectOnlyTargetCellsToHaveConflictHighlight = async (
+  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
+  conflictedCellNumbers: Array<CellNumber>,
+) => {
+  const nonConflictedCellNumbers = ALL_CELL_NUMBERS.filter(
+    (cellNumber) => !conflictedCellNumbers.includes(cellNumber),
+  );
+
+  await expectTargetCellsToHaveConflictHighlightOrNot(
+    renderedBoard,
+    conflictedCellNumbers,
+    true,
+  );
+  await expectTargetCellsToHaveConflictHighlightOrNot(
+    renderedBoard,
+    nonConflictedCellNumbers,
     false,
   );
 };
@@ -359,28 +410,72 @@ const dispatchKeyboardEvent = async (keyboardEventInit: KeyboardEventInit) => {
 // #endregion
 
 // #region Board State Content
-const getBoardStateWithCenterMarkupsInTargetCell = (
-  boardState: BoardState,
-  cellNumber: CellNumber,
-  centerMarkups: Array<SudokuDigit>,
+const getBoardStateWithMarkupsInTargetCells = (
+  markupType: Extract<KeypadMode, "Center" | "Corner">,
+  markupsToEnterInTargetCells: Array<{
+    cellNumber: CellNumber;
+    markups: Array<SudokuDigit>;
+  }>,
+  startingBoardState?: BoardState,
 ): BoardState => {
+  const boardState = startingBoardState ?? getStartingEmptyBoardState();
+
   const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
-        ? {
-            ...cellState,
-            cellContent: {
-              centerMarkups,
-              cornerMarkups: [""],
-            },
-          }
-        : cellState;
+    const nextCellState: CellState = (() => {
+      const markupsToEnterInTargetCell = markupsToEnterInTargetCells.find(
+        (digitInCellObject) =>
+          digitInCellObject.cellNumber === cellState.cellNumber,
+      );
+
+      if (markupsToEnterInTargetCell) {
+        const markupTypeKey =
+          markupType === "Center" ? "centerMarkups" : "cornerMarkups";
+
+        const cellStateWithMarkups: CellState = {
+          ...cellState,
+          cellContent: {
+            ...cellState.cellContent,
+            [markupTypeKey]: markupsToEnterInTargetCell.markups,
+          },
+        };
+
+        return cellStateWithMarkups;
+      }
+
+      return cellState;
+    })();
 
     return nextCellState;
   });
 
   return nextBoardState;
 };
+
+const getBoardStateWithCenterMarkupsInTargetCells = (
+  markupsToEnterInTargetCells: Array<{
+    cellNumber: CellNumber;
+    markups: Array<SudokuDigit>;
+  }>,
+  startingBoardState?: BoardState,
+): BoardState =>
+  getBoardStateWithMarkupsInTargetCells(
+    "Center",
+    markupsToEnterInTargetCells,
+    startingBoardState,
+  );
+
+const getBoardStateWithCornerMarkupsInTargetCells = (
+  markupsToEnterInTargetCells: Array<{
+    cellNumber: CellNumber;
+    markups: Array<SudokuDigit>;
+  }>,
+  startingBoardState?: BoardState,
+): BoardState =>
+  getBoardStateWithMarkupsInTargetCells(
+    "Corner",
+    markupsToEnterInTargetCells,
+    startingBoardState,
+  );
 // #endregion
 
 beforeEach(() => {
@@ -431,10 +526,9 @@ describe("Selecting and deselecting cells by clicking", () => {
 
   it("deselects a clicked cell when in single select mode and it's the only selected cell", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(1),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
     });
@@ -452,10 +546,9 @@ describe("Selecting and deselecting cells by clicking", () => {
 
   it("selects only a clicked cell and deselects the previously selected cell when in single select mode, a single cell is selected, and the clicked cell is a different cell", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(1),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
     });
@@ -475,14 +568,11 @@ describe("Selecting and deselecting cells by clicking", () => {
 
   it("selects only a clicked cell and deselects all previously selected cells when in single select mode, multiple cells are selected, and the clicked cell is one of them", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [
-        getBrandedCellNumber(1),
-        getBrandedCellNumber(2),
-        getBrandedCellNumber(3),
-      ],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+      getBrandedCellNumber(3),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
     });
@@ -502,14 +592,11 @@ describe("Selecting and deselecting cells by clicking", () => {
 
   it("selects only a clicked cell and deselects all previously selected cells when in single select mode, multiple cells are selected, and the clicked cell is a different cell", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [
-        getBrandedCellNumber(1),
-        getBrandedCellNumber(2),
-        getBrandedCellNumber(3),
-      ],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+      getBrandedCellNumber(3),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
     });
@@ -548,10 +635,9 @@ describe("Selecting and deselecting cells by clicking", () => {
 
   it("deselects a clicked cell when in multiselect mode and it's the only selected cell", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(1),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
       isMultiselectMode: true,
@@ -570,10 +656,9 @@ describe("Selecting and deselecting cells by clicking", () => {
 
   it("selects a clicked cell when in multiselect mode, a single cell is selected, and the clicked cell is a different cell", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(1),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
       isMultiselectMode: true,
@@ -595,10 +680,10 @@ describe("Selecting and deselecting cells by clicking", () => {
 
   it("deselects a clicked cell when in multiselect mode, multiple cells are selected, and the clicked cell is one of them", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
       isMultiselectMode: true,
@@ -619,10 +704,10 @@ describe("Selecting and deselecting cells by clicking", () => {
 
   it("selects a clicked cell when in multiselect mode, multiple cells are selected, and the clicked cell is a different cell", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
       isMultiselectMode: true,
@@ -891,19 +976,31 @@ describe("Show seen cells highlights", () => {
   });
 });
 
-describe("Show conflicted digit highlights", () => {
-  it("highlights cells with matching given or entered digits in the same box when conflict checking is enabled", async () => {
+describe("Show conflict digit highlights", () => {
+  it("highlights only the conflicting cells when two entered digits match in the same box and conflict checking is enabled", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
-      getBoardStateWithEnteredDigitInTargetCell(
-        getStartingEmptyBoardState(),
-        getBrandedCellNumber(1),
-        getBrandedSudokuDigit("9"),
-      ),
-      getBrandedCellNumber(11),
-      getBrandedSudokuDigit("9"),
-    );
-
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("9"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(2),
+        digit: getBrandedSudokuDigit("2"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(3),
+        digit: getBrandedSudokuDigit("3"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(11),
+        digit: getBrandedSudokuDigit("9"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(12),
+        digit: getBrandedSudokuDigit("4"),
+      },
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
       userSettings: {
@@ -913,35 +1010,36 @@ describe("Show conflicted digit highlights", () => {
     });
 
     // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
       getBrandedCellNumber(11),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(20),
-      false,
-    );
+    ]);
   });
 
-  it("highlights cells with matching given or entered digits in the same column when conflict checking is enabled", async () => {
+  it("highlights only the conflicting cells when two entered digits match in the same column and conflict checking is enabled", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
-      getBoardStateWithEnteredDigitInTargetCell(
-        getStartingEmptyBoardState(),
-        getBrandedCellNumber(1),
-        getBrandedSudokuDigit("7"),
-      ),
-      getBrandedCellNumber(10),
-      getBrandedSudokuDigit("7"),
-    );
-
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("7"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(19),
+        digit: getBrandedSudokuDigit("1"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(28),
+        digit: getBrandedSudokuDigit("2"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(37),
+        digit: getBrandedSudokuDigit("3"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(73),
+        digit: getBrandedSudokuDigit("7"),
+      },
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
       userSettings: {
@@ -951,35 +1049,36 @@ describe("Show conflicted digit highlights", () => {
     });
 
     // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(10),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(11),
-      false,
-    );
+      getBrandedCellNumber(73),
+    ]);
   });
 
-  it("highlights cells with matching given or entered digits in the same row when conflict checking is enabled", async () => {
+  it("highlights only the conflicting cells when two entered digits match in the same row and conflict checking is enabled", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
-      getBoardStateWithEnteredDigitInTargetCell(
-        getStartingEmptyBoardState(),
-        getBrandedCellNumber(1),
-        getBrandedSudokuDigit("5"),
-      ),
-      getBrandedCellNumber(2),
-      getBrandedSudokuDigit("5"),
-    );
-
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(3),
+        digit: getBrandedSudokuDigit("1"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(4),
+        digit: getBrandedSudokuDigit("2"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(5),
+        digit: getBrandedSudokuDigit("3"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(9),
+        digit: getBrandedSudokuDigit("5"),
+      },
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
       userSettings: {
@@ -989,221 +1088,473 @@ describe("Show conflicted digit highlights", () => {
     });
 
     // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
+      getBrandedCellNumber(9),
+    ]);
+  });
+
+  it("highlights only the conflicting cells when a given digit and an entered digit match in the same box and conflict checking is enabled", async () => {
+    // Arrange
+    const boardStateWithGivenDigitsInTargetCells =
+      getBoardStateWithGivenDigitsInTargetCells([
+        {
+          cellNumber: getBrandedCellNumber(1),
+          digit: getBrandedSudokuDigit("5"),
+        },
+        {
+          cellNumber: getBrandedCellNumber(21),
+          digit: getBrandedSudokuDigit("9"),
+        },
+      ]);
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells(
+      [
+        {
+          cellNumber: getBrandedCellNumber(11),
+          digit: getBrandedSudokuDigit("5"),
+        },
+        {
+          cellNumber: getBrandedCellNumber(12),
+          digit: getBrandedSudokuDigit("3"),
+        },
+        {
+          cellNumber: getBrandedCellNumber(20),
+          digit: getBrandedSudokuDigit("4"),
+        },
+      ],
+      boardStateWithGivenDigitsInTargetCells,
     );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(11),
+    ]);
+  });
+
+  it("highlights only the conflicting cells when a given digit and an entered digit match in the same column and conflict checking is enabled", async () => {
+    // Arrange
+    const boardStateWithGivenDigitsInTargetCells =
+      getBoardStateWithGivenDigitsInTargetCells([
+        {
+          cellNumber: getBrandedCellNumber(1),
+          digit: getBrandedSudokuDigit("5"),
+        },
+        {
+          cellNumber: getBrandedCellNumber(73),
+          digit: getBrandedSudokuDigit("9"),
+        },
+      ]);
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells(
+      [
+        {
+          cellNumber: getBrandedCellNumber(10),
+          digit: getBrandedSudokuDigit("5"),
+        },
+        {
+          cellNumber: getBrandedCellNumber(19),
+          digit: getBrandedSudokuDigit("3"),
+        },
+        {
+          cellNumber: getBrandedCellNumber(28),
+          digit: getBrandedSudokuDigit("4"),
+        },
+      ],
+      boardStateWithGivenDigitsInTargetCells,
+    );
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(10),
+    ]);
+  });
+
+  it("highlights only the conflicting cells when a given digit and an entered digit match in the same row and conflict checking is enabled", async () => {
+    // Arrange
+    const boardStateWithGivenDigitsInTargetCells =
+      getBoardStateWithGivenDigitsInTargetCells([
+        {
+          cellNumber: getBrandedCellNumber(1),
+          digit: getBrandedSudokuDigit("5"),
+        },
+        {
+          cellNumber: getBrandedCellNumber(9),
+          digit: getBrandedSudokuDigit("9"),
+        },
+      ]);
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells(
+      [
+        {
+          cellNumber: getBrandedCellNumber(2),
+          digit: getBrandedSudokuDigit("5"),
+        },
+        {
+          cellNumber: getBrandedCellNumber(3),
+          digit: getBrandedSudokuDigit("3"),
+        },
+        {
+          cellNumber: getBrandedCellNumber(4),
+          digit: getBrandedSudokuDigit("4"),
+        },
+      ],
+      boardStateWithGivenDigitsInTargetCells,
+    );
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
+      getBrandedCellNumber(1),
       getBrandedCellNumber(2),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
+    ]);
+  });
+
+  it("highlights only the conflicting cells when more than two entered digits match within the same box and conflict checking is enabled", async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(11),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(12),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(21),
+        digit: getBrandedSudokuDigit("4"),
+      },
+    ]);
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(11),
+      getBrandedCellNumber(21),
+    ]);
+  });
+
+  it("highlights only the conflicting cells when more than two entered digits match within the same column and conflict checking is enabled", async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(10),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(19),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(28),
+        digit: getBrandedSudokuDigit("5"),
+      },
+    ]);
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(10),
+      getBrandedCellNumber(19),
+    ]);
+  });
+
+  it("highlights only the conflicting cells when more than two entered digits match within the same row and conflict checking is enabled", async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(2),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(3),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(4),
+        digit: getBrandedSudokuDigit("5"),
+      },
+    ]);
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
       getBrandedCellNumber(3),
-      false,
-    );
+    ]);
   });
 
-  it("treats given digits and entered digits as conflicting with each other", async () => {
+  it("highlights no cells when all digits in each box are unique and conflict checking is enabled", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("1"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(2),
+        digit: getBrandedSudokuDigit("2"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(3),
+        digit: getBrandedSudokuDigit("3"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(10),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(11),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(12),
+        digit: getBrandedSudokuDigit("6"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(19),
+        digit: getBrandedSudokuDigit("7"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(20),
+        digit: getBrandedSudokuDigit("8"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(21),
+        digit: getBrandedSudokuDigit("9"),
+      },
+    ]);
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectNoCellsToHaveConflictHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when all digits in each column are unique and conflict checking is enabled", async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("1"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(10),
+        digit: getBrandedSudokuDigit("2"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(19),
+        digit: getBrandedSudokuDigit("3"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(28),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(37),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(46),
+        digit: getBrandedSudokuDigit("6"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(55),
+        digit: getBrandedSudokuDigit("7"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(64),
+        digit: getBrandedSudokuDigit("8"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(73),
+        digit: getBrandedSudokuDigit("9"),
+      },
+    ]);
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectNoCellsToHaveConflictHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when all digits in each row are unique and conflict checking is enabled", async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("1"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(2),
+        digit: getBrandedSudokuDigit("2"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(3),
+        digit: getBrandedSudokuDigit("3"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(4),
+        digit: getBrandedSudokuDigit("4"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(5),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(6),
+        digit: getBrandedSudokuDigit("6"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(7),
+        digit: getBrandedSudokuDigit("7"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(8),
+        digit: getBrandedSudokuDigit("8"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(9),
+        digit: getBrandedSudokuDigit("9"),
+      },
+    ]);
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectNoCellsToHaveConflictHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when conflict checking is disabled, even when matching digits share a house", async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(9),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(10),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(21),
+        digit: getBrandedSudokuDigit("5"),
+      },
+    ]);
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+    });
+
+    // Assert
+    await expectNoCellsToHaveConflictHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when center markup digits share a house with matching given and entered digits and conflict checking is enabled", async () => {
+    // Arrange
+    const boardStateWithGivenDigitInTargetCell =
       getBoardStateWithGivenDigitInTargetCell(
-        getStartingEmptyBoardState(),
-        getBrandedCellNumber(1),
-        getBrandedSudokuDigit("5"),
-      ),
-      getBrandedCellNumber(2),
-      getBrandedSudokuDigit("5"),
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-      userSettings: {
-        ...defaultUserSettings,
-        isConflictCheckerEnabled: true,
-      },
-    });
-
-    // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-  });
-
-  it("highlights every cell that breaks the rule when more than two matching digits appear in the same house", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
-      getBoardStateWithEnteredDigitInTargetCell(
-        getBoardStateWithEnteredDigitInTargetCell(
-          getStartingEmptyBoardState(),
-          getBrandedCellNumber(1),
-          getBrandedSudokuDigit("4"),
-        ),
         getBrandedCellNumber(2),
-        getBrandedSudokuDigit("4"),
-      ),
-      getBrandedCellNumber(3),
-      getBrandedSudokuDigit("4"),
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-      userSettings: {
-        ...defaultUserSettings,
-        isConflictCheckerEnabled: true,
-      },
-    });
-
-    // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(4),
-      false,
-    );
-  });
-
-  it("does not mark cells as conflicting when the digits in the same house are different", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
-      getBoardStateWithEnteredDigitInTargetCell(
-        getStartingEmptyBoardState(),
-        getBrandedCellNumber(1),
         getBrandedSudokuDigit("5"),
-      ),
-      getBrandedCellNumber(2),
-      getBrandedSudokuDigit("6"),
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-      userSettings: {
-        ...defaultUserSettings,
-        isConflictCheckerEnabled: true,
-      },
-    });
-
-    // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-  });
-
-  it("does not highlight matching digits when conflict checking is disabled", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
+      );
+    const boardStateWithEnteredDigitInTargetCell =
       getBoardStateWithEnteredDigitInTargetCell(
-        getStartingEmptyBoardState(),
-        getBrandedCellNumber(1),
-        getBrandedSudokuDigit("5"),
-      ),
-      getBrandedCellNumber(2),
-      getBrandedSudokuDigit("5"),
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-      userSettings: {
-        ...defaultUserSettings,
-        isConflictCheckerEnabled: false,
-      },
-    });
-
-    // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-  });
-
-  it("highlights cells with matching digits in the same row across different boxes when conflict checking is enabled", async () => {
-    // Arrange
-    // Cells 1 and 4 are in row 1 but in different boxes (box 1 and box 2).
-    const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
-      getBoardStateWithEnteredDigitInTargetCell(
-        getStartingEmptyBoardState(),
-        getBrandedCellNumber(1),
-        getBrandedSudokuDigit("3"),
-      ),
-      getBrandedCellNumber(4),
-      getBrandedSudokuDigit("3"),
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-      userSettings: {
-        ...defaultUserSettings,
-        isConflictCheckerEnabled: true,
-      },
-    });
-
-    // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(4),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(5),
-      false,
-    );
-  });
-
-  it("highlights cells with matching digits in the same column across different boxes when conflict checking is enabled", async () => {
-    // Arrange
-    // Cells 1 and 28 are in column 1 but in different boxes (box 1 and box 4).
-    const startingBoardState = getBoardStateWithEnteredDigitInTargetCell(
-      getBoardStateWithEnteredDigitInTargetCell(
-        getStartingEmptyBoardState(),
-        getBrandedCellNumber(1),
+        getBrandedCellNumber(11),
         getBrandedSudokuDigit("6"),
-      ),
-      getBrandedCellNumber(28),
-      getBrandedSudokuDigit("6"),
+        boardStateWithGivenDigitInTargetCell,
+      );
+    const startingBoardState = getBoardStateWithCenterMarkupsInTargetCells(
+      [
+        {
+          cellNumber: getBrandedCellNumber(1),
+          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+        },
+        {
+          cellNumber: getBrandedCellNumber(9),
+          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+        },
+        {
+          cellNumber: getBrandedCellNumber(10),
+          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+        },
+        {
+          cellNumber: getBrandedCellNumber(21),
+          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+        },
+      ],
+      boardStateWithEnteredDigitInTargetCell,
     );
-
     const renderedBoard = await renderBoard({
       startingBoardState,
       userSettings: {
@@ -1213,37 +1564,43 @@ describe("Show conflicted digit highlights", () => {
     });
 
     // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(28),
-      true,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(10),
-      false,
-    );
+    await expectNoCellsToHaveConflictHighlight(renderedBoard);
   });
 
-  it("does not flag cells containing only markup digits as conflicting when the same digit appears twice in the same house", async () => {
+  it("highlights no cells when corner markup digits share a house with matching given and entered digits and conflict checking is enabled", async () => {
     // Arrange
-    // Cells 1 and 2 share row 1 and box 1, and both carry center markup "5",
-    // but neither has a given or entered digit, so the conflict checker should not fire.
-    const startingBoardState = getBoardStateWithCenterMarkupsInTargetCell(
-      getBoardStateWithCenterMarkupsInTargetCell(
-        getStartingEmptyBoardState(),
-        getBrandedCellNumber(1),
-        [getBrandedSudokuDigit("5")],
-      ),
-      getBrandedCellNumber(2),
-      [getBrandedSudokuDigit("5")],
+    const boardStateWithGivenDigitInTargetCell =
+      getBoardStateWithGivenDigitInTargetCell(
+        getBrandedCellNumber(2),
+        getBrandedSudokuDigit("5"),
+      );
+    const boardStateWithEnteredDigitInTargetCell =
+      getBoardStateWithEnteredDigitInTargetCell(
+        getBrandedCellNumber(11),
+        getBrandedSudokuDigit("6"),
+        boardStateWithGivenDigitInTargetCell,
+      );
+    const startingBoardState = getBoardStateWithCornerMarkupsInTargetCells(
+      [
+        {
+          cellNumber: getBrandedCellNumber(1),
+          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+        },
+        {
+          cellNumber: getBrandedCellNumber(9),
+          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+        },
+        {
+          cellNumber: getBrandedCellNumber(10),
+          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+        },
+        {
+          cellNumber: getBrandedCellNumber(21),
+          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+        },
+      ],
+      boardStateWithEnteredDigitInTargetCell,
     );
-
     const renderedBoard = await renderBoard({
       startingBoardState,
       userSettings: {
@@ -1253,27 +1610,62 @@ describe("Show conflicted digit highlights", () => {
     });
 
     // Assert
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
+    await expectNoCellsToHaveConflictHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when the board is empty and conflict checking is enabled", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard({
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectNoCellsToHaveConflictHighlight(renderedBoard);
+  });
+
+  it("highlights only all conflicting cells when the same digit creates separate conflicts in different houses and conflict checking is enabled", async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellNumber: getBrandedCellNumber(1),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(5),
+        digit: getBrandedSudokuDigit("5"),
+      },
+      {
+        cellNumber: getBrandedCellNumber(10),
+        digit: getBrandedSudokuDigit("5"),
+      },
+    ]);
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      userSettings: {
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      },
+    });
+
+    // Assert
+    await expectOnlyTargetCellsToHaveConflictHighlight(renderedBoard, [
       getBrandedCellNumber(1),
-      false,
-    );
-    await expectConflictCellHighlightInTargetCell(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
+      getBrandedCellNumber(5),
+      getBrandedCellNumber(10),
+    ]);
   });
 });
 
-describe("Moving selected cells with the keyboard", () => {
-  describe("Arrow keys", () => {
+describe("Moving selected cells with keyboard shortcuts", () => {
+  describe("Move selection shortcut (Arrow keys)", () => {
     it("selects the non-edge cell above a starting selected cell and deselects the starting selected cell when in single select mode, ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(10)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(10),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1291,10 +1683,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell below a starting selected cell and deselects the starting selected cell when in single select mode, ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1312,10 +1703,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the left of a starting selected cell and deselects the starting selected cell when in single select mode, ← is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1333,10 +1723,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the right of a starting selected cell and deselects the starting selected cell when in single select mode, → is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1354,10 +1743,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the bottom cell of a column and deselects the top cell of a column when in single select mode, ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1375,10 +1763,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the top cell of a column and deselects the bottom cell of a column when in single select mode, ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(73)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(73),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1396,10 +1783,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the last cell of a row and deselects the first cell of a row when in single select mode, ← is pressed, and the first cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1417,10 +1803,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the first cell of a row and deselects the last cell of a row when in single select mode, → is pressed, and the last cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1438,10 +1823,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell above a starting selected cell and deselects the starting selected cell when in multiselect mode, ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(10)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(10),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1460,10 +1844,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell below a starting selected cell and deselects the starting selected cell when in multiselect mode, ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1482,10 +1865,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the left of a starting selected cell and deselects the starting selected cell when in multiselect mode, ← is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1504,10 +1886,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the right of a starting selected cell and deselects the starting selected cell when in multiselect mode, → is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1526,10 +1907,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the bottom cell of a column and deselects the top cell of a column when in multiselect mode, ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1548,10 +1928,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the top cell of a column and deselects the bottom cell of a column when in multiselect mode, ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(73)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(73),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1570,10 +1949,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the last cell of a row and deselects the first cell of a row when in multiselect mode, ← is pressed, and the first cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1592,10 +1970,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the first cell of a row and deselects the last cell of a row when in multiselect mode, → is pressed, and the last cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1662,10 +2039,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects no cells when a numpad arrow key is pressed while a cell is selected", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1696,10 +2072,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects a cell next to the first selected cell and deselects the first selected cell when in multiselect mode, a second cell is selected and then deselected, and then an arrow key is pressed while the first cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1723,13 +2098,12 @@ describe("Moving selected cells with the keyboard", () => {
     });
   });
 
-  describe("Ctrl + Arrow keys", () => {
+  describe("Add to selection shortcut (Ctrl + Arrow keys)", () => {
     it("selects the non-edge cell above a starting selected cell when in single select mode, Ctrl + ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(10)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(10),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1749,10 +2123,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell below a starting selected cell when in single select mode, Ctrl + ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1772,10 +2145,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the left of a starting selected cell when in single select mode, Ctrl + ← is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1795,10 +2167,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the right of a starting selected cell when in single select mode, Ctrl + → is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1818,10 +2189,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the bottom cell of a column when in single select mode, Ctrl + ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1841,10 +2211,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the top cell of a column when in single select mode, Ctrl + ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(73)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(73),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1864,10 +2233,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the last cell of a row when in single select mode, Ctrl + ← is pressed, and the first cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1887,10 +2255,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the first cell of a row when in single select mode, Ctrl + → is pressed, and the last cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -1910,10 +2277,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell above a starting selected cell when in multiselect mode, Ctrl + ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(10)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(10),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1934,10 +2300,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell below a starting selected cell when in multiselect mode, Ctrl + ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1958,10 +2323,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the left of a starting selected cell when in multiselect mode, Ctrl + ← is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -1982,10 +2346,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the right of a starting selected cell when in multiselect mode, Ctrl + → is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2006,10 +2369,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the bottom cell of a column when in multiselect mode, Ctrl + ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2030,10 +2392,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the top cell of a column when in multiselect mode, Ctrl + ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(73)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(73),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2054,10 +2415,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the last cell of a row when in multiselect mode, Ctrl + ← is pressed, and the first cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2078,10 +2438,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the first cell of a row when in multiselect mode, Ctrl + → is pressed, and the last cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2145,10 +2504,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects a cell next to the most recently selected cell when in multiselect mode, Ctrl and an arrow key is pressed, and multiple cells are selected", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2175,10 +2533,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects a cell next to the first selected cell when in multiselect mode, a second cell is selected and then deselected, and then Ctrl and an arrow key is pressed while the first cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2204,13 +2561,12 @@ describe("Moving selected cells with the keyboard", () => {
     });
   });
 
-  describe("Shift + Arrow keys", () => {
+  describe("Add to selection shortcut (Shift + Arrow keys)", () => {
     it("selects the non-edge cell above a starting selected cell when in single select mode, Shift + ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(10)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(10),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2230,10 +2586,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell below a starting selected cell when in single select mode, Shift + ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2253,10 +2608,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the left of a starting selected cell when in single select mode, Shift + ← is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2276,10 +2630,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the right of a starting selected cell when in single select mode, Shift + → is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2299,10 +2652,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the bottom cell of a column when in single select mode, Shift + ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2322,10 +2674,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the top cell of a column when in single select mode, Shift + ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(73)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(73),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2345,10 +2696,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the last cell of a row when in single select mode, Shift + ← is pressed, and the first cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2368,10 +2718,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the first cell of a row when in single select mode, Shift + → is pressed, and the last cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2391,10 +2740,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell above a starting selected cell when in multiselect mode, Shift + ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(10)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(10),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2415,10 +2763,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell below a starting selected cell when in multiselect mode, Shift + ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2439,10 +2786,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the left of a starting selected cell when in multiselect mode, Shift + ← is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2463,10 +2809,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the non-edge cell to the right of a starting selected cell when in multiselect mode, Shift + → is pressed, and the starting selected cell is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2487,10 +2832,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the bottom cell of a column when in multiselect mode, Shift + ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2511,10 +2855,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the top cell of a column when in multiselect mode, Shift + ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(73)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(73),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2535,10 +2878,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the last cell of a row when in multiselect mode, Shift + ← is pressed, and the first cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2559,10 +2901,9 @@ describe("Moving selected cells with the keyboard", () => {
 
     it("selects the first cell of a row when in multiselect mode, Shift + → is pressed, and the last cell of the row is the only selected cell", async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(9)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(9),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
         isMultiselectMode: true,
@@ -2615,10 +2956,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('selects all cells when Ctrl + "a" is pressed and multiple cells are selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2635,10 +2976,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('selects all cells when Ctrl + "A" is pressed and multiple cells are selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2655,10 +2996,8 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('keeps all cells selected when Ctrl + "a" is pressed while all cells are already selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        ALL_CELL_NUMBERS,
-      );
+      const startingBoardState =
+        getBoardStateWithTargetCellsSelected(ALL_CELL_NUMBERS);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2675,10 +3014,8 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('keeps all cells selected when Ctrl + "A" is pressed while all cells are already selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        ALL_CELL_NUMBERS,
-      );
+      const startingBoardState =
+        getBoardStateWithTargetCellsSelected(ALL_CELL_NUMBERS);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2727,10 +3064,8 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
   describe("Deselect all cells shortcut (Ctrl + Shift + A)", () => {
     it('deselects all cells when Ctrl + Shift + "a" is pressed while all cells are already selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        ALL_CELL_NUMBERS,
-      );
+      const startingBoardState =
+        getBoardStateWithTargetCellsSelected(ALL_CELL_NUMBERS);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2748,10 +3083,8 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('deselects all cells when Ctrl + Shift + "A" is pressed while all cells are already selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        ALL_CELL_NUMBERS,
-      );
+      const startingBoardState =
+        getBoardStateWithTargetCellsSelected(ALL_CELL_NUMBERS);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2769,10 +3102,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('deselects all cells when Ctrl + Shift + "a" is pressed and multiple cells are selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2790,10 +3123,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('deselects all cells when Ctrl + Shift + "A" is pressed and multiple cells are selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2841,10 +3174,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('does not select or deselect cells when Ctrl + Shift + Meta + "a" is pressed', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2866,10 +3199,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('does not select or deselect cells when Ctrl + Shift + Meta + "A" is pressed', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
 
       const renderedBoard = await renderBoard({
         startingBoardState,
@@ -2894,10 +3227,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
   describe("Invert selected cells shortcut (Ctrl + I)", () => {
     it('deselects all currently selected cells and selects all other cells when Ctrl + "i" is pressed while multiple cells are selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2917,10 +3250,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('deselects all currently selected cells and selects all other cells when Ctrl + "I" is pressed while multiple cells are selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2940,10 +3273,8 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('deselects all cells when Ctrl + "i" is pressed while all cells are already selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        ALL_CELL_NUMBERS,
-      );
+      const startingBoardState =
+        getBoardStateWithTargetCellsSelected(ALL_CELL_NUMBERS);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -2960,10 +3291,8 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('deselects all cells when Ctrl + "I" is pressed while all cells are already selected', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        ALL_CELL_NUMBERS,
-      );
+      const startingBoardState =
+        getBoardStateWithTargetCellsSelected(ALL_CELL_NUMBERS);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -3008,10 +3337,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('does not select or deselect cells when Ctrl + Meta + "i" is pressed', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -3032,10 +3361,10 @@ describe("Selecting and deselecting cells with keyboard shortcuts", () => {
 
     it('does not select or deselect cells when Ctrl + Meta + "I" is pressed', async () => {
       // Arrange
-      const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getStartingEmptyBoardState(),
-        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-      );
+      const startingBoardState = getBoardStateWithTargetCellsSelected([
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
       const renderedBoard = await renderBoard({
         startingBoardState,
       });
@@ -3231,10 +3560,9 @@ describe("Selecting cells by clicking and dragging", () => {
 
   it("selects each cell crossed while clicking and dragging when in multiselect mode and a non-adjacent cell is already selected", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(9)],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(9),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
       isMultiselectMode: true,
@@ -3294,10 +3622,10 @@ describe("Selecting cells by clicking and dragging", () => {
 
   it("selects each cell crossed while clicking and dragging when in multiselect mode and multiple non-adjacent cells are already selected", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(9), getBrandedCellNumber(18)],
-    );
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellNumber(9),
+      getBrandedCellNumber(18),
+    ]);
     const renderedBoard = await renderBoard({
       startingBoardState,
       isMultiselectMode: true,

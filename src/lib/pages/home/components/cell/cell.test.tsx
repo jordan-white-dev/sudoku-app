@@ -11,8 +11,8 @@ import {
 import {
   CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN,
   defaultUserSettings,
-  expectConflictCellHighlightInTargetCell,
   expectSeenCellHighlightOrNotInTargetCell,
+  expectTargetCellToHaveConflictHighlightOrNot,
   getBoardStateWithTargetCellsSelected,
   getCellAccessibleName,
   getCellElement,
@@ -96,10 +96,12 @@ const getCellFontSizeInPixels = (cellElement: HTMLButtonElement): number => {
 };
 
 const getBoardStateWithUpdatedTargetCell = (
-  boardState: BoardState,
   cellNumber: CellNumber,
   updates: Partial<CellState>,
+  startingBoardState?: BoardState,
 ): BoardState => {
+  const boardState = startingBoardState ?? getStartingEmptyBoardState();
+
   return boardState.map((cellState) => {
     if (cellState.cellNumber !== cellNumber) return cellState;
 
@@ -129,13 +131,13 @@ const getNextBoardStateAfterDoubleClick = async ({
   userSettings: typeof defaultUserSettings;
 }): Promise<BoardState> => {
   const targetCellState = getTargetCellStateFromBoardState(
-    boardState,
     targetCellNumber,
+    boardState,
   );
   const setPuzzleHistory = vi.fn();
 
   const renderedCell = await renderCell({
-    boardState,
+    startingBoardState: boardState,
     cellState: targetCellState,
     setPuzzleHistory,
     userSettings,
@@ -169,8 +171,8 @@ const getNextBoardStateAfterDoubleClick = async ({
 };
 
 const renderCell = async ({
-  boardState,
   cellState,
+  startingBoardState,
   hasDigitConflict = false,
   isSeenInBox = false,
   isSeenInColumn = false,
@@ -181,8 +183,8 @@ const renderCell = async ({
   setPuzzleHistory = vi.fn(),
   userSettings = defaultUserSettings,
 }: {
-  boardState: BoardState;
   cellState: CellState;
+  startingBoardState?: BoardState;
   hasDigitConflict?: boolean;
   isSeenInBox?: boolean;
   isSeenInColumn?: boolean;
@@ -199,6 +201,8 @@ const renderCell = async ({
     userSettings,
     setUserSettings: vi.fn(),
   });
+
+  const boardState = startingBoardState ?? getStartingEmptyBoardState();
 
   const renderedCell = await render(
     <Provider>
@@ -237,14 +241,10 @@ describe("Accessible name", () => {
   it("includes the cell number, row number, and column number in the accessible name", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(23);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ cellState });
 
     // Assert
     await expect
@@ -261,14 +261,10 @@ describe("Data attributes", () => {
   it("marks the cell with its cell number", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(7);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ cellState });
     const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
@@ -278,14 +274,10 @@ describe("Data attributes", () => {
   it("marks the cell as not selected when it is not selected", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(1);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ cellState });
 
     // Assert
     await expect
@@ -303,19 +295,20 @@ describe("Data attributes", () => {
   it("marks the cell as selected when it is selected", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(1);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       { isSelected: true },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({
+      cellState,
+      startingBoardState,
+    });
 
     // Assert
     await expect
@@ -335,14 +328,10 @@ describe("Content display", () => {
   it("shows no digit text when the cell is empty", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ cellState });
     const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
@@ -352,9 +341,7 @@ describe("Content display", () => {
   it("shows the given digit when the cell contains a given digit", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         cellContent: {
@@ -363,12 +350,12 @@ describe("Content display", () => {
       },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
 
     // Assert
     await expect
@@ -379,9 +366,7 @@ describe("Content display", () => {
   it("shows the entered digit when the cell contains an entered digit", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         cellContent: {
@@ -390,12 +375,12 @@ describe("Content display", () => {
       },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
 
     // Assert
     await expect
@@ -406,9 +391,7 @@ describe("Content display", () => {
   it("shows center markups as a sorted sequence of digits", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         cellContent: {
@@ -422,12 +405,12 @@ describe("Content display", () => {
       },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
 
     // Assert
     await expect
@@ -438,9 +421,7 @@ describe("Content display", () => {
   it("renders one corner markup float for each corner markup digit", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         cellContent: {
@@ -453,12 +434,12 @@ describe("Content display", () => {
       },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
 
     // Assert
     await expect
@@ -472,9 +453,7 @@ describe("Content display", () => {
   it("shows no corner markup floats when the cell has no corner markups", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         cellContent: {
@@ -484,12 +463,12 @@ describe("Content display", () => {
       },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
     const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
@@ -501,9 +480,7 @@ describe("Text color", () => {
   it("displays a given digit in black", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         cellContent: {
@@ -512,12 +489,12 @@ describe("Text color", () => {
       },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
     const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
@@ -527,9 +504,7 @@ describe("Text color", () => {
   it("displays an entered digit in blue", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         cellContent: {
@@ -538,12 +513,12 @@ describe("Text color", () => {
       },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
     const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
@@ -555,38 +530,32 @@ describe("Font size", () => {
   it("uses progressively smaller center-markup font sizes as the center markup count increases", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
 
     const boardStateWithFiveCenterMarkups = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
       targetCellNumber,
       {
         cellContent: getCenterMarkupsOfLength(5),
       },
     );
     const boardStateWithSixCenterMarkups = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
       targetCellNumber,
       {
         cellContent: getCenterMarkupsOfLength(6),
       },
     );
     const boardStateWithSevenCenterMarkups = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
       targetCellNumber,
       {
         cellContent: getCenterMarkupsOfLength(7),
       },
     );
     const boardStateWithEightCenterMarkups = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
       targetCellNumber,
       {
         cellContent: getCenterMarkupsOfLength(8),
       },
     );
     const boardStateWithNineCenterMarkups = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
       targetCellNumber,
       {
         cellContent: getCenterMarkupsOfLength(9),
@@ -595,38 +564,38 @@ describe("Font size", () => {
 
     // Act
     const renderedCellWithFiveCenterMarkups = await renderCell({
-      boardState: boardStateWithFiveCenterMarkups,
+      startingBoardState: boardStateWithFiveCenterMarkups,
       cellState: getTargetCellStateFromBoardState(
-        boardStateWithFiveCenterMarkups,
         targetCellNumber,
+        boardStateWithFiveCenterMarkups,
       ),
     });
     const renderedCellWithSixCenterMarkups = await renderCell({
-      boardState: boardStateWithSixCenterMarkups,
+      startingBoardState: boardStateWithSixCenterMarkups,
       cellState: getTargetCellStateFromBoardState(
-        boardStateWithSixCenterMarkups,
         targetCellNumber,
+        boardStateWithSixCenterMarkups,
       ),
     });
     const renderedCellWithSevenCenterMarkups = await renderCell({
-      boardState: boardStateWithSevenCenterMarkups,
+      startingBoardState: boardStateWithSevenCenterMarkups,
       cellState: getTargetCellStateFromBoardState(
-        boardStateWithSevenCenterMarkups,
         targetCellNumber,
+        boardStateWithSevenCenterMarkups,
       ),
     });
     const renderedCellWithEightCenterMarkups = await renderCell({
-      boardState: boardStateWithEightCenterMarkups,
+      startingBoardState: boardStateWithEightCenterMarkups,
       cellState: getTargetCellStateFromBoardState(
-        boardStateWithEightCenterMarkups,
         targetCellNumber,
+        boardStateWithEightCenterMarkups,
       ),
     });
     const renderedCellWithNineCenterMarkups = await renderCell({
-      boardState: boardStateWithNineCenterMarkups,
+      startingBoardState: boardStateWithNineCenterMarkups,
       cellState: getTargetCellStateFromBoardState(
-        boardStateWithNineCenterMarkups,
         targetCellNumber,
+        boardStateWithNineCenterMarkups,
       ),
     });
 
@@ -672,17 +641,14 @@ describe("Text shadow", () => {
   it("uses no text shadow for center markup content and uses text shadow for given digits", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
 
     const boardStateWithCenterMarkup = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
       targetCellNumber,
       {
         cellContent: getCenterMarkupsOfLength(2),
       },
     );
     const boardStateWithGivenDigit = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
       targetCellNumber,
       {
         cellContent: {
@@ -693,17 +659,17 @@ describe("Text shadow", () => {
 
     // Act
     const renderedCellWithCenterMarkup = await renderCell({
-      boardState: boardStateWithCenterMarkup,
+      startingBoardState: boardStateWithCenterMarkup,
       cellState: getTargetCellStateFromBoardState(
-        boardStateWithCenterMarkup,
         targetCellNumber,
+        boardStateWithCenterMarkup,
       ),
     });
     const renderedCellWithGivenDigit = await renderCell({
-      boardState: boardStateWithGivenDigit,
+      startingBoardState: boardStateWithGivenDigit,
       cellState: getTargetCellStateFromBoardState(
-        boardStateWithGivenDigit,
         targetCellNumber,
+        boardStateWithGivenDigit,
       ),
     });
 
@@ -724,15 +690,10 @@ describe("Row and column labels", () => {
   it("shows a row number label for a cell in column 1 when row and column labels are enabled", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       userSettings: {
         ...defaultUserSettings,
@@ -749,15 +710,10 @@ describe("Row and column labels", () => {
   it("shows a column number label for a cell in row 1 when row and column labels are enabled", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(3);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       userSettings: {
         ...defaultUserSettings,
@@ -774,14 +730,10 @@ describe("Row and column labels", () => {
   it("does not show row or column labels when the setting is disabled", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ cellState });
     const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
@@ -791,15 +743,10 @@ describe("Row and column labels", () => {
   it("does not show a row label for a cell not in column 1", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(11);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       userSettings: {
         ...defaultUserSettings,
@@ -815,15 +762,10 @@ describe("Row and column labels", () => {
   it("does not show a column label for a cell not in row 1", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(11);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       userSettings: {
         ...defaultUserSettings,
@@ -841,14 +783,10 @@ describe("Border styles", () => {
   it("uses solid borders for all sides when the dashed grid setting is off", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(1);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ cellState });
     const cellElement = await getCellElement(renderedCell, targetCellNumber);
 
     // Assert
@@ -858,15 +796,10 @@ describe("Border styles", () => {
   it("uses a dashed border on the right side of an interior-column cell when dashed grid is enabled", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(11);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       userSettings: {
         ...defaultUserSettings,
@@ -884,15 +817,10 @@ describe("Border styles", () => {
   it("uses a solid border on the right side of a box-edge column cell even when dashed grid is enabled", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(12);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       userSettings: {
         ...defaultUserSettings,
@@ -909,22 +837,13 @@ describe("Border styles", () => {
     // Arrange
     const leftEdgeCellNumber = getBrandedCellNumber(10);
     const interiorCellNumber = getBrandedCellNumber(11);
-    const boardState = getStartingEmptyBoardState();
 
     // Act
     const renderedLeftEdgeCell = await renderCell({
-      boardState,
-      cellState: getTargetCellStateFromBoardState(
-        boardState,
-        leftEdgeCellNumber,
-      ),
+      cellState: getTargetCellStateFromBoardState(leftEdgeCellNumber),
     });
     const renderedInteriorCell = await renderCell({
-      boardState,
-      cellState: getTargetCellStateFromBoardState(
-        boardState,
-        interiorCellNumber,
-      ),
+      cellState: getTargetCellStateFromBoardState(interiorCellNumber),
     });
 
     const leftEdgeCell = await getCellElement(
@@ -945,22 +864,13 @@ describe("Border styles", () => {
     // Arrange
     const topEdgeCellNumber = getBrandedCellNumber(2);
     const interiorCellNumber = getBrandedCellNumber(11);
-    const boardState = getStartingEmptyBoardState();
 
     // Act
     const renderedTopEdgeCell = await renderCell({
-      boardState,
-      cellState: getTargetCellStateFromBoardState(
-        boardState,
-        topEdgeCellNumber,
-      ),
+      cellState: getTargetCellStateFromBoardState(topEdgeCellNumber),
     });
     const renderedInteriorCell = await renderCell({
-      boardState,
-      cellState: getTargetCellStateFromBoardState(
-        boardState,
-        interiorCellNumber,
-      ),
+      cellState: getTargetCellStateFromBoardState(interiorCellNumber),
     });
 
     const topEdgeCell = await getCellElement(
@@ -982,14 +892,9 @@ describe("Pointer down interaction", () => {
   it("calls handleCellPointerDown with the cell number when the cell is pressed", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
     const handleCellPointerDown = vi.fn();
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       handleCellPointerDown,
     });
@@ -1012,12 +917,8 @@ describe("Pointer down interaction", () => {
   it("captures the pointer when the cell is pressed", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
-    const renderedCell = await renderCell({ boardState, cellState });
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
+    const renderedCell = await renderCell({ cellState });
     const cellElement = await getCellElement(renderedCell, targetCellNumber);
     const setPointerCaptureSpy = vi.spyOn(cellElement, "setPointerCapture");
 
@@ -1040,19 +941,17 @@ describe("Background state: selection", () => {
   it("shows a selection highlight when the cell is selected", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       { isSelected: true },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
     const backgroundImage = window.getComputedStyle(
       await getCellElement(renderedCell, targetCellNumber),
     ).backgroundImage;
@@ -1066,14 +965,10 @@ describe("Background state: selection", () => {
   it("does not show a selection highlight when the cell is not selected", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ cellState });
     const backgroundImage = window.getComputedStyle(
       await getCellElement(renderedCell, targetCellNumber),
     ).backgroundImage;
@@ -1089,21 +984,16 @@ describe("Background state: digit conflicts", () => {
   it("shows a conflict highlight when the cell has a digit conflict", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       hasDigitConflict: true,
     });
 
     // Assert
-    await expectConflictCellHighlightInTargetCell(
+    await expectTargetCellToHaveConflictHighlightOrNot(
       renderedCell,
       targetCellNumber,
       true,
@@ -1113,15 +1003,10 @@ describe("Background state: digit conflicts", () => {
   it("does not show a conflict highlight when the cell has no digit conflict", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       hasDigitConflict: false,
     });
@@ -1140,15 +1025,10 @@ describe("Background state: seen cells", () => {
   it("shows a seen-cell highlight when seen cells are enabled and the cell is in the same row as the selected cell", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(40);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       isSeenInRow: true,
       selectedColumnNumber: getBrandedColumnNumber(5),
@@ -1170,15 +1050,10 @@ describe("Background state: seen cells", () => {
   it("shows a seen-cell highlight when seen cells are enabled and the cell is in the same column as the selected cell", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(40);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       isSeenInColumn: true,
       selectedColumnNumber: getBrandedColumnNumber(5),
@@ -1200,15 +1075,10 @@ describe("Background state: seen cells", () => {
   it("shows a seen-cell highlight when seen cells are enabled and the cell is in the same box as the selected cell", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(40);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       isSeenInBox: true,
       selectedColumnNumber: getBrandedColumnNumber(4),
@@ -1230,15 +1100,10 @@ describe("Background state: seen cells", () => {
   it("does not show a seen-cell highlight when seen cells are disabled, even when the cell is seen", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(40);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       isSeenInRow: true,
       selectedColumnNumber: getBrandedColumnNumber(5),
@@ -1260,15 +1125,10 @@ describe("Background state: seen cells", () => {
   it("uses a single full-cell seen rectangle when row, column, and box highlights all apply", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(40);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       isSeenInBox: true,
       isSeenInColumn: true,
@@ -1306,15 +1166,10 @@ describe("Background state: seen cells", () => {
   it("suppresses the seen-column band at puzzle top edge when the cell is inside the selected box", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(2);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       isSeenInColumn: true,
       selectedColumnNumber: getBrandedColumnNumber(2),
@@ -1337,15 +1192,10 @@ describe("Background state: seen cells", () => {
   it("suppresses the seen-row band at puzzle left edge when the cell is inside the selected box", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       isSeenInRow: true,
       selectedColumnNumber: getBrandedColumnNumber(2),
@@ -1368,15 +1218,10 @@ describe("Background state: seen cells", () => {
   it("insets the seen-box rectangle along the top and left box edges", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(1);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
     const renderedCell = await renderCell({
-      boardState,
       cellState,
       isSeenInBox: true,
       selectedColumnNumber: getBrandedColumnNumber(2),
@@ -1414,19 +1259,17 @@ describe("Background state: selected outline geometry", () => {
   it("draws four outline segments for an isolated selected cell", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(40);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       { isSelected: true },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
     const backgroundImage = window.getComputedStyle(
       await getCellElement(renderedCell, targetCellNumber),
     ).backgroundImage;
@@ -1449,30 +1292,30 @@ describe("Background state: selected outline geometry", () => {
   it("removes the left outline segment when the cell to the left is also selected", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(40);
-    let boardState = getStartingEmptyBoardState();
+    let startingBoardState = getStartingEmptyBoardState();
 
-    boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
+    startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         isSelected: true,
       },
+      startingBoardState,
     );
-    boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
+    startingBoardState = getBoardStateWithUpdatedTargetCell(
       getBrandedCellNumber(39),
       {
         isSelected: true,
       },
+      startingBoardState,
     );
 
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
     const backgroundImage = window.getComputedStyle(
       await getCellElement(renderedCell, targetCellNumber),
     ).backgroundImage;
@@ -1504,37 +1347,37 @@ describe("Background state: selected outline geometry", () => {
   it("adds a top-left corner patch when top and left neighbors are selected but top-left is not", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(40);
-    let boardState = getStartingEmptyBoardState();
+    let startingBoardState = getStartingEmptyBoardState();
 
-    boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
+    startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         isSelected: true,
       },
+      startingBoardState,
     );
-    boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
+    startingBoardState = getBoardStateWithUpdatedTargetCell(
       getBrandedCellNumber(31),
       {
         isSelected: true,
       },
+      startingBoardState,
     );
-    boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
+    startingBoardState = getBoardStateWithUpdatedTargetCell(
       getBrandedCellNumber(39),
       {
         isSelected: true,
       },
+      startingBoardState,
     );
 
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
     const backgroundImage = window.getComputedStyle(
       await getCellElement(renderedCell, targetCellNumber),
     ).backgroundImage;
@@ -1565,14 +1408,14 @@ describe("Background state: selected outline geometry", () => {
   it("removes the selected outline layer completely when all neighboring cells are selected", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(40);
-    let boardState = getStartingEmptyBoardState();
+    let startingBoardState = getStartingEmptyBoardState();
 
-    boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
+    startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       {
         isSelected: true,
       },
+      startingBoardState,
     );
 
     const surroundingSelectedCellNumbers = [
@@ -1587,19 +1430,19 @@ describe("Background state: selected outline geometry", () => {
     ];
 
     for (const surroundingCellNumber of surroundingSelectedCellNumbers)
-      boardState = getBoardStateWithUpdatedTargetCell(
-        boardState,
+      startingBoardState = getBoardStateWithUpdatedTargetCell(
         surroundingCellNumber,
         { isSelected: true },
+        startingBoardState,
       );
 
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
     const backgroundImage = window.getComputedStyle(
       await getCellElement(renderedCell, targetCellNumber),
     ).backgroundImage;
@@ -1615,19 +1458,17 @@ describe("Background state: markup colors", () => {
   it("shows a conic-gradient background when the cell has at least one markup color applied", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const baseBoardState = getStartingEmptyBoardState();
-    const boardState = getBoardStateWithUpdatedTargetCell(
-      baseBoardState,
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellNumber,
       { markupColors: [MARKUP_COLOR_RED] },
     );
     const cellState = getTargetCellStateFromBoardState(
-      boardState,
       targetCellNumber,
+      startingBoardState,
     );
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ startingBoardState, cellState });
     const backgroundImage = window.getComputedStyle(
       await getCellElement(renderedCell, targetCellNumber),
     ).backgroundImage;
@@ -1639,14 +1480,10 @@ describe("Background state: markup colors", () => {
   it("shows no conic-gradient background when the cell has no markup colors", async () => {
     // Arrange
     const targetCellNumber = getBrandedCellNumber(10);
-    const boardState = getStartingEmptyBoardState();
-    const cellState = getTargetCellStateFromBoardState(
-      boardState,
-      targetCellNumber,
-    );
+    const cellState = getTargetCellStateFromBoardState(targetCellNumber);
 
     // Act
-    const renderedCell = await renderCell({ boardState, cellState });
+    const renderedCell = await renderCell({ cellState });
     const backgroundImage = window.getComputedStyle(
       await getCellElement(renderedCell, targetCellNumber),
     ).backgroundImage;
@@ -1661,26 +1498,26 @@ describe("Double-click selection (partial highlight mode)", () => {
     // Arrange
     const sourceCellNumber = getBrandedCellNumber(10);
     const matchingCellNumber = getBrandedCellNumber(20);
-    let boardState = getStartingEmptyBoardState();
+    let startingBoardState = getStartingEmptyBoardState();
 
-    boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
+    startingBoardState = getBoardStateWithUpdatedTargetCell(
       sourceCellNumber,
       {
         cellContent: { givenDigit: getBrandedSudokuDigit("5") },
       },
+      startingBoardState,
     );
-    boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
+    startingBoardState = getBoardStateWithUpdatedTargetCell(
       matchingCellNumber,
       {
         cellContent: { givenDigit: getBrandedSudokuDigit("5") },
       },
+      startingBoardState,
     );
 
     // Act
     const nextBoardState = await getNextBoardStateAfterDoubleClick({
-      boardState,
+      boardState: startingBoardState,
       targetCellNumber: sourceCellNumber,
       userSettings: defaultUserSettings,
     });
@@ -1696,18 +1533,18 @@ describe("Double-click selection (partial highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         cellContent: { enteredDigit: getBrandedSudokuDigit("7") },
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       matchingCellNumber,
       {
         cellContent: { enteredDigit: getBrandedSudokuDigit("7") },
       },
+      boardState,
     );
 
     // Act
@@ -1728,7 +1565,6 @@ describe("Double-click selection (partial highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         cellContent: {
@@ -1739,9 +1575,9 @@ describe("Double-click selection (partial highlight mode)", () => {
           cornerMarkups: [""],
         },
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       matchingCellNumber,
       {
         cellContent: {
@@ -1752,6 +1588,7 @@ describe("Double-click selection (partial highlight mode)", () => {
           cornerMarkups: [""],
         },
       },
+      boardState,
     );
 
     // Act
@@ -1772,7 +1609,6 @@ describe("Double-click selection (partial highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         cellContent: {
@@ -1783,9 +1619,9 @@ describe("Double-click selection (partial highlight mode)", () => {
           ],
         },
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       matchingCellNumber,
       {
         cellContent: {
@@ -1793,6 +1629,7 @@ describe("Double-click selection (partial highlight mode)", () => {
           cornerMarkups: [getBrandedSudokuDigit("8")],
         },
       },
+      boardState,
     );
 
     // Act
@@ -1813,18 +1650,18 @@ describe("Double-click selection (partial highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         markupColors: [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       matchingCellNumber,
       {
         markupColors: [MARKUP_COLOR_RED],
       },
+      boardState,
     );
 
     // Act
@@ -1845,11 +1682,11 @@ describe("Double-click selection (partial highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         cellContent: { enteredDigit: getBrandedSudokuDigit("4") },
       },
+      boardState,
     );
 
     // Act
@@ -1861,7 +1698,7 @@ describe("Double-click selection (partial highlight mode)", () => {
 
     // Assert
     expect(
-      getTargetCellStateFromBoardState(nextBoardState, emptyCellNumber)
+      getTargetCellStateFromBoardState(emptyCellNumber, nextBoardState)
         .isSelected,
     ).toBe(false);
   });
@@ -1872,15 +1709,16 @@ describe("Double-click selection (partial highlight mode)", () => {
     const previouslySelectedCellNumber = getBrandedCellNumber(1);
     let boardState = getStartingEmptyBoardState();
 
-    boardState = getBoardStateWithTargetCellsSelected(boardState, [
-      previouslySelectedCellNumber,
-    ]);
-    boardState = getBoardStateWithUpdatedTargetCell(
+    boardState = getBoardStateWithTargetCellsSelected(
+      [previouslySelectedCellNumber],
       boardState,
+    );
+    boardState = getBoardStateWithUpdatedTargetCell(
       sourceCellNumber,
       {
         cellContent: { givenDigit: getBrandedSudokuDigit("9") },
       },
+      boardState,
     );
 
     // Act
@@ -1893,8 +1731,8 @@ describe("Double-click selection (partial highlight mode)", () => {
     // Assert
     expect(
       getTargetCellStateFromBoardState(
-        nextBoardState,
         previouslySelectedCellNumber,
+        nextBoardState,
       ).isSelected,
     ).toBe(false);
   });
@@ -1909,25 +1747,25 @@ describe("Double-click selection (strict highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         cellContent: { givenDigit: getBrandedSudokuDigit("6") },
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       matchingCellNumber,
       {
         cellContent: { givenDigit: getBrandedSudokuDigit("6") },
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       nonMatchingCellNumber,
       {
         cellContent: { givenDigit: getBrandedSudokuDigit("7") },
       },
+      boardState,
     );
 
     // Act
@@ -1952,25 +1790,25 @@ describe("Double-click selection (strict highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         markupColors: [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       exactMatchCellNumber,
       {
         markupColors: [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       partialMatchCellNumber,
       {
         markupColors: [MARKUP_COLOR_RED],
       },
+      boardState,
     );
 
     // Act
@@ -1994,7 +1832,6 @@ describe("Double-click selection (strict highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         cellContent: {
@@ -2005,9 +1842,9 @@ describe("Double-click selection (strict highlight mode)", () => {
           cornerMarkups: [getBrandedSudokuDigit("3")],
         },
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       exactMatchCellNumber,
       {
         cellContent: {
@@ -2018,6 +1855,7 @@ describe("Double-click selection (strict highlight mode)", () => {
           cornerMarkups: [getBrandedSudokuDigit("3")],
         },
       },
+      boardState,
     );
 
     // Act
@@ -2041,7 +1879,6 @@ describe("Double-click selection (strict highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         cellContent: {
@@ -2052,9 +1889,9 @@ describe("Double-click selection (strict highlight mode)", () => {
           cornerMarkups: [""],
         },
       },
+      boardState,
     );
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       partialMatchCellNumber,
       {
         cellContent: {
@@ -2062,6 +1899,7 @@ describe("Double-click selection (strict highlight mode)", () => {
           cornerMarkups: [""],
         },
       },
+      boardState,
     );
 
     // Act
@@ -2076,7 +1914,7 @@ describe("Double-click selection (strict highlight mode)", () => {
 
     // Assert
     expect(
-      getTargetCellStateFromBoardState(nextBoardState, partialMatchCellNumber)
+      getTargetCellStateFromBoardState(partialMatchCellNumber, nextBoardState)
         .isSelected,
     ).toBe(false);
   });
@@ -2088,11 +1926,11 @@ describe("Double-click selection (strict highlight mode)", () => {
     let boardState = getStartingEmptyBoardState();
 
     boardState = getBoardStateWithUpdatedTargetCell(
-      boardState,
       sourceCellNumber,
       {
         markupColors: [MARKUP_COLOR_GREEN],
       },
+      boardState,
     );
 
     // Act
@@ -2107,7 +1945,7 @@ describe("Double-click selection (strict highlight mode)", () => {
 
     // Assert
     expect(
-      getTargetCellStateFromBoardState(nextBoardState, emptyCellNumber)
+      getTargetCellStateFromBoardState(emptyCellNumber, nextBoardState)
         .isSelected,
     ).toBe(false);
   });

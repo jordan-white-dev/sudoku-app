@@ -44,9 +44,11 @@ export const getStartingPuzzleHistoryFromBoardState = (
 
 // #region Board State Mutators
 export const getBoardStateWithTargetCellsSelected = (
-  boardState: BoardState,
   cellNumbers: Array<CellNumber>,
+  startingBoardState?: BoardState,
 ): BoardState => {
+  const boardState = startingBoardState ?? getStartingEmptyBoardState();
+
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const shouldBeSelected = cellNumbers.includes(cellState.cellNumber);
 
@@ -62,10 +64,12 @@ export const getBoardStateWithTargetCellsSelected = (
 };
 
 export const getBoardStateWithGivenDigitInTargetCell = (
-  boardState: BoardState,
   cellNumber: CellNumber,
   givenDigit: SudokuDigit,
+  startingBoardState?: BoardState,
 ): BoardState => {
+  const boardState = startingBoardState ?? getStartingEmptyBoardState();
+
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState =
       cellState.cellNumber === cellNumber
@@ -84,10 +88,12 @@ export const getBoardStateWithGivenDigitInTargetCell = (
 };
 
 export const getBoardStateWithEnteredDigitInTargetCell = (
-  boardState: BoardState,
   cellNumber: CellNumber,
   enteredDigit: SudokuDigit,
+  startingBoardState?: BoardState,
 ): BoardState => {
+  const boardState = startingBoardState ?? getStartingEmptyBoardState();
+
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
       cellState.cellNumber === cellNumber
@@ -104,13 +110,79 @@ export const getBoardStateWithEnteredDigitInTargetCell = (
 
   return nextBoardState;
 };
+
+export const getBoardStateWithDigitsInTargetCells = (
+  digitType: "givenDigit" | "enteredDigit",
+  digitsToEnterInTargetCells: Array<{
+    cellNumber: CellNumber;
+    digit: SudokuDigit;
+  }>,
+  startingBoardState?: BoardState,
+): BoardState => {
+  const boardState = startingBoardState ?? getStartingEmptyBoardState();
+
+  const nextBoardState: BoardState = boardState.map((cellState) => {
+    const nextCellState: CellState = (() => {
+      const digitToEnterInTargetCell = digitsToEnterInTargetCells.find(
+        (digitInCellObject) =>
+          digitInCellObject.cellNumber === cellState.cellNumber,
+      );
+
+      if (digitToEnterInTargetCell) {
+        const cellStateWithDigit: CellState = {
+          ...cellState,
+          cellContent: {
+            ...cellState.cellContent,
+            [digitType]: getBrandedSudokuDigit(digitToEnterInTargetCell.digit),
+          },
+        };
+
+        return cellStateWithDigit;
+      }
+
+      return cellState;
+    })();
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
+};
+
+export const getBoardStateWithGivenDigitsInTargetCells = (
+  digitsToEnterInTargetCells: Array<{
+    cellNumber: CellNumber;
+    digit: SudokuDigit;
+  }>,
+  startingBoardState?: BoardState,
+): BoardState =>
+  getBoardStateWithDigitsInTargetCells(
+    "givenDigit",
+    digitsToEnterInTargetCells,
+    startingBoardState,
+  );
+
+export const getBoardStateWithEnteredDigitsInTargetCells = (
+  digitsToEnterInTargetCells: Array<{
+    cellNumber: CellNumber;
+    digit: SudokuDigit;
+  }>,
+  startingBoardState?: BoardState,
+): BoardState =>
+  getBoardStateWithDigitsInTargetCells(
+    "enteredDigit",
+    digitsToEnterInTargetCells,
+    startingBoardState,
+  );
 // #endregion
 
 // #region Board State Queries
 export const getTargetCellStateFromBoardState = (
-  boardState: BoardState,
   cellNumber: CellNumber,
+  startingBoardState?: BoardState,
 ): CellState => {
+  const boardState = startingBoardState ?? getStartingEmptyBoardState();
+
   const candidateCellState = boardState.find(
     (cellState) => cellState.cellNumber === cellNumber,
   );
@@ -127,7 +199,7 @@ export const expectTargetCellToContainEmptyCellContent = (
   boardState: BoardState,
   cellNumber: CellNumber,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
 
   expect(isEmptyCellContent(cellState.cellContent)).toBe(true);
 };
@@ -137,7 +209,7 @@ export const expectTargetCellToContainGivenDigit = (
   cellNumber: CellNumber,
   expectedGivenDigit: SudokuDigit,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
 
   expect(isGivenDigitInCellContent(cellState.cellContent)).toBe(true);
 
@@ -227,7 +299,7 @@ export const expectSeenCellHighlightOrNotInTargetCell = async (
   ).toBe(shouldHighlightBeVisible);
 };
 
-export const expectConflictCellHighlightInTargetCell = async (
+export const expectTargetCellToHaveConflictHighlightOrNot = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellNumber: CellNumber,
   shouldBeVisible: boolean,

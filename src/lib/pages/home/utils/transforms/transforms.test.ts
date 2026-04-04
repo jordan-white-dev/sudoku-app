@@ -102,7 +102,7 @@ const expectTargetCellToHaveCoordinates = (
     boxNumber: BoxNumber;
   },
 ) => {
-  const cellState = getTargetCellStateFromBoardState(boardState, cellNumber);
+  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
 
   expect(cellState.cellNumber).toBe(cellNumber);
   expect(cellState.rowNumber).toBe(expectedCoordinates.rowNumber);
@@ -319,16 +319,16 @@ describe("Board State Transform", () => {
         getEmptyRawBoardState(),
       );
       const secondBoardState = getBoardStateWithTargetCellsSelected(
-        firstBoardState,
         [
           getBrandedCellNumber(1),
           getBrandedCellNumber(2),
           getBrandedCellNumber(3),
         ],
+        firstBoardState,
       );
       const thirdBoardState = getBoardStateWithTargetCellsSelected(
-        firstBoardState,
         [getBrandedCellNumber(9)],
+        firstBoardState,
       );
       const puzzleHistory = getPuzzleHistoryFromBoardStates(
         [firstBoardState, secondBoardState, thirdBoardState],
@@ -348,12 +348,12 @@ describe("Board State Transform", () => {
     it("clears selection from every cell when the board is deselected", () => {
       // Arrange
       const startingBoardState = getBoardStateWithTargetCellsSelected(
-        getBoardStateFromRawBoardState(getEmptyRawBoardState()),
         [
           getBrandedCellNumber(1),
           getBrandedCellNumber(5),
           getBrandedCellNumber(9),
         ],
+        getBoardStateFromRawBoardState(getEmptyRawBoardState()),
       );
 
       // Act
