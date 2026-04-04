@@ -4,6 +4,7 @@ import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Cell } from "@/lib/pages/home/components/cell/cell";
+import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   MARKUP_COLOR_BLUE,
   MARKUP_COLOR_GREEN,
@@ -36,11 +37,7 @@ import {
   type PuzzleHistory,
 } from "@/lib/pages/home/utils/types";
 
-const mockUseUserSettings = vi.fn();
-
-vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
-  useUserSettings: () => mockUseUserSettings(),
-}));
+const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 
 const SELECTED_CELL_HIGHLIGHT_COLOR_TOKEN = "4ca4ff";
 
@@ -211,27 +208,29 @@ const renderCell = async ({
   ) => void;
   userSettings?: typeof defaultUserSettings;
 }) => {
-  mockUseUserSettings.mockReturnValue({
-    userSettings,
-    setUserSettings: vi.fn(),
-  });
+  window.sessionStorage.setItem(
+    USER_SETTINGS_SESSION_STORAGE_KEY,
+    JSON.stringify(userSettings),
+  );
 
   const boardState = startingBoardState ?? getStartingEmptyBoardState();
 
   const renderedCell = await render(
     <Provider>
-      <Cell
-        boardState={boardState}
-        cellState={cellState}
-        handleCellPointerDown={handleCellPointerDown}
-        hasDigitConflict={hasDigitConflict}
-        isSeenInBox={isSeenInBox}
-        isSeenInColumn={isSeenInColumn}
-        isSeenInRow={isSeenInRow}
-        selectedColumnNumber={selectedColumnNumber}
-        selectedRowNumber={selectedRowNumber}
-        setPuzzleHistory={setPuzzleHistory}
-      />
+      <UserSettingsProvider>
+        <Cell
+          boardState={boardState}
+          cellState={cellState}
+          handleCellPointerDown={handleCellPointerDown}
+          hasDigitConflict={hasDigitConflict}
+          isSeenInBox={isSeenInBox}
+          isSeenInColumn={isSeenInColumn}
+          isSeenInRow={isSeenInRow}
+          selectedColumnNumber={selectedColumnNumber}
+          selectedRowNumber={selectedRowNumber}
+          setPuzzleHistory={setPuzzleHistory}
+        />
+      </UserSettingsProvider>
     </Provider>,
   );
 
@@ -241,7 +240,7 @@ const renderCell = async ({
 };
 
 beforeEach(() => {
-  mockUseUserSettings.mockReset();
+  window.sessionStorage.clear();
 
   if (!HTMLElement.prototype.setPointerCapture)
     HTMLElement.prototype.setPointerCapture = vi.fn(() => undefined);

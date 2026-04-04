@@ -1,41 +1,18 @@
 import SuperExpressive from "super-expressive";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Header } from "@/lib/pages/home/components/header/header";
+import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
+import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   defaultUserSettings,
+  getEmptyRawBoardState,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 
-// #region Module Mocks
-const mockPauseStopwatch = vi.fn();
-const mockStartStopwatch = vi.fn();
-const mockStartStopwatchIfEnabled = vi.fn();
-
-const mockSetUserSettings = vi.fn();
-const mockUseUserSettings = vi.fn();
-
-vi.mock("@/lib/pages/home/components/stopwatch/stopwatch", () => ({
-  Stopwatch: () => <div>Stopwatch</div>,
-}));
-
-vi.mock(
-  "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch",
-  () => ({
-    useSudokuStopwatch: () => ({
-      pauseStopwatch: mockPauseStopwatch,
-      startStopwatch: mockStartStopwatch,
-      startStopwatchIfEnabled: mockStartStopwatchIfEnabled,
-    }),
-  }),
-);
-
-vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
-  useUserSettings: () => mockUseUserSettings(),
-}));
-// #endregion
+const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 
 // #region Shared Test Types and Constants
 type RenderedHeader = Awaited<ReturnType<typeof render>>;
@@ -68,14 +45,20 @@ const renderHeader = async ({
 }: {
   userSettings?: typeof defaultUserSettings;
 } = {}): Promise<RenderedHeader> => {
-  mockUseUserSettings.mockReturnValue({
-    userSettings,
-    setUserSettings: mockSetUserSettings,
-  });
+  window.sessionStorage.setItem(
+    USER_SETTINGS_SESSION_STORAGE_KEY,
+    JSON.stringify(userSettings),
+  );
+
+  const emptyRawBoardState = getEmptyRawBoardState();
 
   const renderedHeader = await render(
     <Provider>
-      <Header />
+      <UserSettingsProvider>
+        <SudokuStopwatchProvider rawBoardState={emptyRawBoardState}>
+          <Header />
+        </SudokuStopwatchProvider>
+      </UserSettingsProvider>
     </Provider>,
   );
 
@@ -93,12 +76,24 @@ const getAllHeaderButtons = async (
   return resolvedRenderedHeader.getByRole("button").all();
 };
 
+const getMenuTriggerButtons = async (
+  renderedHeader: RenderedHeader | Promise<RenderedHeader>,
+) => {
+  const allHeaderButtons = await getAllHeaderButtons(renderedHeader);
+
+  return allHeaderButtons.filter((headerButton) => {
+    const ariaLabel = headerButton.element().getAttribute("aria-label");
+
+    return ariaLabel !== "Pause stopwatch" && ariaLabel !== "Resume stopwatch";
+  });
+};
+
 const getShortcutsMenuTrigger = async (
   renderedHeader: RenderedHeader | Promise<RenderedHeader>,
 ) => {
-  const headerButtons = await getAllHeaderButtons(renderedHeader);
+  const menuTriggerButtons = await getMenuTriggerButtons(renderedHeader);
 
-  const triggerButton = headerButtons[0];
+  const triggerButton = menuTriggerButtons[0];
 
   if (!triggerButton)
     throw Error("Could not find the shortcuts menu trigger button.");
@@ -109,9 +104,9 @@ const getShortcutsMenuTrigger = async (
 const getSettingsMenuTrigger = async (
   renderedHeader: RenderedHeader | Promise<RenderedHeader>,
 ) => {
-  const headerButtons = await getAllHeaderButtons(renderedHeader);
+  const menuTriggerButtons = await getMenuTriggerButtons(renderedHeader);
 
-  const triggerButton = headerButtons[1];
+  const triggerButton = menuTriggerButtons[1];
 
   if (!triggerButton)
     throw Error("Could not find the settings menu trigger button.");
@@ -145,6 +140,30 @@ const getSettingCheckboxMenuItemLocator = async (
 ) =>
   (await renderedHeader).getByRole("menuitemcheckbox", { name: settingLabel });
 
+const getStopwatchToggleButtonLocator = async (
+  renderedHeader: RenderedHeader | Promise<RenderedHeader>,
+) => {
+  const resolvedRenderedHeader = await renderedHeader;
+
+  const pauseButton = resolvedRenderedHeader
+    .getByRole("button", {
+      name: "Pause stopwatch",
+    })
+    .query();
+
+  if (pauseButton) return pauseButton;
+
+  const resumeButton = resolvedRenderedHeader
+    .getByRole("button", {
+      name: "Resume stopwatch",
+    })
+    .query();
+
+  if (resumeButton) return resumeButton;
+
+  throw Error("Could not find the stopwatch pause/resume button.");
+};
+
 const expectSettingToBeCheckedOrNot = async (
   renderedHeader: RenderedHeader | Promise<RenderedHeader>,
   settingLabel: string,
@@ -162,11 +181,7 @@ const expectSettingToBeCheckedOrNot = async (
 // #endregion
 
 beforeEach(() => {
-  mockPauseStopwatch.mockReset();
-  mockStartStopwatch.mockReset();
-  mockStartStopwatchIfEnabled.mockReset();
-  mockSetUserSettings.mockReset();
-  mockUseUserSettings.mockReset();
+  window.sessionStorage.clear();
 });
 
 describe("Header rendering", () => {
@@ -175,9 +190,9 @@ describe("Header rendering", () => {
     const renderedHeader = await renderHeader();
 
     // Assert
-    const allHeaderButtons = await getAllHeaderButtons(renderedHeader);
+    const menuTriggerButtons = await getMenuTriggerButtons(renderedHeader);
 
-    expect(allHeaderButtons).toHaveLength(2);
+    expect(menuTriggerButtons).toHaveLength(2);
   });
 
   it("shows the stopwatch", async () => {
@@ -186,7 +201,7 @@ describe("Header rendering", () => {
 
     // Assert
     await expect
-      .element(renderedHeader.getByText("Stopwatch"))
+      .element(await getStopwatchToggleButtonLocator(renderedHeader))
       .toBeInTheDocument();
   });
 });
@@ -240,7 +255,7 @@ describe("Settings menu checked state", () => {
 });
 
 describe("Settings menu interactions", () => {
-  it("toggles regular user settings through setUserSettings", async () => {
+  it("toggles regular user settings in session storage", async () => {
     // Arrange
     const renderedHeader = await renderHeader();
     await openSettingsMenu(renderedHeader);
@@ -253,18 +268,19 @@ describe("Settings menu interactions", () => {
     await conflictCheckerOption.click();
 
     // Assert
-    expect(mockSetUserSettings).toHaveBeenCalledTimes(1);
-    const candidateStateUpdater = mockSetUserSettings.mock.calls[0][0];
-    if (typeof candidateStateUpdater !== "function")
-      throw Error(
-        "Expected setUserSettings to be called with a functional updater.",
-      );
+    const userSettingsInSessionStorage = window.sessionStorage.getItem(
+      USER_SETTINGS_SESSION_STORAGE_KEY,
+    );
 
-    const nextUserSettings = candidateStateUpdater(defaultUserSettings);
-    expect(nextUserSettings.isConflictCheckerEnabled).toBe(true);
+    if (!userSettingsInSessionStorage)
+      throw Error("Could not find user settings in session storage.");
+
+    const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
+
+    expect(parsedUserSettings.isConflictCheckerEnabled).toBe(true);
   });
 
-  it("pauses the stopwatch before enabling Disable Stopwatch", async () => {
+  it("pauses the stopwatch and enables Disable Stopwatch", async () => {
     // Arrange
     const renderedHeader = await renderHeader({
       userSettings: {
@@ -280,14 +296,29 @@ describe("Settings menu interactions", () => {
       "Disable Stopwatch",
     );
     await disableStopwatchOption.click();
+    await waitForReactToFinishUpdating();
 
     // Assert
-    expect(mockPauseStopwatch).toHaveBeenCalledTimes(1);
-    expect(mockStartStopwatch).not.toHaveBeenCalled();
-    expect(mockSetUserSettings).toHaveBeenCalledTimes(1);
+    await expect
+      .element(
+        renderedHeader.getByRole("button", {
+          name: "Resume stopwatch",
+        }),
+      )
+      .toBeInTheDocument();
+
+    const userSettingsInSessionStorage = window.sessionStorage.getItem(
+      USER_SETTINGS_SESSION_STORAGE_KEY,
+    );
+
+    if (!userSettingsInSessionStorage)
+      throw Error("Could not find user settings in session storage.");
+
+    const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
+    expect(parsedUserSettings.isStopwatchDisabled).toBe(true);
   });
 
-  it("starts the stopwatch before disabling Disable Stopwatch", async () => {
+  it("starts the stopwatch and disables Disable Stopwatch", async () => {
     // Arrange
     const renderedHeader = await renderHeader({
       userSettings: {
@@ -303,11 +334,26 @@ describe("Settings menu interactions", () => {
       "Disable Stopwatch",
     );
     await disableStopwatchOption.click();
+    await waitForReactToFinishUpdating();
 
     // Assert
-    expect(mockStartStopwatch).toHaveBeenCalledTimes(1);
-    expect(mockPauseStopwatch).not.toHaveBeenCalled();
-    expect(mockSetUserSettings).toHaveBeenCalledTimes(1);
+    await expect
+      .element(
+        renderedHeader.getByRole("button", {
+          name: "Pause stopwatch",
+        }),
+      )
+      .toBeInTheDocument();
+
+    const userSettingsInSessionStorage = window.sessionStorage.getItem(
+      USER_SETTINGS_SESSION_STORAGE_KEY,
+    );
+
+    if (!userSettingsInSessionStorage)
+      throw Error("Could not find user settings in session storage.");
+
+    const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
+    expect(parsedUserSettings.isStopwatchDisabled).toBe(false);
   });
 });
 

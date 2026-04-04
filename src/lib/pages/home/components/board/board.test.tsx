@@ -4,6 +4,7 @@ import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Board } from "@/lib/pages/home/components/board/board";
+import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   defaultUserSettings,
   expectSeenCellHighlightOrNotInTargetCell,
@@ -33,13 +34,7 @@ import {
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 
-// #region Module Mocks
-const mockUseUserSettings = vi.fn();
-
-vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
-  useUserSettings: () => mockUseUserSettings(),
-}));
-// #endregion
+const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 
 // #region Board Lookup
 const getBoardElement = async (
@@ -77,10 +72,10 @@ const renderBoard = async ({
   isMultiselectMode?: boolean;
   userSettings?: typeof defaultUserSettings;
 } = {}): Promise<RenderedBoard> => {
-  mockUseUserSettings.mockReturnValue({
-    userSettings,
-    setUserSettings: vi.fn(),
-  });
+  window.sessionStorage.setItem(
+    USER_SETTINGS_SESSION_STORAGE_KEY,
+    JSON.stringify(userSettings),
+  );
 
   const boardState = startingBoardState ?? getStartingEmptyBoardState();
   const startingPuzzleHistory =
@@ -102,7 +97,9 @@ const renderBoard = async ({
 
   const renderedBoard = await render(
     <Provider>
-      <TestBoard />
+      <UserSettingsProvider>
+        <TestBoard />
+      </UserSettingsProvider>
     </Provider>,
   );
 
@@ -479,7 +476,7 @@ const getBoardStateWithCornerMarkupsInTargetCells = (
 // #endregion
 
 beforeEach(() => {
-  mockUseUserSettings.mockReset();
+  window.sessionStorage.clear();
 
   if (!HTMLElement.prototype.setPointerCapture)
     HTMLElement.prototype.setPointerCapture = vi.fn(() => undefined);

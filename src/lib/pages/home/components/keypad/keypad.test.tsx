@@ -4,6 +4,7 @@ import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Keypad } from "@/lib/pages/home/components/keypad/keypad";
+import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   flippedColors,
   flippedDigits,
@@ -11,42 +12,34 @@ import {
   sudokuDigits,
 } from "@/lib/pages/home/utils/constants";
 import {
+  isEnteredDigitInCellContent,
+  isMarkupDigitsInCellContent,
+} from "@/lib/pages/home/utils/guards";
+import {
+  defaultUserSettings,
+  getBoardStateWithEnteredDigitInTargetCell,
+  getBoardStateWithTargetCellsSelected,
   getStartingEmptyBoardState,
   getStartingPuzzleHistoryFromBoardState,
+  getTargetCellStateFromBoardState,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
+import {
+  getBrandedCellNumber,
+  getBrandedSudokuDigit,
+} from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type KeypadMode,
   type PuzzleHistory,
 } from "@/lib/pages/home/utils/types";
 
-// #region Module Mocks
-const mockUseUserSettings = vi.fn();
-
-const mockHandleCenterMarkupInput = vi.fn();
-const mockHandleClearCell = vi.fn();
-const mockHandleColorPadInput = vi.fn();
-const mockHandleCornerMarkupInput = vi.fn();
-const mockHandleDigitInput = vi.fn();
-
-vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
-  useUserSettings: () => mockUseUserSettings(),
-}));
-
-vi.mock("@/lib/pages/home/utils/actions/actions", () => ({
-  handleCenterMarkupInput: (...args: Array<unknown>) =>
-    mockHandleCenterMarkupInput(...args),
-  handleClearCell: (...args: Array<unknown>) => mockHandleClearCell(...args),
-  handleColorPadInput: (...args: Array<unknown>) =>
-    mockHandleColorPadInput(...args),
-  handleCornerMarkupInput: (...args: Array<unknown>) =>
-    mockHandleCornerMarkupInput(...args),
-  handleDigitInput: (...args: Array<unknown>) => mockHandleDigitInput(...args),
-}));
-// #endregion
+const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 
 // #region Shared Test Types
 type RenderedKeypad = Awaited<ReturnType<typeof render>>;
+type SetPuzzleHistory = (
+  value: PuzzleHistory | ((value: PuzzleHistory) => PuzzleHistory),
+) => void;
 // #endregion
 
 // #region Render Keypad
@@ -55,25 +48,21 @@ const renderKeypad = async ({
   isMultiselectMode = false,
   keypadMode = "Digit",
   puzzleHistory,
+  setPuzzleHistory,
 }: {
   isFlipKeypadEnabled?: boolean;
   isMultiselectMode?: boolean;
   keypadMode?: KeypadMode;
   puzzleHistory?: PuzzleHistory;
+  setPuzzleHistory?: SetPuzzleHistory;
 } = {}): Promise<RenderedKeypad> => {
-  mockUseUserSettings.mockReturnValue({
-    userSettings: {
-      isConflictCheckerEnabled: false,
-      isDashedGridEnabled: false,
+  window.sessionStorage.setItem(
+    USER_SETTINGS_SESSION_STORAGE_KEY,
+    JSON.stringify({
+      ...defaultUserSettings,
       isFlipKeypadEnabled,
-      isHideStopwatchEnabled: false,
-      isShowRowAndColumnLabelsEnabled: false,
-      isShowSeenCellsEnabled: false,
-      isStopwatchDisabled: false,
-      isStrictHighlightsEnabled: false,
-    },
-    setUserSettings: vi.fn(),
-  });
+    }),
+  );
 
   const startingPuzzleHistory =
     puzzleHistory ??
@@ -82,9 +71,11 @@ const renderKeypad = async ({
   const TestKeypad = () => {
     const [currentIsMultiselectMode, setIsMultiselectMode] =
       useState(isMultiselectMode);
-    const [currentPuzzleHistory, setPuzzleHistory] = useState(
+    const [currentPuzzleHistory, setPuzzleHistoryState] = useState(
       startingPuzzleHistory,
     );
+
+    const resolvedSetPuzzleHistory = setPuzzleHistory ?? setPuzzleHistoryState;
 
     return (
       <Keypad
@@ -92,14 +83,16 @@ const renderKeypad = async ({
         keypadMode={keypadMode}
         puzzleHistory={currentPuzzleHistory}
         setIsMultiselectMode={setIsMultiselectMode}
-        setPuzzleHistory={setPuzzleHistory}
+        setPuzzleHistory={resolvedSetPuzzleHistory}
       />
     );
   };
 
   const renderedKeypad = await render(
     <Provider>
-      <TestKeypad />
+      <UserSettingsProvider>
+        <TestKeypad />
+      </UserSettingsProvider>
     </Provider>,
   );
 
@@ -173,16 +166,62 @@ const clickColorSwatchAtIndex = async (
   await waitForReactToFinishUpdating();
 };
 
+const getDigitButtonsInRenderedOrder = async (
+  renderedKeypad: RenderedKeypad | Promise<RenderedKeypad>,
+) => {
+  const resolvedRenderedKeypad = await renderedKeypad;
+  const buttonElements = Array.from(
+    resolvedRenderedKeypad.container.querySelectorAll<HTMLButtonElement>(
+      "button",
+    ),
+  );
+
+  return buttonElements
+    .map((buttonElement) => buttonElement.textContent?.trim() ?? "")
+    .filter((buttonText) =>
+      sudokuDigits.includes(buttonText as (typeof sudokuDigits)[number]),
+    );
+};
+
+const getNextPuzzleHistoryFromSetCall = (
+  setPuzzleHistory: ReturnType<typeof vi.fn>,
+  startingPuzzleHistory: PuzzleHistory,
+): PuzzleHistory => {
+  const candidatePuzzleHistoryUpdate = setPuzzleHistory.mock.calls[0]?.[0];
+
+  if (!candidatePuzzleHistoryUpdate)
+    throw Error("Expected setPuzzleHistory to be called at least once.");
+
+  if (typeof candidatePuzzleHistoryUpdate === "function")
+    return candidatePuzzleHistoryUpdate(startingPuzzleHistory);
+
+  return candidatePuzzleHistoryUpdate;
+};
+
+const getSelectedCellStateFromPuzzleHistory = (
+  puzzleHistory: PuzzleHistory,
+) => {
+  const selectedCellNumber = getBrandedCellNumber(1);
+
+  return getTargetCellStateFromBoardState(
+    selectedCellNumber,
+    puzzleHistory.boardStateHistory[puzzleHistory.currentBoardStateIndex],
+  );
+};
+
+const getPuzzleHistoryWithSelectedCell = () => {
+  const selectedCellNumber = getBrandedCellNumber(1);
+  const boardStateWithSelectedCell = getBoardStateWithTargetCellsSelected([
+    selectedCellNumber,
+  ]);
+
+  return getStartingPuzzleHistoryFromBoardState(boardStateWithSelectedCell);
+};
+
 // #endregion
 
 beforeEach(() => {
-  mockUseUserSettings.mockReset();
-
-  mockHandleCenterMarkupInput.mockReset();
-  mockHandleClearCell.mockReset();
-  mockHandleColorPadInput.mockReset();
-  mockHandleCornerMarkupInput.mockReset();
-  mockHandleDigitInput.mockReset();
+  window.sessionStorage.clear();
 });
 
 describe("Keypad rendering", () => {
@@ -242,152 +281,246 @@ describe("Keypad rendering", () => {
 });
 
 describe("Keypad ordering", () => {
-  it("passes digits in natural order when flip keypad is disabled", async () => {
+  it("renders digits in natural order when flip keypad is disabled", async () => {
     // Arrange
     const renderedKeypad = await renderKeypad({
       isFlipKeypadEnabled: false,
       keypadMode: "Digit",
     });
 
-    // Act
-    for (const digit of sudokuDigits)
-      await (await getDigitButtonLocator(renderedKeypad, digit)).click();
-
     // Assert
-    const calledDigits = mockHandleDigitInput.mock.calls.map(
-      (callArguments) => callArguments[1],
-    );
-    expect(calledDigits).toEqual([...sudokuDigits]);
+    const digitsInRenderedOrder =
+      await getDigitButtonsInRenderedOrder(renderedKeypad);
+    expect(digitsInRenderedOrder).toEqual([...sudokuDigits]);
   });
 
-  it("passes digits in flipped order when flip keypad is enabled", async () => {
+  it("renders digits in flipped order when flip keypad is enabled", async () => {
     // Arrange
     const renderedKeypad = await renderKeypad({
       isFlipKeypadEnabled: true,
       keypadMode: "Digit",
     });
 
-    // Act
-    for (const digit of flippedDigits)
-      await (await getDigitButtonLocator(renderedKeypad, digit)).click();
-
     // Assert
-    const calledDigits = mockHandleDigitInput.mock.calls.map(
-      (callArguments) => callArguments[1],
-    );
-    expect(calledDigits).toEqual([...flippedDigits]);
+    const digitsInRenderedOrder =
+      await getDigitButtonsInRenderedOrder(renderedKeypad);
+    expect(digitsInRenderedOrder).toEqual([...flippedDigits]);
   });
 
-  it("passes colors in flipped order when flip keypad is enabled", async () => {
-    // Arrange
-    const renderedKeypad = await renderKeypad({
-      isFlipKeypadEnabled: true,
-      keypadMode: "Color",
-    });
-
-    // Act
+  it("applies colors in flipped order when flip keypad is enabled", async () => {
     for (
       let colorSwatchIndex = 0;
       colorSwatchIndex < flippedColors.length;
       colorSwatchIndex += 1
-    )
+    ) {
+      const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
+      const setPuzzleHistory = vi.fn();
+
+      const renderedKeypad = await renderKeypad({
+        isFlipKeypadEnabled: true,
+        keypadMode: "Color",
+        puzzleHistory: startingPuzzleHistory,
+        setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+      });
+
       await clickColorSwatchAtIndex(renderedKeypad, colorSwatchIndex);
 
-    // Assert
-    const calledColors = mockHandleColorPadInput.mock.calls.map(
-      (callArguments) => callArguments[1],
-    );
-    expect(calledColors).toEqual([...flippedColors]);
+      const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
+        setPuzzleHistory,
+        startingPuzzleHistory,
+      );
+      const selectedCellState =
+        getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+
+      expect(selectedCellState.markupColors).toEqual([
+        flippedColors[colorSwatchIndex],
+      ]);
+    }
   });
 
-  it("passes colors in natural order when flip keypad is disabled", async () => {
-    // Arrange
-    const renderedKeypad = await renderKeypad({
-      isFlipKeypadEnabled: false,
-      keypadMode: "Color",
-    });
-
-    // Act
+  it("applies colors in natural order when flip keypad is disabled", async () => {
     for (
       let colorSwatchIndex = 0;
       colorSwatchIndex < markupColors.length;
       colorSwatchIndex += 1
-    )
+    ) {
+      const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
+      const setPuzzleHistory = vi.fn();
+
+      const renderedKeypad = await renderKeypad({
+        isFlipKeypadEnabled: false,
+        keypadMode: "Color",
+        puzzleHistory: startingPuzzleHistory,
+        setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+      });
+
       await clickColorSwatchAtIndex(renderedKeypad, colorSwatchIndex);
 
-    // Assert
-    const calledColors = mockHandleColorPadInput.mock.calls.map(
-      (callArguments) => callArguments[1],
-    );
-    expect(calledColors).toEqual([...markupColors]);
+      const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
+        setPuzzleHistory,
+        startingPuzzleHistory,
+      );
+      const selectedCellState =
+        getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+
+      expect(selectedCellState.markupColors).toEqual([
+        markupColors[colorSwatchIndex],
+      ]);
+    }
   });
 });
 
 describe("Keypad input actions", () => {
-  it("calls handleDigitInput with the selected digit in Digit mode", async () => {
+  it("enters the selected digit in Digit mode", async () => {
     // Arrange
-    const renderedKeypad = await renderKeypad({ keypadMode: "Digit" });
+    const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
+    const setPuzzleHistory = vi.fn();
+
+    const renderedKeypad = await renderKeypad({
+      keypadMode: "Digit",
+      puzzleHistory: startingPuzzleHistory,
+      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+    });
 
     // Act
-    await (await getDigitButtonLocator(renderedKeypad, "1")).click();
-    await (await getDigitButtonLocator(renderedKeypad, "5")).click();
     await (await getDigitButtonLocator(renderedKeypad, "9")).click();
 
     // Assert
-    expect(mockHandleDigitInput).toHaveBeenCalledTimes(3);
-    expect(mockHandleDigitInput.mock.calls[0][1]).toBe("1");
-    expect(mockHandleDigitInput.mock.calls[1][1]).toBe("5");
-    expect(mockHandleDigitInput.mock.calls[2][1]).toBe("9");
+    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
+      setPuzzleHistory,
+      startingPuzzleHistory,
+    );
+    const selectedCellState =
+      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+
+    expect(isEnteredDigitInCellContent(selectedCellState.cellContent)).toBe(
+      true,
+    );
+
+    if (isEnteredDigitInCellContent(selectedCellState.cellContent))
+      expect(selectedCellState.cellContent.enteredDigit).toBe("9");
   });
 
-  it("calls handleCenterMarkupInput with the selected digit in Center mode", async () => {
+  it("enters center markups in Center mode", async () => {
     // Arrange
-    const renderedKeypad = await renderKeypad({ keypadMode: "Center" });
+    const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
+    const setPuzzleHistory = vi.fn();
+
+    const renderedKeypad = await renderKeypad({
+      keypadMode: "Center",
+      puzzleHistory: startingPuzzleHistory,
+      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+    });
 
     // Act
     await (await getDigitButtonLocator(renderedKeypad, "3")).click();
 
     // Assert
-    expect(mockHandleCenterMarkupInput).toHaveBeenCalledTimes(1);
-    expect(mockHandleCenterMarkupInput.mock.calls[0][1]).toBe("3");
+    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
+      setPuzzleHistory,
+      startingPuzzleHistory,
+    );
+    const selectedCellState =
+      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+
+    expect(isMarkupDigitsInCellContent(selectedCellState.cellContent)).toBe(
+      true,
+    );
+
+    if (isMarkupDigitsInCellContent(selectedCellState.cellContent))
+      expect(selectedCellState.cellContent.centerMarkups).toEqual(["3"]);
   });
 
-  it("calls handleCornerMarkupInput with the selected digit in Corner mode", async () => {
+  it("enters corner markups in Corner mode", async () => {
     // Arrange
-    const renderedKeypad = await renderKeypad({ keypadMode: "Corner" });
+    const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
+    const setPuzzleHistory = vi.fn();
+
+    const renderedKeypad = await renderKeypad({
+      keypadMode: "Corner",
+      puzzleHistory: startingPuzzleHistory,
+      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+    });
 
     // Act
     await (await getDigitButtonLocator(renderedKeypad, "7")).click();
 
     // Assert
-    expect(mockHandleCornerMarkupInput).toHaveBeenCalledTimes(1);
-    expect(mockHandleCornerMarkupInput.mock.calls[0][1]).toBe("7");
+    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
+      setPuzzleHistory,
+      startingPuzzleHistory,
+    );
+    const selectedCellState =
+      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+
+    expect(isMarkupDigitsInCellContent(selectedCellState.cellContent)).toBe(
+      true,
+    );
+
+    if (isMarkupDigitsInCellContent(selectedCellState.cellContent))
+      expect(selectedCellState.cellContent.cornerMarkups).toEqual(["7"]);
   });
 
-  it("calls handleColorPadInput with the selected color in Color mode", async () => {
+  it("applies selected colors in Color mode", async () => {
     // Arrange
-    const renderedKeypad = await renderKeypad({ keypadMode: "Color" });
+    const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
+    const setPuzzleHistory = vi.fn();
+
+    const renderedKeypad = await renderKeypad({
+      keypadMode: "Color",
+      puzzleHistory: startingPuzzleHistory,
+      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+    });
 
     // Act
     await clickColorSwatchAtIndex(renderedKeypad, 0);
-    await clickColorSwatchAtIndex(renderedKeypad, 7);
 
     // Assert
-    expect(mockHandleColorPadInput).toHaveBeenCalledTimes(2);
-    expect(mockHandleColorPadInput.mock.calls[0][1]).toBe(markupColors[0]);
-    expect(mockHandleColorPadInput.mock.calls[1][1]).toBe(markupColors[7]);
+    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
+      setPuzzleHistory,
+      startingPuzzleHistory,
+    );
+    const selectedCellState =
+      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+
+    expect(selectedCellState.markupColors).toEqual([markupColors[0]]);
   });
 
-  it("calls handleClearCell when the clear button is pressed", async () => {
+  it("clears a selected entered digit when the clear button is pressed", async () => {
     // Arrange
-    const renderedKeypad = await renderKeypad({ keypadMode: "Digit" });
+    const selectedCellNumber = getBrandedCellNumber(1);
+    const boardStateWithEnteredDigit =
+      getBoardStateWithEnteredDigitInTargetCell(
+        selectedCellNumber,
+        getBrandedSudokuDigit("8"),
+        getBoardStateWithTargetCellsSelected([selectedCellNumber]),
+      );
+    const startingPuzzleHistory = getStartingPuzzleHistoryFromBoardState(
+      boardStateWithEnteredDigit,
+    );
+    const setPuzzleHistory = vi.fn();
+
+    const renderedKeypad = await renderKeypad({
+      keypadMode: "Digit",
+      puzzleHistory: startingPuzzleHistory,
+      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+    });
     const clearButton = await getClearButtonElement(renderedKeypad);
 
     // Act
     await clearButton.click();
 
     // Assert
-    expect(mockHandleClearCell).toHaveBeenCalledTimes(1);
+    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
+      setPuzzleHistory,
+      startingPuzzleHistory,
+    );
+    const selectedCellState =
+      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+
+    expect(isEnteredDigitInCellContent(selectedCellState.cellContent)).toBe(
+      false,
+    );
   });
 });
 
