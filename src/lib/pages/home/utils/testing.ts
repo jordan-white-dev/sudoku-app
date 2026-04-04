@@ -209,18 +209,6 @@ const doesBackgroundImageContainToken = (
   token: string,
 ): boolean => backgroundImage.toLowerCase().includes(token.toLowerCase());
 
-export const expectCellToBeSelectedOrNot = async (
-  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-  cellNumber: CellNumber,
-  shouldCellBeSelected: boolean,
-) => {
-  const cellElement = await getCellElement(renderedBoard, cellNumber);
-
-  expect(cellElement.getAttribute("data-selected")).toBe(
-    String(shouldCellBeSelected),
-  );
-};
-
 export const expectSeenCellHighlightOrNotInTargetCell = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellNumber: CellNumber,

@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { userEvent } from "vitest/browser";
 import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Board } from "@/lib/pages/home/components/board/board";
 import {
   defaultUserSettings,
-  expectCellToBeSelectedOrNot,
   expectConflictCellHighlightInTargetCell,
   expectSeenCellHighlightOrNotInTargetCell,
   getBoardStateWithEnteredDigitInTargetCell,
@@ -111,37 +109,102 @@ const renderBoard = async ({
 };
 // #endregion
 
+// #region Cell Expectations
+const ALL_CELL_NUMBERS = Array.from({ length: 81 }, (_, index) =>
+  getBrandedCellNumber(index + 1),
+);
+
 // #region Selected Cell Expectations
+const expectTargetCellToBeSelectedOrNot = async (
+  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
+  targetCellNumber: CellNumber,
+  shouldCellBeSelected: boolean,
+) => {
+  const cellElement = await getCellElement(renderedBoard, targetCellNumber);
+
+  expect(cellElement.getAttribute("data-selected")).toBe(
+    String(shouldCellBeSelected),
+  );
+};
+
+const expectTargetCellsToBeSelectedOrNot = async (
+  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
+  targetCellNumbers: Array<CellNumber>,
+  shouldCellBeSelected: boolean,
+): Promise<void> => {
+  await Promise.all(
+    targetCellNumbers.map((cellNumber) =>
+      expectTargetCellToBeSelectedOrNot(
+        renderedBoard,
+        cellNumber,
+        shouldCellBeSelected,
+      ),
+    ),
+  );
+};
+
 const expectAllCellsToBeSelected = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
 ) => {
-  for (let cellNumber = 1; cellNumber <= 81; cellNumber++) {
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(cellNumber),
-      true,
-    );
-  }
+  await expectTargetCellsToBeSelectedOrNot(
+    renderedBoard,
+    ALL_CELL_NUMBERS,
+    true,
+  );
 };
 
 const expectNoCellsToBeSelected = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
 ) => {
-  for (let cellNumber = 1; cellNumber <= 81; cellNumber++) {
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(cellNumber),
-      false,
-    );
-  }
+  await expectTargetCellsToBeSelectedOrNot(
+    renderedBoard,
+    ALL_CELL_NUMBERS,
+    false,
+  );
+};
+
+const expectOnlyTargetCellsToBeSelected = async (
+  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
+  selectedCellNumbers: Array<CellNumber>,
+) => {
+  const notSelectedCellNumbers = ALL_CELL_NUMBERS.filter(
+    (cellNumber) => !selectedCellNumbers.includes(cellNumber),
+  );
+
+  await expectTargetCellsToBeSelectedOrNot(
+    renderedBoard,
+    selectedCellNumbers,
+    true,
+  );
+  await expectTargetCellsToBeSelectedOrNot(
+    renderedBoard,
+    notSelectedCellNumbers,
+    false,
+  );
+};
+
+const expectOnlyTargetCellsToNotBeSelected = async (
+  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
+  notSelectedCellNumbers: Array<CellNumber>,
+) => {
+  const selectedCellNumbers = ALL_CELL_NUMBERS.filter(
+    (cellNumber) => !notSelectedCellNumbers.includes(cellNumber),
+  );
+
+  await expectTargetCellsToBeSelectedOrNot(
+    renderedBoard,
+    selectedCellNumbers,
+    true,
+  );
+  await expectTargetCellsToBeSelectedOrNot(
+    renderedBoard,
+    notSelectedCellNumbers,
+    false,
+  );
 };
 // #endregion
 
 // #region Seen Cell Expectations
-const ALL_CELL_NUMBERS = Array.from({ length: 81 }, (_, index) =>
-  getBrandedCellNumber(index + 1),
-);
-
 const getZeroBasedCellIndex = (cellNumber: CellNumber): number =>
   Number(cellNumber) - 1;
 
@@ -170,20 +233,13 @@ const getCellNumbersSeenByTargetCell = (
     doCellsShareRowColumnOrBox(targetCellNumber, cellNumber),
   );
 
-const getCellNumbersNotSeenByTargetCell = (
-  targetCellNumber: CellNumber,
-): Array<CellNumber> =>
-  ALL_CELL_NUMBERS.filter(
-    (cellNumber) => !doCellsShareRowColumnOrBox(targetCellNumber, cellNumber),
-  );
-
-const expectSeenCellHighlightOrNotInTargetCells = async (
+const expectTargetCellsToHaveSeenCellHighlightOrNot = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-  cellNumbers: Array<CellNumber>,
+  targetCellNumbers: Array<CellNumber>,
   shouldHighlightBeVisible: boolean,
 ): Promise<void> => {
   await Promise.all(
-    cellNumbers.map((cellNumber) =>
+    targetCellNumbers.map((cellNumber) =>
       expectSeenCellHighlightOrNotInTargetCell(
         renderedBoard,
         cellNumber,
@@ -192,6 +248,40 @@ const expectSeenCellHighlightOrNotInTargetCells = async (
     ),
   );
 };
+
+const expectNoCellsToHaveSeenCellHighlight = async (
+  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
+) => {
+  await expectTargetCellsToHaveSeenCellHighlightOrNot(
+    renderedBoard,
+    ALL_CELL_NUMBERS,
+    false,
+  );
+};
+
+const expectOnlySeenCellsOfTargetCellToBeHighlighted = async (
+  renderedBoard: RenderedBoard | Promise<RenderedBoard>,
+  targetCellNumber: CellNumber,
+) => {
+  const cellNumbersSeenByTargetCell =
+    getCellNumbersSeenByTargetCell(targetCellNumber);
+  const cellNumbersNotSeenByTargetCell = ALL_CELL_NUMBERS.filter(
+    (cellNumber) => !cellNumbersSeenByTargetCell.includes(cellNumber),
+  );
+
+  await expectTargetCellsToHaveSeenCellHighlightOrNot(
+    renderedBoard,
+    cellNumbersSeenByTargetCell,
+    true,
+  );
+  await expectTargetCellsToHaveSeenCellHighlightOrNot(
+    renderedBoard,
+    cellNumbersNotSeenByTargetCell,
+    false,
+  );
+};
+// #endregion
+
 // #endregion
 
 // #region Pointer Interactions
@@ -310,18 +400,19 @@ describe("Board rendering", () => {
     const renderedBoard = await renderBoard();
 
     // Assert
-    for (let cellNumber = 1; cellNumber <= 81; cellNumber++) {
-      await expect
-        .element(
-          await getCellLocator(renderedBoard, getBrandedCellNumber(cellNumber)),
-        )
-        .toBeInTheDocument();
+    for (const cellNumber of ALL_CELL_NUMBERS) {
+      const cellLocator = await getCellLocator(
+        renderedBoard,
+        getBrandedCellNumber(cellNumber),
+      );
+
+      await expect.element(cellLocator).toBeInTheDocument();
     }
   });
 });
 
-describe("Selecting and deselecting cells with the pointer", () => {
-  it("selects only a clicked cell when in single select mode and no cells were selected", async () => {
+describe("Selecting and deselecting cells by clicking", () => {
+  it("selects only a clicked cell when in single select mode and no cells are selected", async () => {
     // Arrange
     const renderedBoard = await renderBoard();
     const cellToClickLocator = await getCellLocator(
@@ -333,14 +424,12 @@ describe("Selecting and deselecting cells with the pointer", () => {
     await cellToClickLocator.click();
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
+    ]);
   });
 
-  it("deselects a clicked cell when in single select mode and it was the only selected cell", async () => {
+  it("deselects a clicked cell when in single select mode and it's the only selected cell", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected(
       getStartingEmptyBoardState(),
@@ -358,14 +447,10 @@ describe("Selecting and deselecting cells with the pointer", () => {
     await cellToClickLocator.click();
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
+    await expectNoCellsToBeSelected(renderedBoard);
   });
 
-  it("selects only a clicked cell and deselects the previously selected cell when in single select mode, a single cell was selected, and the clicked cell was a different cell", async () => {
+  it("selects only a clicked cell and deselects the previously selected cell when in single select mode, a single cell is selected, and the clicked cell is a different cell", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected(
       getStartingEmptyBoardState(),
@@ -383,19 +468,12 @@ describe("Selecting and deselecting cells with the pointer", () => {
     await cellToClickLocator.click();
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(2),
-      true,
-    );
+    ]);
   });
 
-  it("selects only a clicked cell and deselects all previously selected cells when in single select mode, multiple cells were selected, and the clicked cell was one of them", async () => {
+  it("selects only a clicked cell and deselects all previously selected cells when in single select mode, multiple cells are selected, and the clicked cell is one of them", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected(
       getStartingEmptyBoardState(),
@@ -408,31 +486,21 @@ describe("Selecting and deselecting cells with the pointer", () => {
     const renderedBoard = await renderBoard({
       startingBoardState,
     });
-
-    // Act
-    await (
-      await getCellLocator(renderedBoard, getBrandedCellNumber(2))
-    ).click();
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
+    const cellToClickLocator = await getCellLocator(
       renderedBoard,
       getBrandedCellNumber(2),
-      true,
     );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      false,
-    );
+
+    // Act
+    await cellToClickLocator.click();
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellNumber(2),
+    ]);
   });
 
-  it("selects only a clicked cell and deselects all previously selected cells when in single select mode, multiple cells were selected, and the clicked cell was a different cell", async () => {
+  it("selects only a clicked cell and deselects all previously selected cells when in single select mode, multiple cells are selected, and the clicked cell is a different cell", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected(
       getStartingEmptyBoardState(),
@@ -445,36 +513,21 @@ describe("Selecting and deselecting cells with the pointer", () => {
     const renderedBoard = await renderBoard({
       startingBoardState,
     });
-
-    // Act
-    await (
-      await getCellLocator(renderedBoard, getBrandedCellNumber(4))
-    ).click();
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
+    const celltoClickLocator = await getCellLocator(
       renderedBoard,
       getBrandedCellNumber(4),
-      true,
     );
+
+    // Act
+    await celltoClickLocator.click();
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellNumber(4),
+    ]);
   });
 
-  it("selects only a clicked cell when in multiselect mode and no cells were selected", async () => {
+  it("selects only a clicked cell when in multiselect mode and no cells are selected", async () => {
     // Arrange
     const renderedBoard = await renderBoard({
       isMultiselectMode: true,
@@ -488,14 +541,12 @@ describe("Selecting and deselecting cells with the pointer", () => {
     await cellToClickLocator.click();
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
+    ]);
   });
 
-  it("deselects a clicked cell when in multiselect mode and it was the only selected cell", async () => {
+  it("deselects a clicked cell when in multiselect mode and it's the only selected cell", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected(
       getStartingEmptyBoardState(),
@@ -505,21 +556,19 @@ describe("Selecting and deselecting cells with the pointer", () => {
       startingBoardState,
       isMultiselectMode: true,
     });
-
-    // Act
-    await (
-      await getCellLocator(renderedBoard, getBrandedCellNumber(1))
-    ).click();
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
+    const celltoClickLocator = await getCellLocator(
       renderedBoard,
       getBrandedCellNumber(1),
-      false,
     );
+
+    // Act
+    await celltoClickLocator.click();
+
+    // Assert
+    await expectNoCellsToBeSelected(renderedBoard);
   });
 
-  it("selects a clicked cell when in multiselect mode, a single cell was selected, and the clicked cell was a different cell", async () => {
+  it("selects a clicked cell when in multiselect mode, a single cell is selected, and the clicked cell is a different cell", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected(
       getStartingEmptyBoardState(),
@@ -529,26 +578,22 @@ describe("Selecting and deselecting cells with the pointer", () => {
       startingBoardState,
       isMultiselectMode: true,
     });
-
-    // Act
-    await (
-      await getCellLocator(renderedBoard, getBrandedCellNumber(2))
-    ).click();
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
+    const celltoClickLocator = await getCellLocator(
       renderedBoard,
       getBrandedCellNumber(2),
-      true,
     );
+
+    // Act
+    await celltoClickLocator.click();
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+    ]);
   });
 
-  it("deselects a clicked cell when in multiselect mode, multiple cells were selected, and the clicked cell was one of them", async () => {
+  it("deselects a clicked cell when in multiselect mode, multiple cells are selected, and the clicked cell is one of them", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected(
       getStartingEmptyBoardState(),
@@ -558,26 +603,21 @@ describe("Selecting and deselecting cells with the pointer", () => {
       startingBoardState,
       isMultiselectMode: true,
     });
-
-    // Act
-    await (
-      await getCellLocator(renderedBoard, getBrandedCellNumber(1))
-    ).click();
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
+    const celltoClickLocator = await getCellLocator(
       renderedBoard,
       getBrandedCellNumber(1),
-      false,
     );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+
+    // Act
+    await celltoClickLocator.click();
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(2),
-      true,
-    );
+    ]);
   });
 
-  it("selects a clicked cell when in multiselect mode, multiple cells were selected, and the clicked cell was a different cell", async () => {
+  it("selects a clicked cell when in multiselect mode, multiple cells are selected, and the clicked cell is a different cell", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected(
       getStartingEmptyBoardState(),
@@ -587,96 +627,104 @@ describe("Selecting and deselecting cells with the pointer", () => {
       startingBoardState,
       isMultiselectMode: true,
     });
-
-    // Act
-    await (
-      await getCellLocator(renderedBoard, getBrandedCellNumber(3))
-    ).click();
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
+    const celltoClickLocator = await getCellLocator(
       renderedBoard,
       getBrandedCellNumber(3),
-      true,
     );
+
+    // Act
+    await celltoClickLocator.click();
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+      getBrandedCellNumber(3),
+    ]);
   });
 });
 
 describe("Show seen cells highlights", () => {
   it("highlights only a selected cell and all cells that share a row, column, or box with it when in single select mode, show seen cells is enabled, and only one cell is selected", async () => {
     // Arrange
-    const selectedCellNumber = getBrandedCellNumber(1);
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [selectedCellNumber],
-    );
     const renderedBoard = await renderBoard({
-      startingBoardState,
       userSettings: {
         ...defaultUserSettings,
         isShowSeenCellsEnabled: true,
       },
     });
-    const seenCellNumbers = getCellNumbersSeenByTargetCell(selectedCellNumber);
-    const notSeenCellNumbers =
-      getCellNumbersNotSeenByTargetCell(selectedCellNumber);
+    const cellToClickLocator = await getCellLocator(
+      renderedBoard,
+      getBrandedCellNumber(1),
+    );
+
+    // Act
+    await cellToClickLocator.click();
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCells(
+    await expectOnlySeenCellsOfTargetCellToBeHighlighted(
       renderedBoard,
-      seenCellNumbers,
-      true,
-    );
-    await expectSeenCellHighlightOrNotInTargetCells(
-      renderedBoard,
-      notSeenCellNumbers,
-      false,
+      getBrandedCellNumber(1),
     );
   });
 
   it("highlights only a selected cell and all cells that share a row, column, or box with it when in multiselect mode, show seen cells is enabled, and only one cell is selected", async () => {
     // Arrange
-    const selectedCellNumber = getBrandedCellNumber(1);
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [selectedCellNumber],
-    );
     const renderedBoard = await renderBoard({
-      startingBoardState,
       isMultiselectMode: true,
       userSettings: {
         ...defaultUserSettings,
         isShowSeenCellsEnabled: true,
       },
     });
-    const seenCellNumbers = getCellNumbersSeenByTargetCell(selectedCellNumber);
-    const notSeenCellNumbers =
-      getCellNumbersNotSeenByTargetCell(selectedCellNumber);
+    const cellToClickLocator = await getCellLocator(
+      renderedBoard,
+      getBrandedCellNumber(1),
+    );
+
+    // Act
+    await cellToClickLocator.click();
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCells(
+    await expectOnlySeenCellsOfTargetCellToBeHighlighted(
       renderedBoard,
-      seenCellNumbers,
-      true,
-    );
-    await expectSeenCellHighlightOrNotInTargetCells(
-      renderedBoard,
-      notSeenCellNumbers,
-      false,
+      getBrandedCellNumber(1),
     );
   });
 
-  it("highlights no cells when no cells are selected and show seen cells is enabled", async () => {
+  it("highlights no cells when in single select mode, show seen cells is disabled, and only one cell is selected", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard();
+    const cellToClickLocator = await getCellLocator(
+      renderedBoard,
+      getBrandedCellNumber(1),
+    );
+
+    // Act
+    await cellToClickLocator.click();
+
+    // Assert
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when in multiselect mode, show seen cells is disabled, and only one cell is selected", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard({
+      isMultiselectMode: true,
+    });
+    const cellToClickLocator = await getCellLocator(
+      renderedBoard,
+      getBrandedCellNumber(1),
+    );
+
+    // Act
+    await cellToClickLocator.click();
+
+    // Assert
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when in single select mode, show seen cells is enabled, and no cells are selected", async () => {
     // Arrange
     const renderedBoard = await renderBoard({
       userSettings: {
@@ -686,51 +734,21 @@ describe("Show seen cells highlights", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCells(
-      renderedBoard,
-      ALL_CELL_NUMBERS,
-      false,
-    );
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
   });
 
-  it("highlights no cells when no cells are selected and show seen cells is disabled", async () => {
+  it("highlights no cells when in single select mode, show seen cells is disabled, and no cells are selected", async () => {
     // Arrange
     const renderedBoard = await renderBoard();
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCells(
-      renderedBoard,
-      ALL_CELL_NUMBERS,
-      false,
-    );
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
   });
 
-  it("highlights no cells when a single cell is selected and show seen cells is disabled", async () => {
+  it("highlights no cells when in multiselect mode, show seen cells is enabled, and no cells are selected", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
     const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Assert
-    await expectSeenCellHighlightOrNotInTargetCells(
-      renderedBoard,
-      ALL_CELL_NUMBERS,
-      false,
-    );
-  });
-
-  it("highlights no cells when multiple cells are selected and show seen cells is enabled", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      isMultiselectMode: true,
       userSettings: {
         ...defaultUserSettings,
         isShowSeenCellsEnabled: true,
@@ -738,29 +756,138 @@ describe("Show seen cells highlights", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCells(
-      renderedBoard,
-      ALL_CELL_NUMBERS,
-      false,
-    );
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
   });
 
-  it("highlights no cells when multiple cells are selected and show seen cells is disabled", async () => {
+  it("highlights no cells when in multiselect mode, show seen cells is disabled, and no cells are selected", async () => {
     // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
+    const renderedBoard = await renderBoard({ isMultiselectMode: true });
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCells(
-      renderedBoard,
-      ALL_CELL_NUMBERS,
-      false,
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when in single select mode, show seen cells is enabled, and multiple cells are selected", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard({
+      userSettings: {
+        ...defaultUserSettings,
+        isShowSeenCellsEnabled: true,
+      },
+    });
+    await setBoardBoundsForPointerDrag(renderedBoard);
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
     );
+    const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(2),
+    );
+
+    // Act
+    await dispatchPointerEvent(
+      renderedBoard,
+      getBrandedCellNumber(1),
+      "pointerdown",
+      firstCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      secondCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointerup",
+      secondCellPointerCoordinates,
+    );
+
+    // Assert
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when in single select mode, show seen cells is disabled, and multiple cells are selected", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard();
+    await setBoardBoundsForPointerDrag(renderedBoard);
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
+    const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(2),
+    );
+
+    // Act
+    await dispatchPointerEvent(
+      renderedBoard,
+      getBrandedCellNumber(1),
+      "pointerdown",
+      firstCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      secondCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointerup",
+      secondCellPointerCoordinates,
+    );
+
+    // Assert
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when in multiselect mode, show seen cells is enabled, and multiple cells are selected", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard({
+      isMultiselectMode: true,
+      userSettings: {
+        ...defaultUserSettings,
+        isShowSeenCellsEnabled: true,
+      },
+    });
+    const firstCellToClickLocator = await getCellLocator(
+      renderedBoard,
+      getBrandedCellNumber(1),
+    );
+    const secondCellToClickLocator = await getCellLocator(
+      renderedBoard,
+      getBrandedCellNumber(2),
+    );
+
+    // Act
+    await firstCellToClickLocator.click();
+    await secondCellToClickLocator.click();
+
+    // Assert
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
+  });
+
+  it("highlights no cells when in multiselect mode, show seen cells is disabled, and multiple cells are selected", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard({
+      isMultiselectMode: true,
+    });
+    const firstCellToClickLocator = await getCellLocator(
+      renderedBoard,
+      getBrandedCellNumber(1),
+    );
+    const secondCellToClickLocator = await getCellLocator(
+      renderedBoard,
+      getBrandedCellNumber(2),
+    );
+
+    // Act
+    await firstCellToClickLocator.click();
+    await secondCellToClickLocator.click();
+
+    // Assert
+    await expectNoCellsToHaveSeenCellHighlight(renderedBoard);
   });
 });
 
@@ -1139,1075 +1266,1804 @@ describe("Show conflicted digit highlights", () => {
   });
 });
 
-describe("Moving selection with the keyboard", () => {
-  it("moves a single selected cell one space to the right when → is pressed", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
+describe("Moving selected cells with the keyboard", () => {
+  describe("Arrow keys", () => {
+    it("selects the non-edge cell above a starting selected cell and deselects the starting selected cell when in single select mode, ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(10)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowUp",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{ArrowRight}");
+    it("selects the non-edge cell below a starting selected cell and deselects the starting selected cell when in single select mode, ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowDown",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(10),
+      ]);
+    });
+
+    it("selects the non-edge cell to the left of a starting selected cell and deselects the starting selected cell when in single select mode, ← is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowLeft",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+      ]);
+    });
+
+    it("selects the non-edge cell to the right of a starting selected cell and deselects the starting selected cell when in single select mode, → is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(2),
+      ]);
+    });
+
+    it("selects the bottom cell of a column and deselects the top cell of a column when in single select mode, ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowUp",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(81),
+      ]);
+    });
+
+    it("selects the top cell of a column and deselects the bottom cell of a column when in single select mode, ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(73)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowDown",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+      ]);
+    });
+
+    it("selects the last cell of a row and deselects the first cell of a row when in single select mode, ← is pressed, and the first cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowLeft",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(9),
+      ]);
+    });
+
+    it("selects the first cell of a row and deselects the last cell of a row when in single select mode, → is pressed, and the last cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+      ]);
+    });
+
+    it("selects the non-edge cell above a starting selected cell and deselects the starting selected cell when in multiselect mode, ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(10)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowUp",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+      ]);
+    });
+
+    it("selects the non-edge cell below a starting selected cell and deselects the starting selected cell when in multiselect mode, ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowDown",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(10),
+      ]);
+    });
+
+    it("selects the non-edge cell to the left of a starting selected cell and deselects the starting selected cell when in multiselect mode, ← is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowLeft",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+      ]);
+    });
+
+    it("selects the non-edge cell to the right of a starting selected cell and deselects the starting selected cell when in multiselect mode, → is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(2),
+      ]);
+    });
+
+    it("selects the bottom cell of a column and deselects the top cell of a column when in multiselect mode, ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowUp",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(81),
+      ]);
+    });
+
+    it("selects the top cell of a column and deselects the bottom cell of a column when in multiselect mode, ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(73)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowDown",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+      ]);
+    });
+
+    it("selects the last cell of a row and deselects the first cell of a row when in multiselect mode, ← is pressed, and the first cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowLeft",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(9),
+      ]);
+    });
+
+    it("selects the first cell of a row and deselects the last cell of a row when in multiselect mode, → is pressed, and the last cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+      ]);
+    });
+
+    it("selects no cells when an arrow key is pressed while no cells are selected", async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowUp",
+      });
+      await dispatchKeyboardEvent({
+        key: "ArrowDown",
+      });
+      await dispatchKeyboardEvent({
+        key: "ArrowLeft",
+      });
+      await dispatchKeyboardEvent({
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
+    });
+
+    it("selects no cells when a numpad arrow key is pressed while no cells are selected", async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowUp",
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      });
+      await dispatchKeyboardEvent({
+        key: "ArrowDown",
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      });
+      await dispatchKeyboardEvent({
+        key: "ArrowLeft",
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      });
+      await dispatchKeyboardEvent({
+        key: "ArrowRight",
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
+    });
+
+    it("selects no cells when a numpad arrow key is pressed while a cell is selected", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        key: "ArrowUp",
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      });
+      await dispatchKeyboardEvent({
+        key: "ArrowDown",
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      });
+      await dispatchKeyboardEvent({
+        key: "ArrowLeft",
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      });
+      await dispatchKeyboardEvent({
+        key: "ArrowRight",
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+      ]);
+    });
+
+    it("selects a cell next to the first selected cell and deselects the first selected cell when in multiselect mode, a second cell is selected and then deselected, and then an arrow key is pressed while the first cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+      const cellToClickLocator = await getCellLocator(
+        renderedBoard,
+        getBrandedCellNumber(5),
+      );
+
+      // Act
+      await cellToClickLocator.click();
+      await cellToClickLocator.click();
+      await dispatchKeyboardEvent({
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(2),
+      ]);
+    });
   });
 
-  it("moves a single selected cell one space to the left when ← is pressed", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(2)],
-    );
+  describe("Ctrl + Arrow keys", () => {
+    it("selects the non-edge cell above a starting selected cell when in single select mode, Ctrl + ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(10)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowUp",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(10),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{ArrowLeft}");
+    it("selects the non-edge cell below a starting selected cell when in single select mode, Ctrl + ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowDown",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(10),
+      ]);
+    });
+
+    it("selects the non-edge cell to the left of a starting selected cell when in single select mode, Ctrl + ← is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowLeft",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
+    });
+
+    it("selects the non-edge cell to the right of a starting selected cell when in single select mode, Ctrl + → is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
+    });
+
+    it("selects the bottom cell of a column when in single select mode, Ctrl + ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowUp",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(9),
+        getBrandedCellNumber(81),
+      ]);
+    });
+
+    it("selects the top cell of a column when in single select mode, Ctrl + ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(73)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowDown",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(73),
+      ]);
+    });
+
+    it("selects the last cell of a row when in single select mode, Ctrl + ← is pressed, and the first cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowLeft",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(9),
+      ]);
+    });
+
+    it("selects the first cell of a row when in single select mode, Ctrl + → is pressed, and the last cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(9),
+      ]);
+    });
+
+    it("selects the non-edge cell above a starting selected cell when in multiselect mode, Ctrl + ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(10)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowUp",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(10),
+      ]);
+    });
+
+    it("selects the non-edge cell below a starting selected cell when in multiselect mode, Ctrl + ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowDown",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(10),
+      ]);
+    });
+
+    it("selects the non-edge cell to the left of a starting selected cell when in multiselect mode, Ctrl + ← is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowLeft",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
+    });
+
+    it("selects the non-edge cell to the right of a starting selected cell when in multiselect mode, Ctrl + → is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
+    });
+
+    it("selects the bottom cell of a column when in multiselect mode, Ctrl + ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowUp",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(9),
+        getBrandedCellNumber(81),
+      ]);
+    });
+
+    it("selects the top cell of a column when in multiselect mode, Ctrl + ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(73)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowDown",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(73),
+      ]);
+    });
+
+    it("selects the last cell of a row when in multiselect mode, Ctrl + ← is pressed, and the first cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowLeft",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(9),
+      ]);
+    });
+
+    it("selects the first cell of a row when in multiselect mode, Ctrl + → is pressed, and the last cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(9),
+      ]);
+    });
+
+    it("selects a cell next to the most recently selected cell when in single select mode, Ctrl and an arrow key is pressed, and multiple cells are selected", async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
+      await setBoardBoundsForPointerDrag(renderedBoard);
+      const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+        getBrandedCellNumber(1),
+      );
+      const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+        getBrandedCellNumber(2),
+      );
+
+      // Act
+      await dispatchPointerEvent(
+        renderedBoard,
+        getBrandedCellNumber(1),
+        "pointerdown",
+        firstCellPointerCoordinates,
+      );
+      await dispatchPointerEvent(
+        renderedBoard,
+        "board",
+        "pointermove",
+        secondCellPointerCoordinates,
+      );
+      await dispatchPointerEvent(
+        renderedBoard,
+        "board",
+        "pointerup",
+        secondCellPointerCoordinates,
+      );
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+        getBrandedCellNumber(3),
+      ]);
+    });
+
+    it("selects a cell next to the most recently selected cell when in multiselect mode, Ctrl and an arrow key is pressed, and multiple cells are selected", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+      const cellToClickLocator = await getCellLocator(
+        renderedBoard,
+        getBrandedCellNumber(5),
+      );
+
+      // Act
+      await cellToClickLocator.click();
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(5),
+        getBrandedCellNumber(6),
+      ]);
+    });
+
+    it("selects a cell next to the first selected cell when in multiselect mode, a second cell is selected and then deselected, and then Ctrl and an arrow key is pressed while the first cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+      const cellToClickLocator = await getCellLocator(
+        renderedBoard,
+        getBrandedCellNumber(5),
+      );
+
+      // Act
+      await cellToClickLocator.click();
+      await cellToClickLocator.click();
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "ArrowRight",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
+    });
   });
 
-  it("wraps selection to the end of the row when moving left from the first cell in a row", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
+  describe("Shift + Arrow keys", () => {
+    it("selects the non-edge cell above a starting selected cell when in single select mode, Shift + ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(10)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowUp",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(10),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{ArrowLeft}");
+    it("selects the non-edge cell below a starting selected cell when in single select mode, Shift + ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(9),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowDown",
+      });
 
-  it("wraps selection to the bottom row when moving up from the top row", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(9)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(10),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{ArrowUp}");
+    it("selects the non-edge cell to the left of a starting selected cell when in single select mode, Shift + ← is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(9),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(81),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowLeft",
+      });
 
-  it("adds a cell to the selection when Ctrl + → is used", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{Control>}{ArrowRight}{/Control}");
+    it("selects the non-edge cell to the right of a starting selected cell when in single select mode, Shift + → is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowRight",
+      });
 
-  it("adds a cell to the selection when Shift + → is used", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{Shift>}{ArrowDown}{/Shift}");
+    it("selects the bottom cell of a column when in single select mode, Shift + ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(10),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowUp",
+      });
 
-  it("wraps selection to the first column when moving right from the last cell in a row", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(9)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(9),
+        getBrandedCellNumber(81),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{ArrowRight}");
+    it("selects the top cell of a column when in single select mode, Shift + ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(73)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(9),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowDown",
+      });
 
-  it("wraps selection to the top row when moving down from the bottom row", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(73)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(73),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{ArrowDown}");
+    it("selects the last cell of a row when in single select mode, Shift + ← is pressed, and the first cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(73),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowLeft",
+      });
 
-  it("extends from the most recently selected cell when several cells are already selected", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(9),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{Control>}{ArrowRight}{/Control}");
+    it("selects the first cell of a row when in single select mode, Shift + → is pressed, and the last cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowRight",
+      });
 
-  it("continues from the cell the player most recently chose when extending the selection with the keyboard", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-      isMultiselectMode: true,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(9),
+      ]);
     });
 
-    // Act
-    await (
-      await getCellLocator(renderedBoard, getBrandedCellNumber(5))
-    ).click();
-    await userEvent.keyboard("{Control>}{ArrowRight}{/Control}");
+    it("selects the non-edge cell above a starting selected cell when in multiselect mode, Shift + ↑ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(10)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(5),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(6),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowUp",
+      });
 
-  it("falls back to the remaining selected cell when the last keyboard anchor is no longer selected", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-      isMultiselectMode: true,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(10),
+      ]);
     });
 
-    // Act
-    await (
-      await getCellLocator(renderedBoard, getBrandedCellNumber(5))
-    ).click();
-    await (
-      await getCellLocator(renderedBoard, getBrandedCellNumber(5))
-    ).click();
-    await userEvent.keyboard("{Control>}{ArrowRight}{/Control}");
+    it("selects the non-edge cell below a starting selected cell when in multiselect mode, Shift + ↓ is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(5),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(6),
-      false,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowDown",
+      });
 
-  it("does not create a selection when no cells are selected and an arrow key is pressed", async () => {
-    // Arrange
-    const renderedBoard = await renderBoard();
-
-    // Act
-    await userEvent.keyboard("{ArrowUp}");
-    await userEvent.keyboard("{ArrowDown}");
-    await userEvent.keyboard("{ArrowLeft}");
-    await userEvent.keyboard("{ArrowRight}");
-
-    // Assert
-    await expectNoCellsToBeSelected(renderedBoard);
-  });
-
-  it("ignores arrow keys pressed from the numpad", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(10),
+      ]);
     });
 
-    // Act
-    await dispatchKeyboardEvent({
-      key: "ArrowRight",
-      location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+    it("selects the non-edge cell to the left of a starting selected cell when in multiselect mode, Shift + ← is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowLeft",
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
     });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-  });
+    it("selects the non-edge cell to the right of a starting selected cell when in multiselect mode, Shift + → is pressed, and the starting selected cell is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
 
-  it("moves a single selected cell one space downward when ↓ is pressed", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowRight",
+      });
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{ArrowDown}");
+    it("selects the bottom cell of a column when in multiselect mode, Shift + ↑ is pressed, and the top cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(10),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowUp",
+      });
 
-  it("moves a single selected cell one space upward when ↑ is pressed", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(10)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(9),
+        getBrandedCellNumber(81),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{ArrowUp}");
+    it("selects the top cell of a column when in multiselect mode, Shift + ↓ is pressed, and the bottom cell of the column is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(73)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(10),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowDown",
+      });
 
-  it("adds a cell to the selection when Ctrl + ← is used", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(2)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(73),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{Control>}{ArrowLeft}{/Control}");
+    it("selects the last cell of a row when in multiselect mode, Shift + ← is pressed, and the first cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowLeft",
+      });
 
-  it("adds a cell to the selection when Ctrl + ↑ is used", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(10)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(9),
+      ]);
     });
 
-    // Act
-    await userEvent.keyboard("{Control>}{ArrowUp}{/Control}");
+    it("selects the first cell of a row when in multiselect mode, Shift + → is pressed, and the last cell of the row is the only selected cell", async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(9)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+        isMultiselectMode: true,
+      });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(10),
-      true,
-    );
-  });
+      // Act
+      await dispatchKeyboardEvent({
+        shiftKey: true,
+        key: "ArrowRight",
+      });
 
-  it("adds a cell to the selection when Ctrl + ↓ is used", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(9),
+      ]);
     });
-
-    // Act
-    await userEvent.keyboard("{Control>}{ArrowDown}{/Control}");
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(10),
-      true,
-    );
-  });
-
-  it("adds a cell to the selection when Shift + ← is used", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(2)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await userEvent.keyboard("{Shift>}{ArrowLeft}{/Shift}");
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-  });
-
-  it("adds a cell to the selection when Shift + → is used", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await userEvent.keyboard("{Shift>}{ArrowRight}{/Shift}");
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-  });
-
-  it("adds a cell to the selection when Shift + ↑ is used", async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(10)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await userEvent.keyboard("{Shift>}{ArrowUp}{/Shift}");
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(10),
-      true,
-    );
   });
 });
 
-describe("Changing all selected cells with keyboard shortcuts", () => {
-  it('selects all cells when Ctrl+"a" is pressed', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
+describe("Selecting and deselecting cells with keyboard shortcuts", () => {
+  describe("Select all cells shortcut (Ctrl + A)", () => {
+    it('selects all cells when Ctrl + "a" is pressed and no cells are selected', async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "a",
+      });
+
+      // Assert
+      await expectAllCellsToBeSelected(renderedBoard);
     });
 
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "a",
+    it('selects all cells when Ctrl + "A" is pressed and no cells are selected', async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "A",
+      });
+
+      // Assert
+      await expectAllCellsToBeSelected(renderedBoard);
     });
 
-    // Assert
-    await expectAllCellsToBeSelected(renderedBoard);
+    it('selects all cells when Ctrl + "a" is pressed and multiple cells are selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "a",
+      });
+
+      // Assert
+      await expectAllCellsToBeSelected(renderedBoard);
+    });
+
+    it('selects all cells when Ctrl + "A" is pressed and multiple cells are selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "A",
+      });
+
+      // Assert
+      await expectAllCellsToBeSelected(renderedBoard);
+    });
+
+    it('keeps all cells selected when Ctrl + "a" is pressed while all cells are already selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        ALL_CELL_NUMBERS,
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "a",
+      });
+
+      // Assert
+      await expectAllCellsToBeSelected(renderedBoard);
+    });
+
+    it('keeps all cells selected when Ctrl + "A" is pressed while all cells are already selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        ALL_CELL_NUMBERS,
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "A",
+      });
+
+      // Assert
+      await expectAllCellsToBeSelected(renderedBoard);
+    });
+
+    it('does not select or deselect cells when Ctrl + Meta + "a" is pressed', async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "a",
+        metaKey: true,
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
+    });
+
+    it('does not select or deselect cells when Ctrl + Meta + "A" is pressed', async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "A",
+        metaKey: true,
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
+    });
   });
 
-  it('selects all cells when Ctrl+"A" is pressed because the shortcut is case-insensitive', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
+  describe("Deselect all cells shortcut (Ctrl + Shift + A)", () => {
+    it('deselects all cells when Ctrl + Shift + "a" is pressed while all cells are already selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        ALL_CELL_NUMBERS,
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        shiftKey: true,
+        key: "a",
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
     });
 
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "A",
+    it('deselects all cells when Ctrl + Shift + "A" is pressed while all cells are already selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        ALL_CELL_NUMBERS,
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        shiftKey: true,
+        key: "A",
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
     });
 
-    // Assert
-    await expectAllCellsToBeSelected(renderedBoard);
+    it('deselects all cells when Ctrl + Shift + "a" is pressed and multiple cells are selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        shiftKey: true,
+        key: "a",
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
+    });
+
+    it('deselects all cells when Ctrl + Shift + "A" is pressed and multiple cells are selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        shiftKey: true,
+        key: "A",
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
+    });
+
+    it('keeps no cells selected when Ctrl + Shift + "a" is pressed and no cells are selected', async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        shiftKey: true,
+        key: "a",
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
+    });
+
+    it('keeps no cells selected when Ctrl + Shift + "A" is pressed and no cells are selected', async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        shiftKey: true,
+        key: "A",
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
+    });
+
+    it('does not select or deselect cells when Ctrl + Shift + Meta + "a" is pressed', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        shiftKey: true,
+        key: "a",
+        metaKey: true,
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
+    });
+
+    it('does not select or deselect cells when Ctrl + Shift + Meta + "A" is pressed', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        shiftKey: true,
+        key: "A",
+        metaKey: true,
+      });
+
+      // Assert
+      await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
+    });
   });
 
-  it('clears the current selection when Ctrl+Shift+"a" is pressed', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
+  describe("Invert selected cells shortcut (Ctrl + I)", () => {
+    it('deselects all currently selected cells and selects all other cells when Ctrl + "i" is pressed while multiple cells are selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "i",
+      });
+
+      // Assert
+      expectOnlyTargetCellsToNotBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
     });
 
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      shiftKey: true,
-      key: "a",
+    it('deselects all currently selected cells and selects all other cells when Ctrl + "I" is pressed while multiple cells are selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "I",
+      });
+
+      // Assert
+      expectOnlyTargetCellsToNotBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
     });
 
-    // Assert
-    await expectNoCellsToBeSelected(renderedBoard);
-  });
+    it('deselects all cells when Ctrl + "i" is pressed while all cells are already selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        ALL_CELL_NUMBERS,
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-  it('clears the current selection when Ctrl+Shift+"A" is pressed because the shortcut is case-insensitive', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "i",
+      });
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
     });
 
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      shiftKey: true,
-      key: "A",
+    it('deselects all cells when Ctrl + "I" is pressed while all cells are already selected', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        ALL_CELL_NUMBERS,
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "I",
+      });
+
+      // Assert
+      await expectNoCellsToBeSelected(renderedBoard);
     });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(81),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(40),
-      false,
-    );
-  });
+    it('selects all cells when Ctrl + "i" is pressed while no cells are selected', async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
 
-  it('inverts the current selection when Ctrl+"i" is pressed', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "i",
+      });
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      await expectAllCellsToBeSelected(renderedBoard);
     });
 
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "i",
+    it('selects all cells when Ctrl + "I" is pressed while no cells are selected', async () => {
+      // Arrange
+      const renderedBoard = await renderBoard();
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "I",
+      });
+
+      // Assert
+      await expectAllCellsToBeSelected(renderedBoard);
     });
 
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      true,
-    );
-  });
+    it('does not select or deselect cells when Ctrl + Meta + "i" is pressed', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
 
-  it('inverts the current selection when Ctrl+"I" is pressed because the shortcut is case-insensitive', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "i",
+        metaKey: true,
+      });
 
-    const renderedBoard = await renderBoard({
-      startingBoardState,
+      // Assert
+      expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
     });
 
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "I",
+    it('does not select or deselect cells when Ctrl + Meta + "I" is pressed', async () => {
+      // Arrange
+      const startingBoardState = getBoardStateWithTargetCellsSelected(
+        getStartingEmptyBoardState(),
+        [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+      );
+      const renderedBoard = await renderBoard({
+        startingBoardState,
+      });
+
+      // Act
+      await dispatchKeyboardEvent({
+        ctrlKey: true,
+        key: "I",
+        metaKey: true,
+      });
+
+      // Assert
+      expectOnlyTargetCellsToBeSelected(renderedBoard, [
+        getBrandedCellNumber(1),
+        getBrandedCellNumber(2),
+      ]);
     });
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      true,
-    );
-  });
-
-  it('does not select all cells when Ctrl+"a" is pressed with Meta', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "a",
-      metaKey: true,
-    });
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(81),
-      false,
-    );
-  });
-
-  it('does not select all cells when Ctrl+"A" is pressed with Meta', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "A",
-      metaKey: true,
-    });
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(81),
-      false,
-    );
-  });
-
-  it('does not clear the current selection when Ctrl+Shift+"a" is pressed with Meta', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      shiftKey: true,
-      key: "a",
-      metaKey: true,
-    });
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      false,
-    );
-  });
-
-  it('does not clear the current selection when Ctrl+Shift+"A" is pressed with Meta', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      shiftKey: true,
-      key: "A",
-      metaKey: true,
-    });
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      false,
-    );
-  });
-
-  it('does not invert the current selection when Ctrl+"i" is pressed with Meta', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "i",
-      metaKey: true,
-    });
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      false,
-    );
-  });
-
-  it('does not invert the current selection when Ctrl+"I" is pressed with Meta', async () => {
-    // Arrange
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      [getBrandedCellNumber(1), getBrandedCellNumber(2)],
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "I",
-      metaKey: true,
-    });
-
-    // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      false,
-    );
-  });
-
-  it('keeps all cells selected when Ctrl+"a" is pressed and every cell is already selected', async () => {
-    // Arrange
-    const allCellNumbers = Array.from({ length: 81 }, (_, index) =>
-      getBrandedCellNumber(index + 1),
-    );
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      allCellNumbers,
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "a",
-    });
-
-    // Assert
-    await expectAllCellsToBeSelected(renderedBoard);
-  });
-
-  it('keeps no cells selected when Ctrl+Shift+"a" is pressed and no cells are selected', async () => {
-    // Arrange
-    const renderedBoard = await renderBoard();
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      shiftKey: true,
-      key: "a",
-    });
-
-    // Assert
-    await expectNoCellsToBeSelected(renderedBoard);
-  });
-
-  it('selects no cells when Ctrl+"i" is pressed and all cells are already selected', async () => {
-    // Arrange
-    const allCellNumbers = Array.from({ length: 81 }, (_, index) =>
-      getBrandedCellNumber(index + 1),
-    );
-    const startingBoardState = getBoardStateWithTargetCellsSelected(
-      getStartingEmptyBoardState(),
-      allCellNumbers,
-    );
-
-    const renderedBoard = await renderBoard({
-      startingBoardState,
-    });
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "i",
-    });
-
-    // Assert
-    await expectNoCellsToBeSelected(renderedBoard);
-  });
-
-  it('selects all cells when Ctrl+"i" is pressed and no cells are selected', async () => {
-    // Arrange
-    const renderedBoard = await renderBoard();
-
-    // Act
-    await dispatchKeyboardEvent({
-      ctrlKey: true,
-      key: "i",
-    });
-
-    // Assert
-    await expectAllCellsToBeSelected(renderedBoard);
   });
 });
 
-describe("Selecting cells by dragging across the board", () => {
-  it("selects each cell crossed while dragging in a straight line", async () => {
+describe("Selecting cells by clicking and dragging", () => {
+  it("selects each cell crossed in a straight line while clicking and dragging in single select mode", async () => {
     // Arrange
     const renderedBoard = await renderBoard();
-
     await setBoardBoundsForPointerDrag(renderedBoard);
-
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
     const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
       getBrandedCellNumber(2),
     );
@@ -2220,7 +3076,7 @@ describe("Selecting cells by dragging across the board", () => {
       renderedBoard,
       getBrandedCellNumber(1),
       "pointerdown",
-      getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(1)),
+      firstCellPointerCoordinates,
     );
     await dispatchPointerEvent(
       renderedBoard,
@@ -2242,35 +3098,21 @@ describe("Selecting cells by dragging across the board", () => {
     );
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(3),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(4),
-      false,
-    );
+    ]);
   });
 
-  it("selects interpolated cells while dragging diagonally across the board", async () => {
+  it("selects each cell crossed diagonally while clicking and dragging in single select mode", async () => {
     // Arrange
     const renderedBoard = await renderBoard();
-
     await setBoardBoundsForPointerDrag(renderedBoard);
-
-    const diagonalTargetPointerCoordinates =
+    const startingCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
+    const diagonalCellTargetPointerCoordinates =
       getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(21));
 
     // Act
@@ -2278,58 +3120,134 @@ describe("Selecting cells by dragging across the board", () => {
       renderedBoard,
       getBrandedCellNumber(1),
       "pointerdown",
-      getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(1)),
+      startingCellPointerCoordinates,
     );
     await dispatchPointerEvent(
       renderedBoard,
       "board",
       "pointermove",
-      diagonalTargetPointerCoordinates,
+      diagonalCellTargetPointerCoordinates,
     );
     await dispatchPointerEvent(
       renderedBoard,
       "board",
       "pointerup",
-      diagonalTargetPointerCoordinates,
+      diagonalCellTargetPointerCoordinates,
     );
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(11),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(21),
-      true,
-    );
+    ]);
   });
 
-  it("continues adding crossed cells to the existing selection while dragging in multiselect mode", async () => {
+  it("selects each cell crossed in a straight line while clicking and dragging in multiselect mode", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard({ isMultiselectMode: true });
+    await setBoardBoundsForPointerDrag(renderedBoard);
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
+    const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(2),
+    );
+    const thirdCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(3),
+    );
+
+    // Act
+    await dispatchPointerEvent(
+      renderedBoard,
+      getBrandedCellNumber(1),
+      "pointerdown",
+      firstCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      secondCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      thirdCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointerup",
+      thirdCellPointerCoordinates,
+    );
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+      getBrandedCellNumber(3),
+    ]);
+  });
+
+  it("selects each cell crossed diagonally while clicking and dragging in multiselect mode", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard({ isMultiselectMode: true });
+    await setBoardBoundsForPointerDrag(renderedBoard);
+    const startingCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
+    const diagonalCellTargetPointerCoordinates =
+      getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(21));
+
+    // Act
+    await dispatchPointerEvent(
+      renderedBoard,
+      getBrandedCellNumber(1),
+      "pointerdown",
+      startingCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      diagonalCellTargetPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointerup",
+      diagonalCellTargetPointerCoordinates,
+    );
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(11),
+      getBrandedCellNumber(21),
+    ]);
+  });
+
+  it("selects each cell crossed while clicking and dragging when in multiselect mode and a non-adjacent cell is already selected", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected(
       getStartingEmptyBoardState(),
       [getBrandedCellNumber(9)],
     );
-
     const renderedBoard = await renderBoard({
       startingBoardState,
       isMultiselectMode: true,
     });
-
     await setBoardBoundsForPointerDrag(renderedBoard);
-
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
     const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
-      getBrandedCellNumber(2),
+      getBrandedCellNumber(3),
     );
     const thirdCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
-      getBrandedCellNumber(3),
+      getBrandedCellNumber(13),
     );
 
     // Act
@@ -2337,7 +3255,7 @@ describe("Selecting cells by dragging across the board", () => {
       renderedBoard,
       getBrandedCellNumber(1),
       "pointerdown",
-      getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(1)),
+      firstCellPointerCoordinates,
     );
     await dispatchPointerEvent(
       renderedBoard,
@@ -2354,88 +3272,134 @@ describe("Selecting cells by dragging across the board", () => {
     await dispatchPointerEvent(
       renderedBoard,
       "board",
+      "pointermove",
+      thirdCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
       "pointerup",
       thirdCellPointerCoordinates,
     );
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(3),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(9),
-      true,
-    );
+      getBrandedCellNumber(13),
+    ]);
   });
 
-  it("does not add any new cells while the pointer is outside the board boundaries", async () => {
+  it("selects each cell crossed while clicking and dragging when in multiselect mode and multiple non-adjacent cells are already selected", async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithTargetCellsSelected(
+      getStartingEmptyBoardState(),
+      [getBrandedCellNumber(9), getBrandedCellNumber(18)],
+    );
+    const renderedBoard = await renderBoard({
+      startingBoardState,
+      isMultiselectMode: true,
+    });
+    await setBoardBoundsForPointerDrag(renderedBoard);
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
+    const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(3),
+    );
+    const thirdCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(13),
+    );
+
+    // Act
+    await dispatchPointerEvent(
+      renderedBoard,
+      getBrandedCellNumber(1),
+      "pointerdown",
+      firstCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      secondCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      thirdCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      thirdCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointerup",
+      thirdCellPointerCoordinates,
+    );
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellNumber(1),
+      getBrandedCellNumber(2),
+      getBrandedCellNumber(3),
+      getBrandedCellNumber(9),
+      getBrandedCellNumber(13),
+      getBrandedCellNumber(18),
+    ]);
+  });
+
+  it("selects no cells while clicking and dragging outside the board boundaries", async () => {
     // Arrange
     const renderedBoard = await renderBoard();
-
     await setBoardBoundsForPointerDrag(renderedBoard);
-
-    const pointerCoordinatesOutsideTheBoard = {
+    const firstPointerCoordinatesOutsideTheBoard = {
       clientX: 500,
       clientY: 500,
+    };
+    const secondPointerCoordinatesOutsideTheBoard = {
+      clientX: 550,
+      clientY: 550,
     };
 
     // Act
     await dispatchPointerEvent(
       renderedBoard,
-      getBrandedCellNumber(1),
+      "board",
       "pointerdown",
-      getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(1)),
+      firstPointerCoordinatesOutsideTheBoard,
     );
     await dispatchPointerEvent(
       renderedBoard,
       "board",
       "pointermove",
-      pointerCoordinatesOutsideTheBoard,
+      secondPointerCoordinatesOutsideTheBoard,
     );
     await dispatchPointerEvent(
       renderedBoard,
       "board",
       "pointerup",
-      pointerCoordinatesOutsideTheBoard,
+      secondPointerCoordinatesOutsideTheBoard,
     );
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(10),
-      false,
-    );
+    await expectNoCellsToBeSelected(renderedBoard);
   });
 
-  it("stops extending the selection after the pointer is released", async () => {
+  it("selects each cell crossed while clicking and dragging, then selects no cells crossed after releasing the click", async () => {
     // Arrange
     const renderedBoard = await renderBoard();
-
     await setBoardBoundsForPointerDrag(renderedBoard);
-
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
     const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
       getBrandedCellNumber(2),
     );
@@ -2448,7 +3412,7 @@ describe("Selecting cells by dragging across the board", () => {
       renderedBoard,
       getBrandedCellNumber(1),
       "pointerdown",
-      getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(1)),
+      firstCellPointerCoordinates,
     );
     await dispatchPointerEvent(
       renderedBoard,
@@ -2470,29 +3434,19 @@ describe("Selecting cells by dragging across the board", () => {
     );
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      false,
-    );
+    ]);
   });
 
-  it("stops extending the selection after pointer cancellation", async () => {
+  it("selects each cell crossed while clicking and dragging, then selects no cells crossed after the browser cancels the click", async () => {
     // Arrange
     const renderedBoard = await renderBoard();
-
     await setBoardBoundsForPointerDrag(renderedBoard);
-
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
     const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
       getBrandedCellNumber(2),
     );
@@ -2505,7 +3459,7 @@ describe("Selecting cells by dragging across the board", () => {
       renderedBoard,
       getBrandedCellNumber(1),
       "pointerdown",
-      getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(1)),
+      firstCellPointerCoordinates,
     );
     await dispatchPointerEvent(
       renderedBoard,
@@ -2527,29 +3481,19 @@ describe("Selecting cells by dragging across the board", () => {
     );
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      false,
-    );
+    ]);
   });
 
-  it("stops extending the selection after pointer capture is lost", async () => {
+  it("selects each cell crossed while clicking and dragging, then selects no cells crossed after the click is lost", async () => {
     // Arrange
     const renderedBoard = await renderBoard();
-
     await setBoardBoundsForPointerDrag(renderedBoard);
-
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(1),
+    );
     const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
       getBrandedCellNumber(2),
     );
@@ -2562,7 +3506,7 @@ describe("Selecting cells by dragging across the board", () => {
       renderedBoard,
       getBrandedCellNumber(1),
       "pointerdown",
-      getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(1)),
+      firstCellPointerCoordinates,
     );
     await dispatchPointerEvent(
       renderedBoard,
@@ -2584,47 +3528,47 @@ describe("Selecting cells by dragging across the board", () => {
     );
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
       getBrandedCellNumber(1),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
       getBrandedCellNumber(2),
-      true,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(3),
-      false,
-    );
+    ]);
   });
 
-  it("does not select any cells when the pointer moves across the board without a prior pointer down", async () => {
+  it("selects no cells crossed when moving without clicking", async () => {
     // Arrange
     const renderedBoard = await renderBoard();
-
     await setBoardBoundsForPointerDrag(renderedBoard);
+    const firstCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(2),
+    );
+    const secondCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(3),
+    );
+    const thirdCellPointerCoordinates = getPointerCoordinatesForCenterOfCell(
+      getBrandedCellNumber(13),
+    );
 
     // Act
     await dispatchPointerEvent(
       renderedBoard,
       "board",
       "pointermove",
-      getPointerCoordinatesForCenterOfCell(getBrandedCellNumber(2)),
+      firstCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      secondCellPointerCoordinates,
+    );
+    await dispatchPointerEvent(
+      renderedBoard,
+      "board",
+      "pointermove",
+      thirdCellPointerCoordinates,
     );
 
     // Assert
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(1),
-      false,
-    );
-    await expectCellToBeSelectedOrNot(
-      renderedBoard,
-      getBrandedCellNumber(2),
-      false,
-    );
+    await expectNoCellsToBeSelected(renderedBoard);
   });
 });
