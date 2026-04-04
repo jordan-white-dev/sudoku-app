@@ -1,3 +1,4 @@
+import SuperExpressive from "super-expressive";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
@@ -39,11 +40,26 @@ vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
 // #region Shared Test Types and Constants
 type RenderedHeader = Awaited<ReturnType<typeof render>>;
 
-const SELECTION_LABEL_REGEX = /^Selection$/;
-const KEYPAD_MODES_LABEL_REGEX = /^Keypad Modes$/;
-const NUMBER_ENTRY_LABEL_REGEX = /^Number Entry$/;
-const MARKUP_ENTRY_LABEL_REGEX = /^Markup Entry$/;
-const HISTORY_LABEL_REGEX = /^History$/;
+// Equivalent to: /^Selection$/
+const SELECTION_LABEL_REGEX = SuperExpressive()
+  .startOfInput.string("Selection")
+  .endOfInput.toRegex();
+// Equivalent to: /^Keypad Modes$/
+const KEYPAD_MODES_LABEL_REGEX = SuperExpressive()
+  .startOfInput.string("Keypad Modes")
+  .endOfInput.toRegex();
+// Equivalent to: /^Number Entry$/
+const NUMBER_ENTRY_LABEL_REGEX = SuperExpressive()
+  .startOfInput.string("Number Entry")
+  .endOfInput.toRegex();
+// Equivalent to: /^Markup Entry$/
+const MARKUP_ENTRY_LABEL_REGEX = SuperExpressive()
+  .startOfInput.string("Markup Entry")
+  .endOfInput.toRegex();
+// Equivalent to: /^History$/
+const HISTORY_LABEL_REGEX = SuperExpressive()
+  .startOfInput.string("History")
+  .endOfInput.toRegex();
 // #endregion
 
 // #region Render Header

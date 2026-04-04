@@ -1,3 +1,4 @@
+import SuperExpressive from "super-expressive";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
@@ -48,8 +49,14 @@ vi.mock("react-timer-hook", () => ({
 // #region Shared Test Types and Constants
 type RenderedStopwatch = Awaited<ReturnType<typeof render>>;
 
-const RESUME_BUTTON_ACCESSIBLE_NAME = /Resume/i;
-const STAY_PAUSED_BUTTON_ACCESSIBLE_NAME = /Stay Paused/i;
+// Equivalent to: /Resume/i
+const RESUME_BUTTON_ACCESSIBLE_NAME = SuperExpressive()
+  .caseInsensitive.string("Resume")
+  .toRegex();
+// Equivalent to: /Stay Paused/i
+const STAY_PAUSED_BUTTON_ACCESSIBLE_NAME = SuperExpressive()
+  .caseInsensitive.string("Stay Paused")
+  .toRegex();
 const GAME_PAUSED_TEXT = "Game Paused";
 const PAUSE_STOPWATCH_BUTTON_ACCESSIBLE_NAME = "Pause stopwatch";
 const RESUME_STOPWATCH_BUTTON_ACCESSIBLE_NAME = "Resume stopwatch";

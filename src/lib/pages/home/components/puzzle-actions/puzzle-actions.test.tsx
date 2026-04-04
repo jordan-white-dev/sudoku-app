@@ -1,3 +1,4 @@
+import SuperExpressive from "super-expressive";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
@@ -70,9 +71,21 @@ vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
 // #region Shared Test Types and Constants
 type RenderedPuzzleActions = Awaited<ReturnType<typeof render>>;
 
-const NEW_PUZZLE_ROUTE_REGEX = /^\/puzzle\//;
-const TRY_AGAIN_MESSAGE_REGEX = /That doesn't look quite right/i;
-const SOLVED_WITH_TIME_REGEX = /You solved the puzzle in 03:15!/;
+// Equivalent to: /^\/puzzle\//
+const NEW_PUZZLE_ROUTE_REGEX = SuperExpressive()
+  .startOfInput.string("/puzzle/")
+  .toRegex();
+// Equivalent to: /That doesn't look quite right/i
+const TRY_AGAIN_MESSAGE_REGEX = SuperExpressive()
+  .caseInsensitive.string("That doesn't look quite right")
+  .toRegex();
+// Equivalent to: /You solved the puzzle in 03:15!/
+const SOLVED_WITH_TIME_REGEX = SuperExpressive()
+  .string("You solved the puzzle in 03:15!")
+  .toRegex();
+// Equivalent to: /\s+/g
+const WHITESPACE_SEQUENCE_REGEX =
+  SuperExpressive().allowMultipleMatches.oneOrMore.whitespaceChar.toRegex();
 // #endregion
 
 // #region Puzzle History Factories
@@ -179,7 +192,9 @@ const clickDialogButtonWithText = async (
     openDialogElement.querySelectorAll<HTMLButtonElement>("button"),
   ).find((buttonElement) => {
     const normalizedButtonText =
-      buttonElement.textContent?.replace(/\s+/g, " ").trim() ?? "";
+      buttonElement.textContent
+        ?.replace(WHITESPACE_SEQUENCE_REGEX, " ")
+        .trim() ?? "";
 
     return normalizedButtonText === buttonText;
   });

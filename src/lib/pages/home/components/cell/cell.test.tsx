@@ -1,3 +1,4 @@
+import SuperExpressive from "super-expressive";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
@@ -43,12 +44,18 @@ vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
 
 const SELECTED_CELL_HIGHLIGHT_COLOR_TOKEN = "4ca4ff";
 
+// Equivalent to: /url\("data:image\/svg\+xml,([^"]+)"\)/g
+const SVG_DATA_URL_REGEX = SuperExpressive()
+  .allowMultipleMatches.string('url("data:image/svg+xml,')
+  .capture.oneOrMore.anythingButChars('"')
+  .end()
+  .string('")')
+  .toRegex();
+
 const getSvgLayersFromBackgroundImage = (
   backgroundImage: string,
 ): Array<string> => {
-  const svgUrlMatches = backgroundImage.matchAll(
-    /url\("data:image\/svg\+xml,([^"]+)"\)/g,
-  );
+  const svgUrlMatches = backgroundImage.matchAll(SVG_DATA_URL_REGEX);
 
   return [...svgUrlMatches].map((svgUrlMatch) =>
     decodeURIComponent(svgUrlMatch[1]),
@@ -66,8 +73,15 @@ const getSvgLayerContainingToken = (
   );
 };
 
+// Equivalent to: /<rect\b[^>]*>/g
+const SVG_RECT_TAG_REGEX = SuperExpressive()
+  .allowMultipleMatches.string("<rect")
+  .wordBoundary.zeroOrMore.anythingButChars(">")
+  .string(">")
+  .toRegex();
+
 const getRectTagsFromSvgLayer = (svgLayer: string): Array<string> => {
-  const rectTagMatches = svgLayer.match(/<rect\b[^>]*>/g);
+  const rectTagMatches = svgLayer.match(SVG_RECT_TAG_REGEX);
 
   return rectTagMatches ?? [];
 };
