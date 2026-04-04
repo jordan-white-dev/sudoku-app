@@ -41,7 +41,7 @@ vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
 }));
 // #endregion
 
-// #region Board Element Lookup
+// #region Board Lookup
 const getBoardElement = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
 ): Promise<HTMLElement> => {

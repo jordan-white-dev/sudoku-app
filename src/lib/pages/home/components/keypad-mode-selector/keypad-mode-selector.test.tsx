@@ -11,7 +11,7 @@ import { type KeypadMode } from "@/lib/pages/home/utils/types";
 type RenderedKeypadModeSelector = Awaited<ReturnType<typeof render>>;
 // #endregion
 
-// #region Render and Async Update Helpers
+// #region Render Keypad Mode Selector
 const renderKeypadModeSelector = async ({
   startingKeypadMode = "Digit",
 }: {
@@ -41,7 +41,7 @@ const renderKeypadModeSelector = async ({
 };
 // #endregion
 
-// #region Keypad Mode Selector Element Lookup Helpers
+// #region Keypad Mode Selector Lookup
 const getKeypadModeSelectorGroupElement = async (
   renderedKeypadModeSelector:
     | RenderedKeypadModeSelector
@@ -80,7 +80,7 @@ const getKeypadModeInput = async (
 };
 // #endregion
 
-// #region Selection State Assertion Helpers
+// #region Selection State Assertion
 const expectKeypadModeToBeSelected = async (
   renderedKeypadModeSelector:
     | RenderedKeypadModeSelector
@@ -153,7 +153,6 @@ describe("Changing keypad modes", () => {
     const renderedKeypadModeSelector = await renderKeypadModeSelector({
       startingKeypadMode: "Digit",
     });
-
     const colorInput = await getKeypadModeInput(
       renderedKeypadModeSelector,
       "Color",
@@ -177,7 +176,7 @@ describe("Changing keypad modes", () => {
   });
 });
 
-describe("Numpad arrow key handling", () => {
+describe("Numpad key handling", () => {
   it("prevents default behavior for numpad arrow keys", async () => {
     // Arrange
     const renderedKeypadModeSelector = await renderKeypadModeSelector();
@@ -209,7 +208,7 @@ describe("Numpad arrow key handling", () => {
     expect(keyDownEvent.defaultPrevented).toBe(true);
   });
 
-  it("does not prevent default behavior for non-numpad arrow keys", async () => {
+  it("does not prevent default behavior for non-arrow numpad keys", async () => {
     // Arrange
     const renderedKeypadModeSelector = await renderKeypadModeSelector();
     const keypadModeSelectorGroup = await getKeypadModeSelectorGroupElement(

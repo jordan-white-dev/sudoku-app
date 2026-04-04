@@ -6,11 +6,12 @@ import { Stopwatch } from "@/lib/pages/home/components/stopwatch/stopwatch";
 import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
 import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
+  defaultUserSettings,
   getEmptyRawBoardState,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 
-// #region Test Doubles and Module Mocks
+// #region Module Mocks
 const mockPauseStopwatch = vi.fn();
 const mockResetStopwatch = vi.fn();
 const mockStartStopwatch = vi.fn();
@@ -44,7 +45,7 @@ vi.mock("react-timer-hook", () => ({
 }));
 // #endregion
 
-// #region Shared Test Types and Default Configuration
+// #region Shared Test Types and Constants
 type RenderedStopwatch = Awaited<ReturnType<typeof render>>;
 
 const RESUME_BUTTON_ACCESSIBLE_NAME = /Resume/i;
@@ -53,20 +54,9 @@ const GAME_PAUSED_TEXT = "Game Paused";
 const PAUSE_STOPWATCH_BUTTON_ACCESSIBLE_NAME = "Pause stopwatch";
 const RESUME_STOPWATCH_BUTTON_ACCESSIBLE_NAME = "Resume stopwatch";
 const EMPTY_RAW_BOARD_STATE = getEmptyRawBoardState();
-
-const defaultUserSettings = {
-  isConflictCheckerEnabled: false,
-  isDashedGridEnabled: false,
-  isStopwatchDisabled: false,
-  isFlipKeypadEnabled: false,
-  isHideStopwatchEnabled: false,
-  isShowRowAndColumnLabelsEnabled: false,
-  isShowSeenCellsEnabled: false,
-  isStrictHighlightsEnabled: false,
-};
 // #endregion
 
-// #region Session Storage Helpers
+// #region Session Storage
 const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 const getStopwatchSessionStorageKey = () =>
   `sudoku-stopwatch-persisted-total-seconds-${JSON.stringify(EMPTY_RAW_BOARD_STATE)}`;
@@ -90,7 +80,7 @@ const setSessionStorageForRender = ({
 };
 // #endregion
 
-// #region Render and Async Update Helpers
+// #region Render Stopwatch
 const renderStopwatch = async ({
   persistedStopwatchTotalSeconds = 0,
   stopwatchHookValue,
@@ -126,7 +116,7 @@ const renderStopwatch = async ({
 };
 // #endregion
 
-// #region Element Lookup Helpers
+// #region Stopwatch and Time Lookup
 const getFormattedTimeText = (stopwatchHookValue: MockStopwatchHookValue) => {
   const formattedMinutes = String(stopwatchHookValue.minutes).padStart(2, "0");
   const formattedSeconds = String(stopwatchHookValue.seconds).padStart(2, "0");
@@ -160,7 +150,7 @@ const getHiddenStopwatchRootElement = async (
 };
 // #endregion
 
-// #region Dialog Interaction Helpers
+// #region Dialog Interactions
 const openPauseDialog = async (
   renderedStopwatch: RenderedStopwatch | Promise<RenderedStopwatch>,
 ) => {
