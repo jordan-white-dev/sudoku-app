@@ -111,7 +111,7 @@ export const getBoardStateWithEnteredDigitInTargetCell = (
   return nextBoardState;
 };
 
-export const getBoardStateWithDigitsInTargetCells = (
+const getBoardStateWithDigitsInTargetCells = (
   digitType: "givenDigit" | "enteredDigit",
   digitsToEnterInTargetCells: Array<{
     cellNumber: CellNumber;
