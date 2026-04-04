@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
@@ -22,6 +22,12 @@ import {
   type BoardState,
   type RawBoardState,
 } from "@/lib/pages/home/utils/types";
+
+// #region Module Mocks
+vi.mock("@tanstack/react-router", () => ({
+  useNavigate: () => vi.fn(),
+}));
+// #endregion
 
 // #region Shared Test Types
 type RenderedPuzzle = Awaited<ReturnType<typeof render>>;
