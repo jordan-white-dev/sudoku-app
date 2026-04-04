@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
-import { makepuzzle } from "sudoku";
 
+import { makePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
 import {
   getEncodedPuzzleStringFromRawPuzzleString,
   getRawPuzzleStringFromRawBoardState,
@@ -9,7 +9,7 @@ import { type RawBoardState } from "@/lib/pages/home/utils/types";
 
 export const Route = createFileRoute("/")({
   loader: () => {
-    const rawBoardState: RawBoardState = makepuzzle();
+    const rawBoardState: RawBoardState = makePuzzle();
     const rawPuzzleString = getRawPuzzleStringFromRawBoardState(rawBoardState);
     const encodedPuzzleString =
       getEncodedPuzzleStringFromRawPuzzleString(rawPuzzleString);

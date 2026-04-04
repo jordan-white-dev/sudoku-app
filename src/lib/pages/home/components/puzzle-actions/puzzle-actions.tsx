@@ -20,7 +20,6 @@ import {
 } from "react";
 import { ImCheckmark, ImRedo, ImStopwatch, ImUndo } from "react-icons/im";
 import { MdOutlineFiberNew, MdRestartAlt } from "react-icons/md";
-import { makepuzzle } from "sudoku";
 
 import { Tooltip } from "@/lib/pages/home/components/tooltip";
 import { useSudokuStopwatch } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
@@ -29,6 +28,7 @@ import {
   handleRedoMove,
   handleUndoMove,
 } from "@/lib/pages/home/utils/actions/actions";
+import { makePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
 import {
   getBoardStateFromRawBoardState,
   getCurrentBoardStateFromPuzzleHistory,
@@ -169,7 +169,7 @@ const ActionDialog = ({
 const handleNewPuzzleConfirmation = (
   navigateToNewPuzzle: ReturnType<typeof useNavigate>,
 ) => {
-  const newRawBoardState: RawBoardState = makepuzzle();
+  const newRawBoardState: RawBoardState = makePuzzle();
   const rawPuzzleString = getRawPuzzleStringFromRawBoardState(newRawBoardState);
   const encodedPuzzleString =
     getEncodedPuzzleStringFromRawPuzzleString(rawPuzzleString);

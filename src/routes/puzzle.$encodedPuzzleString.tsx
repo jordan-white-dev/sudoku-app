@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import { solvepuzzle } from "sudoku";
 
 import Home from "@/lib/pages/home";
+import { solvePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
 import { getBoardStateFromRawBoardState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type EncodedPuzzleString,
@@ -99,7 +99,7 @@ export const Route = createFileRoute("/puzzle/$encodedPuzzleString")({
       }
     })();
 
-    const isPuzzleSolvable = solvepuzzle(rawBoardState);
+    const isPuzzleSolvable = solvePuzzle(rawBoardState);
     if (!isPuzzleSolvable) throw notFound();
 
     const boardState = getBoardStateFromRawBoardState(rawBoardState);
