@@ -31,10 +31,12 @@ const handleClearAllSelections = (
     const nextBoardStateWithNoCellsSelected =
       getBoardStateWithNoCellsSelected(currentBoardState);
 
-    const nextBoardStateHistory = [...currentPuzzleHistory.boardStateHistory];
-
-    nextBoardStateHistory[currentPuzzleHistory.currentBoardStateIndex] =
-      nextBoardStateWithNoCellsSelected;
+    const nextBoardStateHistory = currentPuzzleHistory.boardStateHistory.map(
+      (boardState, boardStateIndex) =>
+        boardStateIndex === currentPuzzleHistory.currentBoardStateIndex
+          ? nextBoardStateWithNoCellsSelected
+          : boardState,
+    );
 
     const nextPuzzleHistory: PuzzleHistory = {
       currentBoardStateIndex: currentPuzzleHistory.currentBoardStateIndex,

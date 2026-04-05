@@ -486,71 +486,92 @@ const getSelectedCellBackground = ({
 }): string | null => {
   if (!isSelected) return null;
 
-  const selectedCellRectangles: Array<Rectangle> = [];
+  const topEdgeRectangle: Rectangle | null = !isSelectedCellAbove
+    ? {
+        height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+        width: 100,
+        xCoordinate: 0,
+        yCoordinate: 0,
+      }
+    : null;
 
-  if (!isSelectedCellAbove)
-    selectedCellRectangles.push({
-      height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      width: 100,
-      xCoordinate: 0,
-      yCoordinate: 0,
-    });
+  const bottomEdgeRectangle: Rectangle | null = !isSelectedCellBelow
+    ? {
+        height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+        width: 100,
+        xCoordinate: 0,
+        yCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+      }
+    : null;
 
-  if (!isSelectedCellBelow)
-    selectedCellRectangles.push({
-      height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      width: 100,
-      xCoordinate: 0,
-      yCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-    });
+  const leftEdgeRectangle: Rectangle | null = !isSelectedCellToLeft
+    ? {
+        height: 100,
+        width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+        xCoordinate: 0,
+        yCoordinate: 0,
+      }
+    : null;
 
-  if (!isSelectedCellToLeft)
-    selectedCellRectangles.push({
-      height: 100,
-      width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      xCoordinate: 0,
-      yCoordinate: 0,
-    });
+  const rightEdgeRectangle: Rectangle | null = !isSelectedCellToRight
+    ? {
+        height: 100,
+        width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+        xCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+        yCoordinate: 0,
+      }
+    : null;
 
-  if (!isSelectedCellToRight)
-    selectedCellRectangles.push({
-      height: 100,
-      width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      xCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      yCoordinate: 0,
-    });
+  const topLeftCornerRectangle: Rectangle | null =
+    isSelectedCellAbove && isSelectedCellToLeft && !isSelectedCellAboveLeft
+      ? {
+          height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          xCoordinate: 0,
+          yCoordinate: 0,
+        }
+      : null;
 
-  if (isSelectedCellAbove && isSelectedCellToLeft && !isSelectedCellAboveLeft)
-    selectedCellRectangles.push({
-      height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      xCoordinate: 0,
-      yCoordinate: 0,
-    });
+  const topRightCornerRectangle: Rectangle | null =
+    isSelectedCellAbove && isSelectedCellToRight && !isSelectedCellAboveRight
+      ? {
+          height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          xCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          yCoordinate: 0,
+        }
+      : null;
 
-  if (isSelectedCellAbove && isSelectedCellToRight && !isSelectedCellAboveRight)
-    selectedCellRectangles.push({
-      height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      xCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      yCoordinate: 0,
-    });
+  const bottomLeftCornerRectangle: Rectangle | null =
+    isSelectedCellBelow && isSelectedCellToLeft && !isSelectedCellBelowLeft
+      ? {
+          height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          xCoordinate: 0,
+          yCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+        }
+      : null;
 
-  if (isSelectedCellBelow && isSelectedCellToLeft && !isSelectedCellBelowLeft)
-    selectedCellRectangles.push({
-      height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      xCoordinate: 0,
-      yCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-    });
+  const bottomRightCornerRectangle: Rectangle | null =
+    isSelectedCellBelow && isSelectedCellToRight && !isSelectedCellBelowRight
+      ? {
+          height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          xCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+          yCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
+        }
+      : null;
 
-  if (isSelectedCellBelow && isSelectedCellToRight && !isSelectedCellBelowRight)
-    selectedCellRectangles.push({
-      height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      xCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      yCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-    });
+  const selectedCellRectangles = [
+    topEdgeRectangle,
+    bottomEdgeRectangle,
+    leftEdgeRectangle,
+    rightEdgeRectangle,
+    topLeftCornerRectangle,
+    topRightCornerRectangle,
+    bottomLeftCornerRectangle,
+    bottomRightCornerRectangle,
+  ].filter((rectangle): rectangle is Rectangle => rectangle !== null);
 
   if (selectedCellRectangles.length === 0) return null;
 
@@ -774,27 +795,22 @@ const getCornerMarkupFloats = (
 
   if (cornerMarkups.length === 0 || cornerMarkups[0] === "") return undefined;
 
-  const cornerMarkupFloats = cornerMarkups.reduce<Array<ReactNode>>(
-    (cornerMarkupFloatNodes, cornerMarkup, markupIndex) => {
-      const placement = getFloatPlacement(cornerMarkups.length, markupIndex);
+  const cornerMarkupFloats = cornerMarkups.map((cornerMarkup, markupIndex) => {
+    const placement = getFloatPlacement(cornerMarkups.length, markupIndex);
 
-      cornerMarkupFloatNodes.push(
-        <Float
-          fontSize={CORNER_AND_LABEL_FONT_SIZE}
-          key={cornerMarkup}
-          offsetX={{ base: "1.5", sm: "2.5", md: "4" }}
-          offsetY={{ base: "0.438rem", sm: "3", md: "5" }}
-          placement={placement}
-          textShadow={MARKUP_TEXT_SHADOW}
-        >
-          {cornerMarkup}
-        </Float>,
-      );
-
-      return cornerMarkupFloatNodes;
-    },
-    [],
-  );
+    return (
+      <Float
+        fontSize={CORNER_AND_LABEL_FONT_SIZE}
+        key={cornerMarkup}
+        offsetX={{ base: "1.5", sm: "2.5", md: "4" }}
+        offsetY={{ base: "0.438rem", sm: "3", md: "5" }}
+        placement={placement}
+        textShadow={MARKUP_TEXT_SHADOW}
+      >
+        {cornerMarkup}
+      </Float>
+    );
+  });
 
   return cornerMarkupFloats;
 };

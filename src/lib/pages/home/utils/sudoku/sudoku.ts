@@ -10,242 +10,240 @@ const UNITS = 9;
 const MAX_GENERATION_ATTEMPTS = 100;
 const POSSIBLE_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const;
 
-type PossibilityMap = Array<Set<number>>;
+type CellPossibilityMap = Array<Set<number>>;
 // #endregion
 
 // #region Board Geometry and Possibility Initialization
-const buildInitialPossibilities = (
+const buildInitialCellPossibilities = (
   rawBoardState: RawBoardState,
-): PossibilityMap => {
-  const initialPossibilities: PossibilityMap = rawBoardState.map((cell) => {
-    if (cell === null) return new Set(POSSIBLE_DIGITS);
+): CellPossibilityMap => {
+  const initialCellPossibilities: CellPossibilityMap = rawBoardState.map(
+    (cell) => {
+      if (cell === null) return new Set(POSSIBLE_DIGITS);
 
-    return new Set([cell]);
-  });
+      return new Set([cell]);
+    },
+  );
 
-  return initialPossibilities;
+  return initialCellPossibilities;
 };
 
-const positionToRowIndex = (cellPos: number): number =>
-  Math.floor(cellPos / UNITS);
+const getRowIndexFromCellPosition = (cellPosition: number): number =>
+  Math.floor(cellPosition / UNITS);
 
-const positionToColumnIndex = (cellPos: number): number => cellPos % UNITS;
+const getColumnIndexFromCellPosition = (cellPosition: number): number =>
+  cellPosition % UNITS;
 
-const positionToBoxIndex = (cellPos: number): number => {
-  const row = positionToRowIndex(cellPos);
-  const col = positionToColumnIndex(cellPos);
+const getBoxIndexFromCellPosition = (cellPosition: number): number => {
+  const rowIndex = getRowIndexFromCellPosition(cellPosition);
+  const columnIndex = getColumnIndexFromCellPosition(cellPosition);
   return (
-    Math.floor(row / SUBGRID_SIZE) * SUBGRID_SIZE +
-    Math.floor(col / SUBGRID_SIZE)
+    Math.floor(rowIndex / SUBGRID_SIZE) * SUBGRID_SIZE +
+    Math.floor(columnIndex / SUBGRID_SIZE)
   );
 };
 
-const getAllCellsInRow = (rowIndex: number): Array<number> => {
-  const cells: Array<number> = [];
+const getAllCellsInRow = (rowIndex: number): Array<number> =>
+  Array.from({ length: UNITS }, (_, column) => rowIndex * UNITS + column);
 
-  for (let col = 0; col < UNITS; col++) cells.push(rowIndex * UNITS + col);
-
-  return cells;
-};
-
-const getAllCellsInColumn = (colIndex: number): Array<number> => {
-  const cells: Array<number> = [];
-
-  for (let row = 0; row < UNITS; row++) cells.push(row * UNITS + colIndex);
-
-  return cells;
-};
+const getAllCellsInColumn = (columnIndex: number): Array<number> =>
+  Array.from(
+    { length: UNITS },
+    (_, rowIndex) => rowIndex * UNITS + columnIndex,
+  );
 
 const getAllCellsInBox = (boxIndex: number): Array<number> => {
-  const cells: Array<number> = [];
   const startRow = Math.floor(boxIndex / SUBGRID_SIZE) * SUBGRID_SIZE;
-  const startCol = (boxIndex % SUBGRID_SIZE) * SUBGRID_SIZE;
+  const startColumn = (boxIndex % SUBGRID_SIZE) * SUBGRID_SIZE;
 
-  for (let row = startRow; row < startRow + SUBGRID_SIZE; row++)
-    for (let col = startCol; col < startCol + SUBGRID_SIZE; col++)
-      cells.push(row * UNITS + col);
-
-  return cells;
+  return Array.from({ length: SUBGRID_SIZE }, (_, rowOffset) =>
+    Array.from(
+      { length: SUBGRID_SIZE },
+      (_, columnOffset) =>
+        (startRow + rowOffset) * UNITS + (startColumn + columnOffset),
+    ),
+  ).flat();
 };
 // #endregion
 
 // #region Constraint Propagation
-const removeDigitFromCellsInGroup = (
-  excludePos: number,
+const isDigitRemovalFromCellsInGroupSuccessful = (
+  excludedCellPosition: number,
   digit: number,
-  region: Array<number>,
-  possibilities: PossibilityMap,
+  groupCellPositions: Array<number>,
+  cellPossibilitiesByPosition: CellPossibilityMap,
 ): boolean => {
-  for (const pos of region)
-    if (pos !== excludePos && possibilities[pos].has(digit)) {
-      possibilities[pos].delete(digit);
-      if (possibilities[pos].size === 0) return false;
+  for (const cellPosition of groupCellPositions)
+    if (
+      cellPosition !== excludedCellPosition &&
+      cellPossibilitiesByPosition[cellPosition].has(digit)
+    ) {
+      cellPossibilitiesByPosition[cellPosition].delete(digit);
+
+      if (cellPossibilitiesByPosition[cellPosition].size === 0) return false;
     }
 
   return true;
 };
 
-const removeDigitFromAllPeers = (
-  cellPos: number,
+const isDigitRemovalFromPeerCellPossibilitiesSuccessful = (
+  targetCellPosition: number,
   digit: number,
-  possibilities: PossibilityMap,
+  cellPossibilitiesByPosition: CellPossibilityMap,
 ): boolean => {
-  const row = positionToRowIndex(cellPos);
-  const col = positionToColumnIndex(cellPos);
-  const box = positionToBoxIndex(cellPos);
+  const rowIndex = getRowIndexFromCellPosition(targetCellPosition);
+  const columnIndex = getColumnIndexFromCellPosition(targetCellPosition);
+  const boxIndex = getBoxIndexFromCellPosition(targetCellPosition);
 
   return (
-    removeDigitFromCellsInGroup(
-      cellPos,
+    isDigitRemovalFromCellsInGroupSuccessful(
+      targetCellPosition,
       digit,
-      getAllCellsInRow(row),
-      possibilities,
+      getAllCellsInRow(rowIndex),
+      cellPossibilitiesByPosition,
     ) &&
-    removeDigitFromCellsInGroup(
-      cellPos,
+    isDigitRemovalFromCellsInGroupSuccessful(
+      targetCellPosition,
       digit,
-      getAllCellsInColumn(col),
-      possibilities,
+      getAllCellsInColumn(columnIndex),
+      cellPossibilitiesByPosition,
     ) &&
-    removeDigitFromCellsInGroup(
-      cellPos,
+    isDigitRemovalFromCellsInGroupSuccessful(
+      targetCellPosition,
       digit,
-      getAllCellsInBox(box),
-      possibilities,
+      getAllCellsInBox(boxIndex),
+      cellPossibilitiesByPosition,
     )
   );
 };
 
-const enforceEachDigitAppearsOnceInRegion = (
-  region: Array<number>,
-  possibilities: PossibilityMap,
+const isSingleDigitPlacementEnforcementInGroupSuccessful = (
+  groupCellPositions: Array<number>,
+  cellPossibilitiesByPosition: CellPossibilityMap,
 ): boolean => {
   for (const digit of POSSIBLE_DIGITS) {
-    let regionCellsWithDigit = 0;
-    let lastCellWithDigit = -1;
+    let possibleCellCountForDigit = 0;
+    let lastPossibleCellPositionForDigit = -1;
 
-    for (const cellPos of region) {
-      if (possibilities[cellPos].has(digit)) {
-        regionCellsWithDigit++;
-        lastCellWithDigit = cellPos;
+    for (const cellPosition of groupCellPositions)
+      if (cellPossibilitiesByPosition[cellPosition].has(digit)) {
+        possibleCellCountForDigit++;
+        lastPossibleCellPositionForDigit = cellPosition;
       }
-    }
 
     if (
-      regionCellsWithDigit === 1 &&
-      possibilities[lastCellWithDigit].size > 1
-    ) {
-      possibilities[lastCellWithDigit] = new Set([digit]);
-    } else if (regionCellsWithDigit === 0) {
-      return false;
-    }
+      possibleCellCountForDigit === 1 &&
+      cellPossibilitiesByPosition[lastPossibleCellPositionForDigit].size > 1
+    )
+      cellPossibilitiesByPosition[lastPossibleCellPositionForDigit] = new Set([
+        digit,
+      ]);
+    else if (possibleCellCountForDigit === 0) return false;
   }
 
   return true;
 };
 
-const resolveConstraintsFromDeterminedCells = (
-  possibilities: PossibilityMap,
+const isSingleDigitCellConstraintResolutionSuccessful = (
+  cellPossibilitiesByPosition: CellPossibilityMap,
+): boolean =>
+  Array.from(
+    { length: BOARD_CELL_COUNT },
+    (_, cellPosition) => cellPosition,
+  ).every((cellPosition) => {
+    if (cellPossibilitiesByPosition[cellPosition].size === 0) return false;
+
+    if (cellPossibilitiesByPosition[cellPosition].size === 1) {
+      const [digit] = cellPossibilitiesByPosition[cellPosition];
+
+      return isDigitRemovalFromPeerCellPossibilitiesSuccessful(
+        cellPosition,
+        digit,
+        cellPossibilitiesByPosition,
+      );
+    }
+
+    return true;
+  });
+
+const isGroupConstraintResolutionSuccessful = (
+  cellPossibilitiesByPosition: CellPossibilityMap,
+): boolean =>
+  Array.from({ length: UNITS }, (_, groupIndex) => groupIndex).every(
+    (groupIndex) =>
+      isSingleDigitPlacementEnforcementInGroupSuccessful(
+        getAllCellsInRow(groupIndex),
+        cellPossibilitiesByPosition,
+      ) &&
+      isSingleDigitPlacementEnforcementInGroupSuccessful(
+        getAllCellsInColumn(groupIndex),
+        cellPossibilitiesByPosition,
+      ) &&
+      isSingleDigitPlacementEnforcementInGroupSuccessful(
+        getAllCellsInBox(groupIndex),
+        cellPossibilitiesByPosition,
+      ),
+  );
+
+const countCellsWithMultipleCandidateDigits = (
+  cellPossibilitiesByPosition: CellPossibilityMap,
+): number =>
+  cellPossibilitiesByPosition.filter(
+    (cellPossibilities) => cellPossibilities.size > 1,
+  ).length;
+
+const isConstraintPropagationSuccessful = (
+  cellPossibilitiesByPosition: CellPossibilityMap,
 ): boolean => {
-  for (let cellPos = 0; cellPos < BOARD_CELL_COUNT; cellPos++) {
-    if (possibilities[cellPos].size === 0) {
-      return false;
-    }
-
-    if (possibilities[cellPos].size === 1) {
-      const [digit] = possibilities[cellPos];
-      if (!removeDigitFromAllPeers(cellPos, digit, possibilities)) {
-        return false;
-      }
-    }
-  }
-  return true;
-};
-
-const resolveConstraintsFromRegions = (
-  possibilities: PossibilityMap,
-): boolean => {
-  for (let index = 0; index < UNITS; index++) {
-    if (
-      !enforceEachDigitAppearsOnceInRegion(
-        getAllCellsInRow(index),
-        possibilities,
-      )
-    ) {
-      return false;
-    }
-    if (
-      !enforceEachDigitAppearsOnceInRegion(
-        getAllCellsInColumn(index),
-        possibilities,
-      )
-    ) {
-      return false;
-    }
-    if (
-      !enforceEachDigitAppearsOnceInRegion(
-        getAllCellsInBox(index),
-        possibilities,
-      )
-    ) {
-      return false;
-    }
-  }
-  return true;
-};
-
-const countCellsWithMultiplePossibilities = (
-  possibilities: PossibilityMap,
-): number => {
-  let count = 0;
-  for (const cell of possibilities) {
-    if (cell.size > 1) {
-      count++;
-    }
-  }
-  return count;
-};
-
-const propagateConstraints = (possibilities: PossibilityMap): boolean => {
-  let currentUnfilledCount = countCellsWithMultiplePossibilities(possibilities);
+  let currentUnresolvedCellCount = countCellsWithMultipleCandidateDigits(
+    cellPossibilitiesByPosition,
+  );
 
   while (true) {
-    if (!resolveConstraintsFromDeterminedCells(possibilities)) {
+    if (
+      !isSingleDigitCellConstraintResolutionSuccessful(
+        cellPossibilitiesByPosition,
+      )
+    )
       return false;
-    }
 
-    if (!resolveConstraintsFromRegions(possibilities)) {
+    if (!isGroupConstraintResolutionSuccessful(cellPossibilitiesByPosition))
       return false;
-    }
 
-    const updatedUnfilledCount =
-      countCellsWithMultiplePossibilities(possibilities);
-    if (updatedUnfilledCount === currentUnfilledCount) {
-      return true;
-    }
-    currentUnfilledCount = updatedUnfilledCount;
+    const updatedUnresolvedCellCount = countCellsWithMultipleCandidateDigits(
+      cellPossibilitiesByPosition,
+    );
+
+    if (updatedUnresolvedCellCount === currentUnresolvedCellCount) return true;
+
+    currentUnresolvedCellCount = updatedUnresolvedCellCount;
   }
 };
 // #endregion
 
 // #region Difficulty Evaluation
-const isSolvableByPureDeduction = (rawBoardState: RawBoardState): boolean => {
-  const possibilities = buildInitialPossibilities(rawBoardState);
+const isPuzzleSolvableByDeductionOnly = (
+  rawBoardState: RawBoardState,
+): boolean => {
+  const cellPossibilitiesByPosition =
+    buildInitialCellPossibilities(rawBoardState);
 
-  if (!propagateConstraints(possibilities)) return false;
+  if (!isConstraintPropagationSuccessful(cellPossibilitiesByPosition))
+    return false;
 
-  for (const cellPossibilities of possibilities)
+  for (const cellPossibilities of cellPossibilitiesByPosition)
     if (cellPossibilities.size !== 1) return false;
 
   return true;
 };
 
 const ratePuzzleDifficulty = (rawBoardState: RawBoardState): number => {
-  if (isSolvableByPureDeduction(rawBoardState)) return 0;
+  if (isPuzzleSolvableByDeductionOnly(rawBoardState)) return 0;
 
   const numberOfGivenDigits = rawBoardState.filter(
     (cell) => cell !== null,
   ).length;
+
   const emptyCells = BOARD_CELL_COUNT - numberOfGivenDigits;
 
   const puzzleDifficulty = Math.max(1, Math.ceil(emptyCells / 4));
@@ -257,35 +255,37 @@ const ratePuzzleDifficulty = (rawBoardState: RawBoardState): number => {
 // #region Sudoku Package Validation
 const validateAndNormalizeBoardState = (
   unvalidatedBoardState: unknown,
-  sourceFunction: "makepuzzle" | "solvepuzzle",
+  sourceSudokuFunctionName: "makepuzzle" | "solvepuzzle",
 ): RawBoardState => {
   if (!Array.isArray(unvalidatedBoardState))
     throw Error(
-      `Failed to validate output from ${sourceFunction}. Expected an array output.`,
+      `Failed to validate output from ${sourceSudokuFunctionName}. Expected an array output.`,
     );
 
   if (unvalidatedBoardState.length !== BOARD_CELL_COUNT)
     throw Error(
-      `Failed to validate output from ${sourceFunction}. Expected 81 cells but received ${unvalidatedBoardState.length}.`,
+      `Failed to validate output from ${sourceSudokuFunctionName}. Expected 81 cells but received ${unvalidatedBoardState.length}.`,
     );
 
-  const validatedState = unvalidatedBoardState.map((unvalidatedCell, index) => {
-    if (unvalidatedCell === null) return null;
+  const validatedBoardState = unvalidatedBoardState.map(
+    (unvalidatedCell, cellIndex) => {
+      if (unvalidatedCell === null) return null;
 
-    if (!isRawGivenDigit(unvalidatedCell))
-      throw Error(
-        `Failed to validate output from ${sourceFunction}. Encountered invalid cell value at index ${index}: ${String(unvalidatedCell)}.`,
-      );
+      if (!isRawGivenDigit(unvalidatedCell))
+        throw Error(
+          `Failed to validate output from ${sourceSudokuFunctionName}. Encountered invalid cell value at index ${cellIndex}: ${String(unvalidatedCell)}.`,
+        );
 
-    return unvalidatedCell;
-  });
+      return unvalidatedCell;
+    },
+  );
 
-  return validatedState;
+  return validatedBoardState;
 };
 // #endregion
 
 // #region Puzzle Generation Strategy
-const generateSinglePuzzleAttempt = (): RawBoardState => {
+const generateValidatedPuzzleAttempt = (): RawBoardState => {
   const unvalidatedBoardState = sudoku.makepuzzle();
 
   const validatedBoardState = validateAndNormalizeBoardState(
@@ -297,9 +297,9 @@ const generateSinglePuzzleAttempt = (): RawBoardState => {
 };
 
 const selectBestPuzzleOrFallback = (
-  bestPuzzle: RawBoardState | null,
+  bestPuzzleFound: RawBoardState | null,
 ): RawBoardState => {
-  if (bestPuzzle !== null) return bestPuzzle;
+  if (bestPuzzleFound !== null) return bestPuzzleFound;
 
   const unvalidatedFallbackPuzzle = sudoku.makepuzzle();
 
@@ -315,20 +315,20 @@ const selectBestPuzzleOrFallback = (
 // #region Public API
 export const makePuzzle = (): RawBoardState => {
   let bestFoundPuzzle: RawBoardState | null = null;
-  let lowestDifficultyFound = Infinity;
+  let lowestDifficultyScoreFound = Infinity;
 
   for (
     let attemptNumber = 1;
     attemptNumber <= MAX_GENERATION_ATTEMPTS;
     attemptNumber++
   ) {
-    const generatedPuzzle = generateSinglePuzzleAttempt();
-    const puzzleDifficulty = ratePuzzleDifficulty(generatedPuzzle);
+    const generatedPuzzle = generateValidatedPuzzleAttempt();
+    const puzzleDifficultyScore = ratePuzzleDifficulty(generatedPuzzle);
 
-    if (puzzleDifficulty === 0) return generatedPuzzle;
+    if (puzzleDifficultyScore === 0) return generatedPuzzle;
 
-    if (puzzleDifficulty < lowestDifficultyFound) {
-      lowestDifficultyFound = puzzleDifficulty;
+    if (puzzleDifficultyScore < lowestDifficultyScoreFound) {
+      lowestDifficultyScoreFound = puzzleDifficultyScore;
       bestFoundPuzzle = generatedPuzzle;
     }
   }

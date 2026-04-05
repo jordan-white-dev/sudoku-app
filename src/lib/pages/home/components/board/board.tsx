@@ -524,36 +524,37 @@ const getCellNumbersBetweenBoardPositions = (
 
   if (interpolationStepCount === 0) return [startingBoardPosition.cellNumber];
 
-  const crossedCellNumbers = new Set<CellNumber>();
+  const crossedCellNumbers = new Set<CellNumber>(
+    Array.from(
+      { length: interpolationStepCount + 1 },
+      (_, interpolationStepIndex) => {
+        const interpolationProgress =
+          interpolationStepIndex / interpolationStepCount;
 
-  for (
-    let interpolationStepIndex = 0;
-    interpolationStepIndex <= interpolationStepCount;
-    interpolationStepIndex++
-  ) {
-    const interpolationProgress =
-      interpolationStepIndex / interpolationStepCount;
+        const interpolatedColumnNumber = Math.round(
+          startingBoardPosition.columnNumber +
+            columnDistance * interpolationProgress,
+        );
+        const interpolatedRowNumber = Math.round(
+          startingBoardPosition.rowNumber + rowDistance * interpolationProgress,
+        );
 
-    const interpolatedColumnNumber = Math.round(
-      startingBoardPosition.columnNumber +
-        columnDistance * interpolationProgress,
-    );
-    const interpolatedRowNumber = Math.round(
-      startingBoardPosition.rowNumber + rowDistance * interpolationProgress,
-    );
+        if (
+          isRowNumber(interpolatedRowNumber) &&
+          isColumnNumber(interpolatedColumnNumber)
+        ) {
+          const interpolatedCellNumber = getCellNumberFromRowAndColumn(
+            interpolatedRowNumber,
+            interpolatedColumnNumber,
+          );
 
-    if (
-      isRowNumber(interpolatedRowNumber) &&
-      isColumnNumber(interpolatedColumnNumber)
-    ) {
-      const interpolatedCellNumber = getCellNumberFromRowAndColumn(
-        interpolatedRowNumber,
-        interpolatedColumnNumber,
-      );
+          return interpolatedCellNumber;
+        }
 
-      crossedCellNumbers.add(interpolatedCellNumber);
-    }
-  }
+        return null;
+      },
+    ).filter((cellNumber): cellNumber is CellNumber => cellNumber !== null),
+  );
 
   return [...crossedCellNumbers];
 };

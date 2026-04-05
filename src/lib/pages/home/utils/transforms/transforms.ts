@@ -137,14 +137,9 @@ const getGivenDigitCellContentFromRawGivenDigit = (
 
 export const getBoardStateFromRawBoardState = (
   rawBoardState: RawBoardState,
-): BoardState => {
-  const boardState: BoardState = [];
-
-  for (
-    let candidateCellNumber = 1;
-    candidateCellNumber <= 81;
-    candidateCellNumber++
-  ) {
+): BoardState =>
+  Array.from({ length: 81 }, (_, index) => {
+    const candidateCellNumber = index + 1;
     const candidateColumnNumber = ((candidateCellNumber - 1) % 9) + 1;
     const candidateRowNumber = Math.floor((candidateCellNumber - 1) / 9) + 1;
     const candidateBoxNumber =
@@ -178,11 +173,8 @@ export const getBoardStateFromRawBoardState = (
       rowNumber,
     };
 
-    boardState.push(cellState);
-  }
-
-  return boardState;
-};
+    return cellState;
+  });
 
 export const getCurrentBoardStateFromPuzzleHistory = (
   puzzleHistory: PuzzleHistory,
