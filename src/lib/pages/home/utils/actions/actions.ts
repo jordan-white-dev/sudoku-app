@@ -55,9 +55,9 @@ const areAllSelectedCellsGivenOrContainSudokuDigitAsEnteredDigit = (
   currentBoardState.every(
     (currentCellState) =>
       !currentCellState.isSelected ||
-      isGivenDigitInCellContent(currentCellState.cellContent) ||
-      (isEnteredDigitInCellContent(currentCellState.cellContent) &&
-        currentCellState.cellContent.enteredDigit === sudokuDigit),
+      isGivenDigitInCellContent(currentCellState.content) ||
+      (isEnteredDigitInCellContent(currentCellState.content) &&
+        currentCellState.content.enteredDigit === sudokuDigit),
   );
 
 const getEnteredDigitCellState = (
@@ -67,14 +67,14 @@ const getEnteredDigitCellState = (
 ): CellState => {
   const isValidInputCell =
     currentCellState.isSelected &&
-    !isGivenDigitInCellContent(currentCellState.cellContent);
+    !isGivenDigitInCellContent(currentCellState.content);
 
   if (!isValidInputCell) return currentCellState;
 
   if (shouldEnteredDigitBeRemoved) {
     const emptyEnteredDigitCellState: CellState = {
       ...currentCellState,
-      cellContent: {
+      content: {
         emptyCell: "",
       },
     };
@@ -84,7 +84,7 @@ const getEnteredDigitCellState = (
 
   const addedEnteredDigitCellState: CellState = {
     ...currentCellState,
-    cellContent: {
+    content: {
       enteredDigit: sudokuDigit,
     },
   };
@@ -131,7 +131,7 @@ const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
   sudokuDigit: SudokuDigit,
 ): boolean =>
   currentBoardState.every((currentCellState) => {
-    const cellContent = currentCellState.cellContent;
+    const cellContent = currentCellState.content;
 
     if (!currentCellState.isSelected) return true;
 
@@ -158,7 +158,7 @@ const getCellStateWithRemovedMarkupDigit = (
   markupType: MarkupType,
   sudokuDigit: SudokuDigit,
 ): CellState => {
-  const currentCellContent = currentCellState.cellContent;
+  const currentCellContent = currentCellState.content;
 
   if (!isMarkupDigitsInCellContent(currentCellContent)) return currentCellState;
 
@@ -184,7 +184,7 @@ const getCellStateWithRemovedMarkupDigit = (
 
   const nextCellState: CellState = {
     ...currentCellState,
-    cellContent: cellContentAfterRemoveCheck,
+    content: cellContentAfterRemoveCheck,
   };
 
   return nextCellState;
@@ -196,7 +196,7 @@ const getCellStateWithAddedMarkupDigit = (
   markupType: MarkupType,
   sudokuDigit: SudokuDigit,
 ): CellState => {
-  const currentCellContent = currentCellState.cellContent;
+  const currentCellContent = currentCellState.content;
 
   if (!isMarkupDigitsInCellContent(currentCellContent)) return currentCellState;
 
@@ -217,7 +217,7 @@ const getCellStateWithAddedMarkupDigit = (
 
   const nextCellState: CellState = {
     ...currentCellState,
-    cellContent: cellContentAfterAddCheck,
+    content: cellContentAfterAddCheck,
   };
 
   return nextCellState;
@@ -241,7 +241,7 @@ const getCellStateWithAnEmptyMarkupType = (
 
   const nextMarkupDigitsCellState: CellState = {
     ...currentCellState,
-    cellContent: nextMarkupDigitsCellContent,
+    content: nextMarkupDigitsCellContent,
   };
 
   return nextMarkupDigitsCellState;
@@ -255,7 +255,7 @@ const getMarkupDigitsCellState = (
 ): CellState => {
   if (!currentCellState.isSelected) return currentCellState;
 
-  const currentCellContent = currentCellState.cellContent;
+  const currentCellContent = currentCellState.content;
 
   const isNotAGivenDigit = !isGivenDigitInCellContent(currentCellContent);
 
@@ -478,7 +478,7 @@ export const handleClearCell = (
     (currentCellState) => {
       if (!currentCellState.isSelected) return currentCellState;
 
-      if (isGivenDigitInCellContent(currentCellState.cellContent)) {
+      if (isGivenDigitInCellContent(currentCellState.content)) {
         const nextCellState: CellState = {
           ...currentCellState,
           markupColors: [""],
@@ -489,7 +489,7 @@ export const handleClearCell = (
 
       const nextCellState: CellState = {
         ...currentCellState,
-        cellContent: {
+        content: {
           emptyCell: "",
         },
         markupColors: [""],

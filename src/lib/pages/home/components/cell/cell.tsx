@@ -26,7 +26,7 @@ import {
 import {
   type BoardState,
   type CellContent,
-  type CellNumber,
+  type CellId,
   type CellState,
   type ColumnNumber,
   type MarkupColor,
@@ -406,7 +406,7 @@ const getSelectedAdjacentCells = (
   boardState: BoardState,
   cellState: CellState,
 ): SelectedAdjacentCells => {
-  const { rowNumber, columnNumber } = cellState;
+  const { rowNumber, columnNumber } = cellState.houses;
 
   const isSelectedCellAbove = !!getCellStateAtRowAndColumn(
     boardState,
@@ -862,7 +862,7 @@ const isArrayOfMarkupColors = (
 // #endregion
 
 const isEmptyEditableCellWithoutMarkup = (cellState: CellState) => {
-  const { cellContent } = cellState;
+  const { content: cellContent } = cellState;
 
   if (isGivenDigitInCellContent(cellContent)) return false;
 
@@ -1088,8 +1088,8 @@ const getSelectedCellStateWithStrictMatching = (
 
   if (!doCellMarkupColorsMatchExactly) return candidateCellState;
 
-  const sourceCellContent = sourceCellState.cellContent;
-  const candidateCellContent = candidateCellState.cellContent;
+  const sourceCellContent = sourceCellState.content;
+  const candidateCellContent = candidateCellState.content;
 
   const sourceGivenOrEnteredDigit =
     getGivenOrEnteredDigitInCellIfPresent(sourceCellContent);
@@ -1138,8 +1138,8 @@ const getSelectedCellStateWithPartialMatching = (
   if (isEmptyEditableCellWithoutMarkup(candidateCellState))
     return candidateCellState;
 
-  const sourceCellContent = sourceCellState.cellContent;
-  const candidateCellContent = candidateCellState.cellContent;
+  const sourceCellContent = sourceCellState.content;
+  const candidateCellContent = candidateCellState.content;
 
   if (
     sourceCellState.markupColors[0] !== "" &&
@@ -1244,7 +1244,7 @@ type CellProps = {
   isSeenInRow: boolean;
   selectedColumnNumber: ColumnNumber | undefined;
   selectedRowNumber: RowNumber | undefined;
-  handleCellPointerDown: (cellNumber: CellNumber) => void;
+  handleCellPointerDown: (cellId: CellId) => void;
   setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
 };
 
@@ -1275,19 +1275,18 @@ export const Cell = memo(
     );
 
     const {
-      cellContent,
-      cellNumber,
-      columnNumber,
+      content: cellContent,
+      houses: { columnNumber, rowNumber },
+      id: cellId,
       isSelected,
       markupColors: cellMarkupColors,
-      rowNumber,
     } = cellState;
     const nonCornerCellDigits = getNonCornerCellDigits(cellContent);
     const cornerMarkupFloats = getCornerMarkupFloats(cellContent);
 
     return (
       <Button
-        aria-label={`Cell ${cellNumber} located in row ${rowNumber}, column ${columnNumber}`}
+        aria-label={`Cell ${cellId} located in row ${rowNumber}, column ${columnNumber}`}
         background={getCellBackground({
           cellMarkupColors,
           columnNumber,
@@ -1305,7 +1304,7 @@ export const Cell = memo(
         borderColor="black"
         borderRadius="0"
         color={isGivenDigitInCellContent(cellContent) ? "black" : "#1212f0"}
-        data-cell-number={cellNumber}
+        data-cell-number={cellId}
         data-selected={isSelected}
         fontSize={getFontSize(cellContent)}
         height={CELL_SIZE}
@@ -1325,7 +1324,7 @@ export const Cell = memo(
         }
         onPointerDown={(event) => {
           event.currentTarget.setPointerCapture(event.pointerId);
-          handleCellPointerDown(cellNumber);
+          handleCellPointerDown(cellId);
         }}
       >
         {isShowRowAndColumnLabelsEnabled &&

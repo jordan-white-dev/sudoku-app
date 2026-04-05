@@ -4,7 +4,7 @@ import {
 } from "@/lib/pages/home/utils/constants";
 import {
   type BrandedBoxNumber,
-  type BrandedCellNumber,
+  type BrandedCellId,
   type BrandedColumnNumber,
   type BrandedEncodedPuzzleString,
   type BrandedRawGivenDigit,
@@ -58,7 +58,7 @@ export type CellContent = Prettify<
 
 // #region Board Coordinate Types
 export type BoxNumber = typeof BrandedBoxNumber;
-export type CellNumber = typeof BrandedCellNumber;
+export type CellId = typeof BrandedCellId;
 export type ColumnNumber = typeof BrandedColumnNumber;
 export type RowNumber = typeof BrandedRowNumber;
 // #endregion
@@ -67,13 +67,15 @@ export type RowNumber = typeof BrandedRowNumber;
 export type MarkupColor = (typeof markupColors)[number];
 
 export type CellState = {
-  boxNumber: BoxNumber;
-  cellContent: CellContent;
-  cellNumber: CellNumber;
-  columnNumber: ColumnNumber;
+  content: CellContent;
+  houses: {
+    boxNumber: BoxNumber;
+    columnNumber: ColumnNumber;
+    rowNumber: RowNumber;
+  };
+  id: CellId;
   isSelected: boolean;
   markupColors: [""] | Array<MarkupColor>;
-  rowNumber: RowNumber;
 };
 
 export type BoardState = Array<CellState>;

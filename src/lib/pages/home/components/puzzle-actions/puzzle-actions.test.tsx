@@ -12,7 +12,7 @@ import {
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
-  getBrandedCellNumber,
+  getBrandedCellId,
   getBrandedSudokuDigit,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -100,7 +100,7 @@ const getSolvedPuzzleHistory = (): PuzzleHistory => {
       ((rowIndex * 3 + Math.floor(rowIndex / 3) + columnIndex) % 9) + 1;
 
     return {
-      cellNumber: getBrandedCellNumber(index + 1),
+      cellId: getBrandedCellId(index + 1),
       digit: getBrandedSudokuDigit(String(digitNumber)),
     };
   });

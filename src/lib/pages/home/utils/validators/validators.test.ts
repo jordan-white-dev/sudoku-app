@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   isBoxNumber,
-  isCellNumber,
+  isCellId,
   isColumnNumber,
   isEncodedPuzzleString,
   isRawGivenDigit,
@@ -503,73 +503,69 @@ describe("Board Coordinate Validators", () => {
     });
   });
 
-  describe("isCellNumber", () => {
-    it("accepts every valid cell number", () => {
+  describe("isCellId", () => {
+    it("accepts every valid cell id", () => {
       // Arrange
-      const validCellNumbers = Array.from(
-        { length: 81 },
-        (_, index) => index + 1,
-      );
+      const validCellIds = Array.from({ length: 81 }, (_, index) => index + 1);
 
       // Act / Assert
-      for (const candidateCellNumber of validCellNumbers) {
-        expect(isCellNumber(candidateCellNumber)).toBe(true);
-      }
+      for (const candidateCellId of validCellIds)
+        expect(isCellId(candidateCellId)).toBe(true);
     });
 
-    it("rejects a cell number below the valid range", () => {
+    it("rejects a cell id below the valid range", () => {
       // Arrange
-      const candidateCellNumber = 0;
+      const candidateCellId = 0;
 
       // Act
-      const isValidCellNumber = isCellNumber(candidateCellNumber);
+      const isValidCellId = isCellId(candidateCellId);
 
       // Assert
-      expect(isValidCellNumber).toBe(false);
+      expect(isValidCellId).toBe(false);
     });
 
-    it("rejects a cell number above the valid range", () => {
+    it("rejects a cell id above the valid range", () => {
       // Arrange
-      const candidateCellNumber = 82;
+      const candidateCellId = 82;
 
       // Act
-      const isValidCellNumber = isCellNumber(candidateCellNumber);
+      const isValidCellId = isCellId(candidateCellId);
 
       // Assert
-      expect(isValidCellNumber).toBe(false);
+      expect(isValidCellId).toBe(false);
     });
 
-    it("rejects a non-integer cell number", () => {
+    it("rejects a non-integer cell id", () => {
       // Arrange
-      const candidateCellNumber = 12.5;
+      const candidateCellId = 12.5;
 
       // Act
-      const isValidCellNumber = isCellNumber(candidateCellNumber);
+      const isValidCellId = isCellId(candidateCellId);
 
       // Assert
-      expect(isValidCellNumber).toBe(false);
+      expect(isValidCellId).toBe(false);
     });
 
     it("rejects positive infinity", () => {
       // Arrange
-      const candidateCellNumber = Number.POSITIVE_INFINITY;
+      const candidateCellId = Number.POSITIVE_INFINITY;
 
       // Act
-      const isValidCellNumber = isCellNumber(candidateCellNumber);
+      const isValidCellId = isCellId(candidateCellId);
 
       // Assert
-      expect(isValidCellNumber).toBe(false);
+      expect(isValidCellId).toBe(false);
     });
 
     it("rejects negative infinity", () => {
       // Arrange
-      const candidateCellNumber = Number.NEGATIVE_INFINITY;
+      const candidateCellId = Number.NEGATIVE_INFINITY;
 
       // Act
-      const isValidCellNumber = isCellNumber(candidateCellNumber);
+      const isValidCellId = isCellId(candidateCellId);
 
       // Assert
-      expect(isValidCellNumber).toBe(false);
+      expect(isValidCellId).toBe(false);
     });
   });
 

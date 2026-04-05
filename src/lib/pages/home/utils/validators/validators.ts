@@ -55,9 +55,9 @@ export const [isBoxNumber, BrandedBoxNumber] = branded(
   "BoxNumber",
 );
 
-export const [isCellNumber, BrandedCellNumber] = branded(
+export const [isCellId, BrandedCellId] = branded(
   (input: number) => Number.isInteger(input) && input >= 1 && input <= 81,
-  "CellNumber",
+  "CellId",
 );
 
 export const [isColumnNumber, BrandedColumnNumber] = branded(

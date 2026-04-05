@@ -15,7 +15,7 @@ import {
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
-  getBrandedCellNumber,
+  getBrandedCellId,
   getBrandedSudokuDigit,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -88,14 +88,9 @@ describe("Puzzle rendering", () => {
     const renderedPuzzle = await renderPuzzle();
 
     // Assert
-    for (let cellNumber = 1; cellNumber <= 81; cellNumber += 1)
+    for (let cellId = 1; cellId <= 81; cellId += 1)
       await expect
-        .element(
-          await getCellLocator(
-            renderedPuzzle,
-            getBrandedCellNumber(cellNumber),
-          ),
-        )
+        .element(await getCellLocator(renderedPuzzle, getBrandedCellId(cellId)))
         .toBeInTheDocument();
 
     await expect
@@ -113,11 +108,11 @@ describe("Puzzle initial board state", () => {
     // Arrange
     const startingBoardState = getBoardStateWithGivenDigitsInTargetCells([
       {
-        cellNumber: getBrandedCellNumber(1),
+        cellId: getBrandedCellId(1),
         digit: getBrandedSudokuDigit("4"),
       },
       {
-        cellNumber: getBrandedCellNumber(81),
+        cellId: getBrandedCellId(81),
         digit: getBrandedSudokuDigit("9"),
       },
     ]);
@@ -126,16 +121,16 @@ describe("Puzzle initial board state", () => {
     // Assert
     await expect
       .element(
-        (
-          await getCellLocator(renderedPuzzle, getBrandedCellNumber(1))
-        ).getByText("4"),
+        (await getCellLocator(renderedPuzzle, getBrandedCellId(1))).getByText(
+          "4",
+        ),
       )
       .toBeInTheDocument();
     await expect
       .element(
-        (
-          await getCellLocator(renderedPuzzle, getBrandedCellNumber(81))
-        ).getByText("9"),
+        (await getCellLocator(renderedPuzzle, getBrandedCellId(81))).getByText(
+          "9",
+        ),
       )
       .toBeInTheDocument();
   });
@@ -145,12 +140,12 @@ describe("Pointer down outside puzzle selection behavior", () => {
   it("clears a single selected cell when pointer down occurs outside the puzzle", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected([
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
     ]);
     const renderedPuzzle = await renderPuzzle({ startingBoardState });
     const selectedCellBeforeOutsidePointerDown = await getCellElement(
       renderedPuzzle,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
     );
 
     // Act
@@ -165,23 +160,23 @@ describe("Pointer down outside puzzle selection behavior", () => {
   it("clears all selected cells when multiple cells are selected and pointer down occurs outside the puzzle", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected([
-      getBrandedCellNumber(1),
-      getBrandedCellNumber(2),
-      getBrandedCellNumber(3),
+      getBrandedCellId(1),
+      getBrandedCellId(2),
+      getBrandedCellId(3),
     ]);
     const renderedPuzzle = await renderPuzzle({ startingBoardState });
 
     const firstSelectedCellBeforeOutsidePointerDown = await getCellElement(
       renderedPuzzle,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
     );
     const secondSelectedCellBeforeOutsidePointerDown = await getCellElement(
       renderedPuzzle,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
     );
     const thirdSelectedCellBeforeOutsidePointerDown = await getCellElement(
       renderedPuzzle,
-      getBrandedCellNumber(3),
+      getBrandedCellId(3),
     );
 
     // Act
@@ -204,12 +199,12 @@ describe("Pointer down inside puzzle selection behavior", () => {
   it("keeps selected cells selected when pointer down occurs inside the puzzle", async () => {
     // Arrange
     const startingBoardState = getBoardStateWithTargetCellsSelected([
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
     ]);
     const renderedPuzzle = await renderPuzzle({ startingBoardState });
     const selectedCellBeforeInsidePointerDown = await getCellElement(
       renderedPuzzle,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
     );
     const keypadModeSelector = await (await renderedPuzzle).getByRole(
       "radiogroup",

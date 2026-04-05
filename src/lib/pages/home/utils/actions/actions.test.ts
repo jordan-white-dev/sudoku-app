@@ -36,13 +36,13 @@ import {
   getTargetCellStateFromBoardState,
 } from "@/lib/pages/home/utils/testing";
 import {
-  getBrandedCellNumber,
+  getBrandedCellId,
   getBrandedSudokuDigit,
   getCurrentBoardStateFromPuzzleHistory,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
-  type CellNumber,
+  type CellId,
   type CellState,
   type MarkupColor,
   type PuzzleHistory,
@@ -221,14 +221,14 @@ const getPuzzleHistoryAfterClearingSelectedCells = (
 // #region Board State Cell Content Builders
 const getBoardStateWithEmptyCellContentInTargetCell = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
 ) => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
+      cellState.id === cellId
         ? {
             ...cellState,
-            cellContent: {
+            content: {
               emptyCell: "",
             },
           }
@@ -242,16 +242,16 @@ const getBoardStateWithEmptyCellContentInTargetCell = (
 
 const getBoardStateWithMarkupDigitsInTargetCell = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   centerMarkups: Array<SudokuDigit>,
   cornerMarkups: Array<SudokuDigit>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
+      cellState.id === cellId
         ? {
             ...cellState,
-            cellContent: {
+            content: {
               centerMarkups:
                 centerMarkups.length > 0
                   ? centerMarkups.map(getBrandedSudokuDigit)
@@ -272,15 +272,15 @@ const getBoardStateWithMarkupDigitsInTargetCell = (
 
 const getBoardStateWithCenterMarkupsInTargetCell = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   centerMarkups: Array<SudokuDigit>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
+      cellState.id === cellId
         ? {
             ...cellState,
-            cellContent: {
+            content: {
               centerMarkups:
                 centerMarkups.length > 0
                   ? centerMarkups.map(getBrandedSudokuDigit)
@@ -298,15 +298,15 @@ const getBoardStateWithCenterMarkupsInTargetCell = (
 
 const getBoardStateWithCornerMarkupsInTargetCell = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   cornerMarkups: Array<SudokuDigit>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
+      cellState.id === cellId
         ? {
             ...cellState,
-            cellContent: {
+            content: {
               centerMarkups: [""],
               cornerMarkups:
                 cornerMarkups.length > 0
@@ -326,12 +326,12 @@ const getBoardStateWithCornerMarkupsInTargetCell = (
 // #region Board State Color Builders
 const getBoardStateWithMarkupColorsInTargetCell = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   markupColors: Array<MarkupColor>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
+      cellState.id === cellId
         ? {
             ...cellState,
             markupColors: markupColors.length > 0 ? markupColors : [""],
@@ -348,49 +348,49 @@ const getBoardStateWithMarkupColorsInTargetCell = (
 // #region Cell Content Assertions
 const expectTargetCellToContainEnteredDigit = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   expectedEnteredDigit: SudokuDigit,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
+  const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isEnteredDigitInCellContent(cellState.cellContent)).toBe(true);
+  expect(isEnteredDigitInCellContent(cellState.content)).toBe(true);
 
-  if (isEnteredDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.enteredDigit).toBe(expectedEnteredDigit);
+  if (isEnteredDigitInCellContent(cellState.content))
+    expect(cellState.content.enteredDigit).toBe(expectedEnteredDigit);
 };
 
 const expectTargetCellToContainCenterMarkups = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   expectedCenterMarkups: [""] | Array<SudokuDigit>,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
+  const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isMarkupDigitsInCellContent(cellState.cellContent)).toBe(true);
+  expect(isMarkupDigitsInCellContent(cellState.content)).toBe(true);
 
-  if (isMarkupDigitsInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.centerMarkups).toEqual(expectedCenterMarkups);
+  if (isMarkupDigitsInCellContent(cellState.content))
+    expect(cellState.content.centerMarkups).toEqual(expectedCenterMarkups);
 };
 
 const expectTargetCellToContainCornerMarkups = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   expectedCornerMarkups: [""] | Array<SudokuDigit>,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
+  const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isMarkupDigitsInCellContent(cellState.cellContent)).toBe(true);
+  expect(isMarkupDigitsInCellContent(cellState.content)).toBe(true);
 
-  if (isMarkupDigitsInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.cornerMarkups).toEqual(expectedCornerMarkups);
+  if (isMarkupDigitsInCellContent(cellState.content))
+    expect(cellState.content.cornerMarkups).toEqual(expectedCornerMarkups);
 };
 
 const expectTargetCellToContainMarkupColors = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   expectedMarkupColors: [""] | Array<MarkupColor>,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
+  const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
   expect(cellState.markupColors).toEqual(expectedMarkupColors);
 };
@@ -420,11 +420,7 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState: BoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [
-              getBrandedCellNumber(1),
-              getBrandedCellNumber(2),
-              getBrandedCellNumber(3),
-            ],
+            [getBrandedCellId(1), getBrandedCellId(2), getBrandedCellId(3)],
             currentBoardState,
           ),
       ]);
@@ -440,14 +436,14 @@ describe("Digit entry", () => {
     // Assert
     expect(nextPuzzleHistory.currentBoardStateIndex).toBe(1);
     expect(nextPuzzleHistory.boardStateHistory).toHaveLength(2);
-    for (const cellNumber of [
-      getBrandedCellNumber(1),
-      getBrandedCellNumber(2),
-      getBrandedCellNumber(3),
+    for (const cellId of [
+      getBrandedCellId(1),
+      getBrandedCellId(2),
+      getBrandedCellId(3),
     ]) {
       expectTargetCellToContainEnteredDigit(
         currentBoardState,
-        getBrandedCellNumber(cellNumber),
+        getBrandedCellId(cellId),
         getBrandedSudokuDigit("4"),
       );
     }
@@ -459,13 +455,13 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("2"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -481,7 +477,7 @@ describe("Digit entry", () => {
     // Assert
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("4"),
     );
   });
@@ -493,13 +489,13 @@ describe("Digit entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
             [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -515,7 +511,7 @@ describe("Digit entry", () => {
     // Assert
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("4"),
     );
   });
@@ -527,17 +523,17 @@ describe("Digit entry", () => {
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -553,12 +549,12 @@ describe("Digit entry", () => {
     // Assert
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("4"),
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
     );
   });
@@ -569,13 +565,13 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("9"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -591,12 +587,12 @@ describe("Digit entry", () => {
     // Assert
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("9"),
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("4"),
     );
   });
@@ -607,19 +603,19 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -633,11 +629,8 @@ describe("Digit entry", () => {
       getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
 
     // Assert
-    for (const cellNumber of [
-      getBrandedCellNumber(1),
-      getBrandedCellNumber(2),
-    ]) {
-      expectTargetCellToContainEmptyCellContent(currentBoardState, cellNumber);
+    for (const cellId of [getBrandedCellId(1), getBrandedCellId(2)]) {
+      expectTargetCellToContainEmptyCellContent(currentBoardState, cellId);
     }
   });
 
@@ -647,19 +640,19 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("9"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -675,12 +668,12 @@ describe("Digit entry", () => {
     // Assert
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("9"),
     );
     expectTargetCellToContainEmptyCellContent(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
     );
   });
 
@@ -690,20 +683,20 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [getBrandedSudokuDigit("2")],
             [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -719,12 +712,12 @@ describe("Digit entry", () => {
     // Assert
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("5"),
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("5"),
     );
   });
@@ -735,19 +728,19 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("2"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("3"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -763,12 +756,12 @@ describe("Digit entry", () => {
     // Assert
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("4"),
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("3"),
     );
   });
@@ -797,13 +790,13 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("9"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -827,7 +820,7 @@ describe("Digit entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -858,7 +851,7 @@ describe("Digit entry", () => {
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("3"),
     );
   });
@@ -872,11 +865,11 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -892,12 +885,12 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
   });
@@ -909,12 +902,12 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -930,7 +923,7 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
   });
@@ -942,18 +935,18 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -969,12 +962,12 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
   });
@@ -986,17 +979,17 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1012,12 +1005,12 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("5"),
     );
   });
@@ -1029,18 +1022,18 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1056,12 +1049,12 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
   });
@@ -1073,17 +1066,17 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("4"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1099,17 +1092,17 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("4"),
     );
   });
@@ -1121,19 +1114,19 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("3")],
             [getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("9"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1149,17 +1142,17 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("5")],
     );
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("9"),
     );
   });
@@ -1172,10 +1165,10 @@ describe("Center markup entry", () => {
           const nextBoardState: BoardState = currentBoardState.map(
             (cellState) => {
               const nextCellState: CellState =
-                cellState.cellNumber === 1 || cellState.cellNumber === 2
+                cellState.id === 1 || cellState.id === 2
                   ? {
                       ...cellState,
-                      cellContent: {
+                      content: {
                         centerMarkups: [getBrandedSudokuDigit("7")],
                         cornerMarkups: [""],
                       },
@@ -1190,7 +1183,7 @@ describe("Center markup entry", () => {
         },
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1206,12 +1199,12 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [""],
     );
   });
@@ -1223,12 +1216,12 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1244,7 +1237,7 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("2")],
     );
   });
@@ -1256,13 +1249,13 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("2")],
             [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("4")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1278,12 +1271,12 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("4")],
     );
   });
@@ -1294,19 +1287,19 @@ describe("Center markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("4"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1322,12 +1315,12 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("4"),
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("5"),
     );
   });
@@ -1338,29 +1331,25 @@ describe("Center markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("4"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(3),
+            getBrandedCellId(3),
             [getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [
-              getBrandedCellNumber(1),
-              getBrandedCellNumber(2),
-              getBrandedCellNumber(3),
-            ],
+            [getBrandedCellId(1), getBrandedCellId(2), getBrandedCellId(3)],
             currentBoardState,
           ),
       ]);
@@ -1376,17 +1365,17 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("4"),
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("5"),
     );
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(3),
+      getBrandedCellId(3),
       [""],
     );
   });
@@ -1398,18 +1387,18 @@ describe("Center markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1425,12 +1414,12 @@ describe("Center markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [getBrandedSudokuDigit("3")],
     );
   });
@@ -1459,13 +1448,13 @@ describe("Center markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1489,7 +1478,7 @@ describe("Center markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1520,7 +1509,7 @@ describe("Center markup entry", () => {
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("1"), getBrandedSudokuDigit("3")],
     );
   });
@@ -1534,11 +1523,11 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1554,12 +1543,12 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("3")],
     );
   });
@@ -1571,12 +1560,12 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1592,7 +1581,7 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
   });
@@ -1604,18 +1593,18 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1631,12 +1620,12 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
   });
@@ -1648,17 +1637,17 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1674,12 +1663,12 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("5"),
     );
   });
@@ -1691,18 +1680,18 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1718,12 +1707,12 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
   });
@@ -1735,17 +1724,17 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("4"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1761,17 +1750,17 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("4"),
     );
   });
@@ -1783,19 +1772,19 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("3")],
             [getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("9"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1811,17 +1800,17 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("3")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("9"),
     );
   });
@@ -1834,10 +1823,10 @@ describe("Corner markup entry", () => {
           const nextBoardState: BoardState = currentBoardState.map(
             (cellState) => {
               const nextCellState: CellState =
-                cellState.cellNumber === 1
+                cellState.id === 1
                   ? {
                       ...cellState,
-                      cellContent: {
+                      content: {
                         centerMarkups: [""],
                         cornerMarkups: [getBrandedSudokuDigit("3")],
                       },
@@ -1852,7 +1841,7 @@ describe("Corner markup entry", () => {
         },
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1868,7 +1857,7 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
   });
@@ -1880,12 +1869,12 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1901,7 +1890,7 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("5")],
     );
   });
@@ -1913,13 +1902,13 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("6")],
             [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -1935,12 +1924,12 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("6")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("7")],
     );
   });
@@ -1951,19 +1940,19 @@ describe("Corner markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("4"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -1979,12 +1968,12 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("4"),
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("5"),
     );
   });
@@ -1995,29 +1984,25 @@ describe("Corner markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("4"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(3),
+            getBrandedCellId(3),
             [getBrandedSudokuDigit("7")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [
-              getBrandedCellNumber(1),
-              getBrandedCellNumber(2),
-              getBrandedCellNumber(3),
-            ],
+            [getBrandedCellId(1), getBrandedCellId(2), getBrandedCellId(3)],
             currentBoardState,
           ),
       ]);
@@ -2033,17 +2018,17 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("4"),
     );
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("5"),
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(3),
+      getBrandedCellId(3),
       [""],
     );
   });
@@ -2055,18 +2040,18 @@ describe("Corner markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("2")],
           ),
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2082,12 +2067,12 @@ describe("Corner markup entry", () => {
     // Assert
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [getBrandedSudokuDigit("3")],
     );
   });
@@ -2116,13 +2101,13 @@ describe("Corner markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("5"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2146,7 +2131,7 @@ describe("Corner markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2177,7 +2162,7 @@ describe("Corner markup entry", () => {
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("1"), getBrandedSudokuDigit("3")],
     );
   });
@@ -2190,7 +2175,7 @@ describe("Color markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -2206,12 +2191,12 @@ describe("Color markup entry", () => {
     // Assert
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [MARKUP_COLOR_RED],
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [MARKUP_COLOR_RED],
     );
   });
@@ -2222,7 +2207,7 @@ describe("Color markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2237,10 +2222,8 @@ describe("Color markup entry", () => {
 
     // Assert
     expect(
-      getTargetCellStateFromBoardState(
-        getBrandedCellNumber(1),
-        currentBoardState,
-      ).markupColors,
+      getTargetCellStateFromBoardState(getBrandedCellId(1), currentBoardState)
+        .markupColors,
     ).toEqual([MARKUP_COLOR_BLUE]);
   });
 
@@ -2260,7 +2243,7 @@ describe("Color markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2276,7 +2259,7 @@ describe("Color markup entry", () => {
     // Assert
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [expectedColor],
     );
   });
@@ -2288,18 +2271,18 @@ describe("Color markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -2315,12 +2298,12 @@ describe("Color markup entry", () => {
     // Assert
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [MARKUP_COLOR_BLUE],
     );
   });
@@ -2332,12 +2315,12 @@ describe("Color markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2353,7 +2336,7 @@ describe("Color markup entry", () => {
     // Assert
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
     );
   });
@@ -2365,18 +2348,18 @@ describe("Color markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1), getBrandedCellNumber(2)],
+            [getBrandedCellId(1), getBrandedCellId(2)],
             currentBoardState,
           ),
       ]);
@@ -2392,12 +2375,12 @@ describe("Color markup entry", () => {
     // Assert
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [MARKUP_COLOR_RED],
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
     );
   });
@@ -2408,13 +2391,13 @@ describe("Color markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("8"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2430,12 +2413,12 @@ describe("Color markup entry", () => {
     // Assert
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("8"),
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [MARKUP_COLOR_RED],
     );
   });
@@ -2446,13 +2429,13 @@ describe("Color markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("6"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2468,12 +2451,12 @@ describe("Color markup entry", () => {
     // Assert
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("6"),
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [MARKUP_COLOR_RED],
     );
   });
@@ -2485,13 +2468,13 @@ describe("Color markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
             [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2507,17 +2490,17 @@ describe("Color markup entry", () => {
     // Assert
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [MARKUP_COLOR_BLUE],
     );
   });
@@ -2529,18 +2512,18 @@ describe("Color markup entry", () => {
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2556,12 +2539,12 @@ describe("Color markup entry", () => {
     // Assert
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [MARKUP_COLOR_RED],
     );
   });
@@ -2590,7 +2573,7 @@ describe("Color markup entry", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2621,7 +2604,7 @@ describe("Color markup entry", () => {
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [MARKUP_COLOR_BLUE, MARKUP_COLOR_GREEN],
     );
   });
@@ -2634,42 +2617,42 @@ describe("Clearing selected cells", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("6"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
             [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(3),
+            getBrandedCellId(3),
             [MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(4),
+            getBrandedCellId(4),
             getBrandedSudokuDigit("7"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [
-              getBrandedCellNumber(1),
-              getBrandedCellNumber(2),
-              getBrandedCellNumber(3),
-              getBrandedCellNumber(4),
+              getBrandedCellId(1),
+              getBrandedCellId(2),
+              getBrandedCellId(3),
+              getBrandedCellId(4),
             ],
             currentBoardState,
           ),
@@ -2685,36 +2668,36 @@ describe("Clearing selected cells", () => {
     // Assert
     expectTargetCellToContainEmptyCellContent(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
     );
     expectTargetCellToContainEmptyCellContent(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
     );
     expectTargetCellToContainEmptyCellContent(
       currentBoardState,
-      getBrandedCellNumber(3),
+      getBrandedCellId(3),
     );
 
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(4),
+      getBrandedCellId(4),
       getBrandedSudokuDigit("7"),
     );
 
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [""],
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(3),
+      getBrandedCellId(3),
       [""],
     );
   });
@@ -2725,19 +2708,19 @@ describe("Clearing selected cells", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("8"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2752,12 +2735,12 @@ describe("Clearing selected cells", () => {
     // Assert
     expectTargetCellToContainGivenDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("8"),
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
   });
@@ -2768,31 +2751,31 @@ describe("Clearing selected cells", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("6"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             getBrandedSudokuDigit("4"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [MARKUP_COLOR_GREEN],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2807,22 +2790,22 @@ describe("Clearing selected cells", () => {
     // Assert
     expectTargetCellToContainEmptyCellContent(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
 
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       getBrandedSudokuDigit("4"),
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [MARKUP_COLOR_GREEN],
     );
   });
@@ -2833,32 +2816,32 @@ describe("Clearing selected cells", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             getBrandedSudokuDigit("6"),
             currentBoardState,
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
             [MARKUP_COLOR_RED],
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [getBrandedSudokuDigit("2")],
             [getBrandedSudokuDigit("3")],
           ),
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(2),
+            getBrandedCellId(2),
             [MARKUP_COLOR_BLUE],
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2873,27 +2856,27 @@ describe("Clearing selected cells", () => {
     // Assert
     expectTargetCellToContainEmptyCellContent(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
 
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [getBrandedSudokuDigit("2")],
     );
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [getBrandedSudokuDigit("3")],
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(2),
+      getBrandedCellId(2),
       [MARKUP_COLOR_BLUE],
     );
   });
@@ -2922,11 +2905,11 @@ describe("Clearing selected cells", () => {
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
-            getBrandedCellNumber(1),
+            getBrandedCellId(1),
           ),
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2949,7 +2932,7 @@ describe("Clearing selected cells", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -2979,11 +2962,11 @@ describe("Clearing selected cells", () => {
     expect(branchedHistory.boardStateHistory).toHaveLength(3);
     expectTargetCellToContainEmptyCellContent(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
     );
     expectTargetCellToContainMarkupColors(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       [""],
     );
   });
@@ -2996,7 +2979,7 @@ describe("Undoing moves", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -3028,7 +3011,7 @@ describe("Undoing moves", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -3090,7 +3073,7 @@ describe("Redoing moves", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -3121,7 +3104,7 @@ describe("Redoing moves", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -3170,7 +3153,7 @@ describe("Redoing moves", () => {
       getStartingPuzzleHistoryWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
-            [getBrandedCellNumber(1)],
+            [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
@@ -3205,7 +3188,7 @@ describe("Redoing moves", () => {
     expect(puzzleHistoryAfterRedo.boardStateHistory).toHaveLength(3);
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
-      getBrandedCellNumber(1),
+      getBrandedCellId(1),
       getBrandedSudokuDigit("3"),
     );
   });

@@ -11,7 +11,7 @@ import {
   getBoardStateFromRawBoardState,
   getBoardStateWithNoCellsSelected,
   getBrandedBoxNumber,
-  getBrandedCellNumber,
+  getBrandedCellId,
   getBrandedColumnNumber,
   getBrandedRowNumber,
   getBrandedSudokuDigit,
@@ -24,7 +24,7 @@ import {
   type BoardState,
   type BoxNumber,
   type CellContent,
-  type CellNumber,
+  type CellId,
   type ColumnNumber,
   type PuzzleHistory,
   type RawBoardState,
@@ -64,14 +64,14 @@ const getBrandedRawGivenDigit = (
 // #region Raw Board State Builders
 const getRawBoardStateWithGivenDigitsInTargetCells = (
   targetCellsAndRawGivenDigits: Array<{
-    cellNumber: CellNumber;
+    cellId: CellId;
     rawGivenDigit: RawGivenDigit;
   }>,
 ): RawBoardState => {
   const rawBoardState = getEmptyRawBoardState();
 
-  for (const { cellNumber, rawGivenDigit } of targetCellsAndRawGivenDigits) {
-    rawBoardState[cellNumber - 1] = rawGivenDigit;
+  for (const { cellId, rawGivenDigit } of targetCellsAndRawGivenDigits) {
+    rawBoardState[cellId - 1] = rawGivenDigit;
   }
 
   return rawBoardState;
@@ -95,19 +95,19 @@ const getPuzzleHistoryFromBoardStates = (
 // #region Board State Assertions
 const expectTargetCellToHaveCoordinates = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   expectedCoordinates: {
     rowNumber: RowNumber;
     columnNumber: ColumnNumber;
     boxNumber: BoxNumber;
   },
 ) => {
-  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
+  const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(cellState.cellNumber).toBe(cellNumber);
-  expect(cellState.rowNumber).toBe(expectedCoordinates.rowNumber);
-  expect(cellState.columnNumber).toBe(expectedCoordinates.columnNumber);
-  expect(cellState.boxNumber).toBe(expectedCoordinates.boxNumber);
+  expect(cellState.id).toBe(cellId);
+  expect(cellState.houses.rowNumber).toBe(expectedCoordinates.rowNumber);
+  expect(cellState.houses.columnNumber).toBe(expectedCoordinates.columnNumber);
+  expect(cellState.houses.boxNumber).toBe(expectedCoordinates.boxNumber);
 };
 // #endregion
 
@@ -135,15 +135,15 @@ describe("Puzzle String Transforms", () => {
       // Arrange
       const rawBoardState = getRawBoardStateWithGivenDigitsInTargetCells([
         {
-          cellNumber: getBrandedCellNumber(1),
+          cellId: getBrandedCellId(1),
           rawGivenDigit: getBrandedRawGivenDigit(0),
         },
         {
-          cellNumber: getBrandedCellNumber(2),
+          cellId: getBrandedCellId(2),
           rawGivenDigit: getBrandedRawGivenDigit(4),
         },
         {
-          cellNumber: getBrandedCellNumber(3),
+          cellId: getBrandedCellId(3),
           rawGivenDigit: getBrandedRawGivenDigit(8),
         },
       ]);
@@ -216,11 +216,11 @@ describe("Board State Transform", () => {
       // Assert
       expectTargetCellToContainEmptyCellContent(
         boardState,
-        getBrandedCellNumber(1),
+        getBrandedCellId(1),
       );
       expectTargetCellToContainEmptyCellContent(
         boardState,
-        getBrandedCellNumber(81),
+        getBrandedCellId(81),
       );
     });
 
@@ -228,15 +228,15 @@ describe("Board State Transform", () => {
       // Arrange
       const rawBoardState = getRawBoardStateWithGivenDigitsInTargetCells([
         {
-          cellNumber: getBrandedCellNumber(1),
+          cellId: getBrandedCellId(1),
           rawGivenDigit: getBrandedRawGivenDigit(0),
         },
         {
-          cellNumber: getBrandedCellNumber(2),
+          cellId: getBrandedCellId(2),
           rawGivenDigit: getBrandedRawGivenDigit(4),
         },
         {
-          cellNumber: getBrandedCellNumber(3),
+          cellId: getBrandedCellId(3),
           rawGivenDigit: getBrandedRawGivenDigit(8),
         },
       ]);
@@ -247,17 +247,17 @@ describe("Board State Transform", () => {
       // Assert
       expectTargetCellToContainGivenDigit(
         boardState,
-        getBrandedCellNumber(1),
+        getBrandedCellId(1),
         getBrandedSudokuDigit("1"),
       );
       expectTargetCellToContainGivenDigit(
         boardState,
-        getBrandedCellNumber(2),
+        getBrandedCellId(2),
         getBrandedSudokuDigit("5"),
       );
       expectTargetCellToContainGivenDigit(
         boardState,
-        getBrandedCellNumber(3),
+        getBrandedCellId(3),
         getBrandedSudokuDigit("9"),
       );
     });
@@ -270,27 +270,27 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(1), {
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(1), {
         rowNumber: getBrandedRowNumber(1),
         columnNumber: getBrandedColumnNumber(1),
         boxNumber: getBrandedBoxNumber(1),
       });
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(9), {
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(9), {
         rowNumber: getBrandedRowNumber(1),
         columnNumber: getBrandedColumnNumber(9),
         boxNumber: getBrandedBoxNumber(3),
       });
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(10), {
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(10), {
         rowNumber: getBrandedRowNumber(2),
         columnNumber: getBrandedColumnNumber(1),
         boxNumber: getBrandedBoxNumber(1),
       });
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(41), {
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(41), {
         rowNumber: getBrandedRowNumber(5),
         columnNumber: getBrandedColumnNumber(5),
         boxNumber: getBrandedBoxNumber(5),
       });
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellNumber(81), {
+      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(81), {
         rowNumber: getBrandedRowNumber(9),
         columnNumber: getBrandedColumnNumber(9),
         boxNumber: getBrandedBoxNumber(9),
@@ -319,15 +319,11 @@ describe("Board State Transform", () => {
         getEmptyRawBoardState(),
       );
       const secondBoardState = getBoardStateWithTargetCellsSelected(
-        [
-          getBrandedCellNumber(1),
-          getBrandedCellNumber(2),
-          getBrandedCellNumber(3),
-        ],
+        [getBrandedCellId(1), getBrandedCellId(2), getBrandedCellId(3)],
         firstBoardState,
       );
       const thirdBoardState = getBoardStateWithTargetCellsSelected(
-        [getBrandedCellNumber(9)],
+        [getBrandedCellId(9)],
         firstBoardState,
       );
       const puzzleHistory = getPuzzleHistoryFromBoardStates(
@@ -348,11 +344,7 @@ describe("Board State Transform", () => {
     it("clears selection from every cell when the board is deselected", () => {
       // Arrange
       const startingBoardState = getBoardStateWithTargetCellsSelected(
-        [
-          getBrandedCellNumber(1),
-          getBrandedCellNumber(5),
-          getBrandedCellNumber(9),
-        ],
+        [getBrandedCellId(1), getBrandedCellId(5), getBrandedCellId(9)],
         getBoardStateFromRawBoardState(getEmptyRawBoardState()),
       );
 

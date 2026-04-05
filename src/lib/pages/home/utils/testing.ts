@@ -12,7 +12,7 @@ import {
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
-  type CellNumber,
+  type CellId,
   type CellState,
   type PuzzleHistory,
   type RawBoardState,
@@ -44,13 +44,13 @@ export const getStartingPuzzleHistoryFromBoardState = (
 
 // #region Board State Mutators
 export const getBoardStateWithTargetCellsSelected = (
-  cellNumbers: Array<CellNumber>,
+  cellIds: Array<CellId>,
   startingBoardState?: BoardState,
 ): BoardState => {
   const boardState = startingBoardState ?? getStartingEmptyBoardState();
 
   const nextBoardState: BoardState = boardState.map((cellState) => {
-    const shouldBeSelected = cellNumbers.includes(cellState.cellNumber);
+    const shouldBeSelected = cellIds.includes(cellState.id);
 
     const nextCellState: CellState = {
       ...cellState,
@@ -64,7 +64,7 @@ export const getBoardStateWithTargetCellsSelected = (
 };
 
 export const getBoardStateWithGivenDigitInTargetCell = (
-  cellNumber: CellNumber,
+  cellId: CellId,
   givenDigit: SudokuDigit,
   startingBoardState?: BoardState,
 ): BoardState => {
@@ -72,10 +72,10 @@ export const getBoardStateWithGivenDigitInTargetCell = (
 
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState =
-      cellState.cellNumber === cellNumber
+      cellState.id === cellId
         ? {
             ...cellState,
-            cellContent: {
+            content: {
               givenDigit: getBrandedSudokuDigit(givenDigit),
             },
           }
@@ -88,7 +88,7 @@ export const getBoardStateWithGivenDigitInTargetCell = (
 };
 
 export const getBoardStateWithEnteredDigitInTargetCell = (
-  cellNumber: CellNumber,
+  cellId: CellId,
   enteredDigit: SudokuDigit,
   startingBoardState?: BoardState,
 ): BoardState => {
@@ -96,10 +96,10 @@ export const getBoardStateWithEnteredDigitInTargetCell = (
 
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState =
-      cellState.cellNumber === cellNumber
+      cellState.id === cellId
         ? {
             ...cellState,
-            cellContent: {
+            content: {
               enteredDigit: getBrandedSudokuDigit(enteredDigit),
             },
           }
@@ -114,7 +114,7 @@ export const getBoardStateWithEnteredDigitInTargetCell = (
 const getBoardStateWithDigitsInTargetCells = (
   digitType: "givenDigit" | "enteredDigit",
   digitsToEnterInTargetCells: Array<{
-    cellNumber: CellNumber;
+    cellId: CellId;
     digit: SudokuDigit;
   }>,
   startingBoardState?: BoardState,
@@ -124,15 +124,14 @@ const getBoardStateWithDigitsInTargetCells = (
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState = (() => {
       const digitToEnterInTargetCell = digitsToEnterInTargetCells.find(
-        (digitInCellObject) =>
-          digitInCellObject.cellNumber === cellState.cellNumber,
+        (digitInCellObject) => digitInCellObject.cellId === cellState.id,
       );
 
       if (digitToEnterInTargetCell) {
         const cellStateWithDigit: CellState = {
           ...cellState,
-          cellContent: {
-            ...cellState.cellContent,
+          content: {
+            ...cellState.content,
             [digitType]: getBrandedSudokuDigit(digitToEnterInTargetCell.digit),
           },
         };
@@ -151,7 +150,7 @@ const getBoardStateWithDigitsInTargetCells = (
 
 export const getBoardStateWithGivenDigitsInTargetCells = (
   digitsToEnterInTargetCells: Array<{
-    cellNumber: CellNumber;
+    cellId: CellId;
     digit: SudokuDigit;
   }>,
   startingBoardState?: BoardState,
@@ -164,7 +163,7 @@ export const getBoardStateWithGivenDigitsInTargetCells = (
 
 export const getBoardStateWithEnteredDigitsInTargetCells = (
   digitsToEnterInTargetCells: Array<{
-    cellNumber: CellNumber;
+    cellId: CellId;
     digit: SudokuDigit;
   }>,
   startingBoardState?: BoardState,
@@ -178,17 +177,17 @@ export const getBoardStateWithEnteredDigitsInTargetCells = (
 
 // #region Board State Queries
 export const getTargetCellStateFromBoardState = (
-  cellNumber: CellNumber,
+  cellId: CellId,
   startingBoardState?: BoardState,
 ): CellState => {
   const boardState = startingBoardState ?? getStartingEmptyBoardState();
 
   const candidateCellState = boardState.find(
-    (cellState) => cellState.cellNumber === cellNumber,
+    (cellState) => cellState.id === cellId,
   );
 
   if (!candidateCellState)
-    throw Error(`Missing cellState for cell number ${cellNumber}`);
+    throw Error(`Missing cellState for cell id ${cellId}`);
 
   return candidateCellState;
 };
@@ -197,24 +196,24 @@ export const getTargetCellStateFromBoardState = (
 // #region Board State Assertions
 export const expectTargetCellToContainEmptyCellContent = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
+  const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isEmptyCellContent(cellState.cellContent)).toBe(true);
+  expect(isEmptyCellContent(cellState.content)).toBe(true);
 };
 
 export const expectTargetCellToContainGivenDigit = (
   boardState: BoardState,
-  cellNumber: CellNumber,
+  cellId: CellId,
   expectedGivenDigit: SudokuDigit,
 ) => {
-  const cellState = getTargetCellStateFromBoardState(cellNumber, boardState);
+  const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isGivenDigitInCellContent(cellState.cellContent)).toBe(true);
+  expect(isGivenDigitInCellContent(cellState.content)).toBe(true);
 
-  if (isGivenDigitInCellContent(cellState.cellContent))
-    expect(cellState.cellContent.givenDigit).toBe(expectedGivenDigit);
+  if (isGivenDigitInCellContent(cellState.content))
+    expect(cellState.content.givenDigit).toBe(expectedGivenDigit);
 };
 // #endregion
 
@@ -234,27 +233,27 @@ export const CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN = "179%2c%2058%2c%2058";
 
 export type RenderedBoard = Awaited<ReturnType<typeof render>>;
 
-export const getCellAccessibleName = (cellNumber: CellNumber) => {
-  const rowNumber = Math.floor((cellNumber - 1) / 9) + 1;
-  const columnNumber = ((cellNumber - 1) % 9) + 1;
+export const getCellAccessibleName = (cellId: CellId) => {
+  const rowNumber = Math.floor((cellId - 1) / 9) + 1;
+  const columnNumber = ((cellId - 1) % 9) + 1;
 
-  return `Cell ${cellNumber} located in row ${rowNumber}, column ${columnNumber}`;
+  return `Cell ${cellId} located in row ${rowNumber}, column ${columnNumber}`;
 };
 
 export const getCellLocator = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-  cellNumber: CellNumber,
+  cellId: CellId,
 ): Promise<Locator> =>
   (await renderedBoard).getByRole("button", {
-    name: getCellAccessibleName(cellNumber),
+    name: getCellAccessibleName(cellId),
   });
 
 export const getCellElement = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-  cellNumber: CellNumber,
+  cellId: CellId,
 ): Promise<HTMLButtonElement> => {
   const resolvedRenderedBoard = await renderedBoard;
-  const cellAccessibleName = getCellAccessibleName(cellNumber);
+  const cellAccessibleName = getCellAccessibleName(cellId);
 
   const candidateCellElement =
     resolvedRenderedBoard.container.querySelector<HTMLButtonElement>(
@@ -269,9 +268,9 @@ export const getCellElement = async (
 
 const getComputedStyleOfRenderedCellBackgroundImage = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-  cellNumber: CellNumber,
+  cellId: CellId,
 ): Promise<string> => {
-  const cellElement = await getCellElement(renderedBoard, cellNumber);
+  const cellElement = await getCellElement(renderedBoard, cellId);
 
   return window.getComputedStyle(cellElement).backgroundImage;
 };
@@ -283,12 +282,12 @@ const doesBackgroundImageContainToken = (
 
 export const expectSeenCellHighlightOrNotInTargetCell = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-  cellNumber: CellNumber,
+  cellId: CellId,
   shouldHighlightBeVisible: boolean,
 ) => {
   const backgroundImage = await getComputedStyleOfRenderedCellBackgroundImage(
     renderedBoard,
-    cellNumber,
+    cellId,
   );
 
   expect(
@@ -301,12 +300,12 @@ export const expectSeenCellHighlightOrNotInTargetCell = async (
 
 export const expectTargetCellToHaveConflictHighlightOrNot = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-  cellNumber: CellNumber,
+  cellId: CellId,
   shouldBeVisible: boolean,
 ) => {
   const backgroundImage = await getComputedStyleOfRenderedCellBackgroundImage(
     renderedBoard,
-    cellNumber,
+    cellId,
   );
 
   expect(

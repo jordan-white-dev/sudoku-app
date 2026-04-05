@@ -309,13 +309,13 @@ const getIsPuzzleSolved = (boardState: BoardState): boolean => {
 
   for (const cellState of boardState) {
     const givenOrEnteredDigit = getGivenOrEnteredDigitInCellIfPresent(
-      cellState.cellContent,
+      cellState.content,
     );
     if (givenOrEnteredDigit === "") return false;
 
-    const boxIndex = cellState.boxNumber - 1;
-    const columnIndex = cellState.columnNumber - 1;
-    const rowIndex = cellState.rowNumber - 1;
+    const boxIndex = cellState.houses.boxNumber - 1;
+    const columnIndex = cellState.houses.columnNumber - 1;
+    const rowIndex = cellState.houses.rowNumber - 1;
 
     if (boxes[boxIndex].has(givenOrEnteredDigit)) return false;
     if (columns[columnIndex].has(givenOrEnteredDigit)) return false;

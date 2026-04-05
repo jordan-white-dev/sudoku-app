@@ -6,7 +6,7 @@ import {
   type BoardState,
   type BoxNumber,
   type CellContent,
-  type CellNumber,
+  type CellId,
   type CellState,
   type ColumnNumber,
   type EmptyCellContent,
@@ -20,7 +20,7 @@ import {
 } from "@/lib/pages/home/utils/types";
 import {
   isBoxNumber,
-  isCellNumber,
+  isCellId,
   isColumnNumber,
   isEncodedPuzzleString,
   isRawPuzzleString,
@@ -85,15 +85,13 @@ export const getBrandedBoxNumber = (candidateBoxNumber: number): BoxNumber => {
   return candidateBoxNumber;
 };
 
-export const getBrandedCellNumber = (
-  candidateCellNumber: number,
-): CellNumber => {
-  if (!isCellNumber(candidateCellNumber))
+export const getBrandedCellId = (candidateCellId: number): CellId => {
+  if (!isCellId(candidateCellId))
     throw Error(
-      `Encountered an invalid CellNumber "${candidateCellNumber}" while getting a BoardState from RawBoardState.`,
+      `Encountered an invalid CellId "${candidateCellId}" while getting a BoardState from RawBoardState.`,
     );
 
-  return candidateCellNumber;
+  return candidateCellId;
 };
 
 export const getBrandedColumnNumber = (
@@ -139,38 +137,40 @@ export const getBoardStateFromRawBoardState = (
   rawBoardState: RawBoardState,
 ): BoardState =>
   Array.from({ length: 81 }, (_, index) => {
-    const candidateCellNumber = index + 1;
-    const candidateColumnNumber = ((candidateCellNumber - 1) % 9) + 1;
-    const candidateRowNumber = Math.floor((candidateCellNumber - 1) / 9) + 1;
+    const candidateCellId = index + 1;
+    const candidateColumnNumber = ((candidateCellId - 1) % 9) + 1;
+    const candidateRowNumber = Math.floor((candidateCellId - 1) / 9) + 1;
     const candidateBoxNumber =
       Math.floor((candidateRowNumber - 1) / 3) * 3 +
       Math.floor((candidateColumnNumber - 1) / 3) +
       1;
 
     const boxNumber = getBrandedBoxNumber(candidateBoxNumber);
-    const cellNumber = getBrandedCellNumber(candidateCellNumber);
+    const id = getBrandedCellId(candidateCellId);
     const columnNumber = getBrandedColumnNumber(candidateColumnNumber);
     const rowNumber = getBrandedRowNumber(candidateRowNumber);
 
-    const rawCellState = rawBoardState[candidateCellNumber - 1];
+    const rawCellState = rawBoardState[candidateCellId - 1];
 
     const emptyCellContent: EmptyCellContent = {
       emptyCell: "",
     };
 
-    const cellContent: CellContent =
+    const content: CellContent =
       rawCellState === null
         ? emptyCellContent
         : getGivenDigitCellContentFromRawGivenDigit(rawCellState);
 
     const cellState: CellState = {
-      boxNumber,
-      cellContent,
-      cellNumber,
-      columnNumber,
+      content,
+      houses: {
+        boxNumber,
+        columnNumber,
+        rowNumber,
+      },
+      id,
       isSelected: false,
       markupColors: [""],
-      rowNumber,
     };
 
     return cellState;

@@ -25,7 +25,7 @@ import {
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
-  getBrandedCellNumber,
+  getBrandedCellId,
   getBrandedSudokuDigit,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -201,18 +201,18 @@ const getNextPuzzleHistoryFromSetCall = (
 const getSelectedCellStateFromPuzzleHistory = (
   puzzleHistory: PuzzleHistory,
 ) => {
-  const selectedCellNumber = getBrandedCellNumber(1);
+  const selectedCellId = getBrandedCellId(1);
 
   return getTargetCellStateFromBoardState(
-    selectedCellNumber,
+    selectedCellId,
     puzzleHistory.boardStateHistory[puzzleHistory.currentBoardStateIndex],
   );
 };
 
 const getPuzzleHistoryWithSelectedCell = () => {
-  const selectedCellNumber = getBrandedCellNumber(1);
+  const selectedCellId = getBrandedCellId(1);
   const boardStateWithSelectedCell = getBoardStateWithTargetCellsSelected([
-    selectedCellNumber,
+    selectedCellId,
   ]);
 
   return getStartingPuzzleHistoryFromBoardState(boardStateWithSelectedCell);
@@ -393,12 +393,10 @@ describe("Keypad input actions", () => {
     const selectedCellState =
       getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
 
-    expect(isEnteredDigitInCellContent(selectedCellState.cellContent)).toBe(
-      true,
-    );
+    expect(isEnteredDigitInCellContent(selectedCellState.content)).toBe(true);
 
-    if (isEnteredDigitInCellContent(selectedCellState.cellContent))
-      expect(selectedCellState.cellContent.enteredDigit).toBe("9");
+    if (isEnteredDigitInCellContent(selectedCellState.content))
+      expect(selectedCellState.content.enteredDigit).toBe("9");
   });
 
   it("enters center markups in Center mode", async () => {
@@ -423,12 +421,10 @@ describe("Keypad input actions", () => {
     const selectedCellState =
       getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
 
-    expect(isMarkupDigitsInCellContent(selectedCellState.cellContent)).toBe(
-      true,
-    );
+    expect(isMarkupDigitsInCellContent(selectedCellState.content)).toBe(true);
 
-    if (isMarkupDigitsInCellContent(selectedCellState.cellContent))
-      expect(selectedCellState.cellContent.centerMarkups).toEqual(["3"]);
+    if (isMarkupDigitsInCellContent(selectedCellState.content))
+      expect(selectedCellState.content.centerMarkups).toEqual(["3"]);
   });
 
   it("enters corner markups in Corner mode", async () => {
@@ -453,12 +449,10 @@ describe("Keypad input actions", () => {
     const selectedCellState =
       getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
 
-    expect(isMarkupDigitsInCellContent(selectedCellState.cellContent)).toBe(
-      true,
-    );
+    expect(isMarkupDigitsInCellContent(selectedCellState.content)).toBe(true);
 
-    if (isMarkupDigitsInCellContent(selectedCellState.cellContent))
-      expect(selectedCellState.cellContent.cornerMarkups).toEqual(["7"]);
+    if (isMarkupDigitsInCellContent(selectedCellState.content))
+      expect(selectedCellState.content.cornerMarkups).toEqual(["7"]);
   });
 
   it("applies selected colors in Color mode", async () => {
@@ -488,12 +482,12 @@ describe("Keypad input actions", () => {
 
   it("clears a selected entered digit when the clear button is pressed", async () => {
     // Arrange
-    const selectedCellNumber = getBrandedCellNumber(1);
+    const selectedCellId = getBrandedCellId(1);
     const boardStateWithEnteredDigit =
       getBoardStateWithEnteredDigitInTargetCell(
-        selectedCellNumber,
+        selectedCellId,
         getBrandedSudokuDigit("8"),
-        getBoardStateWithTargetCellsSelected([selectedCellNumber]),
+        getBoardStateWithTargetCellsSelected([selectedCellId]),
       );
     const startingPuzzleHistory = getStartingPuzzleHistoryFromBoardState(
       boardStateWithEnteredDigit,
@@ -518,9 +512,7 @@ describe("Keypad input actions", () => {
     const selectedCellState =
       getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
 
-    expect(isEnteredDigitInCellContent(selectedCellState.cellContent)).toBe(
-      false,
-    );
+    expect(isEnteredDigitInCellContent(selectedCellState.content)).toBe(false);
   });
 });
 
