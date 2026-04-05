@@ -4,6 +4,7 @@ import { StrictMode } from "react";
 import ReactDOM from "react-dom/client";
 
 import { Provider } from "@/lib/components/ui/provider";
+import ErrorPage from "@/lib/pages/error";
 import Page404 from "@/lib/pages/not-found";
 import { routeTree } from "@/routeTree.gen";
 
@@ -26,6 +27,9 @@ const router = createRouter({
     </div>
   ),
   defaultNotFoundComponent: () => <Page404 />,
+  defaultErrorComponent: ({ error, reset }) => (
+    <ErrorPage error={error} resetErrorBoundary={reset} />
+  ),
 });
 
 declare module "@tanstack/react-router" {

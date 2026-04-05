@@ -1,7 +1,9 @@
 import { createRootRoute, HeadContent, Outlet } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
+import { ErrorBoundary } from "react-error-boundary";
 
 import { Layout } from "@/lib/layout";
+import ErrorPage from "@/lib/pages/error";
 
 const title = "Sudoku";
 const description = "sudoku app";
@@ -43,7 +45,9 @@ export const Route = createRootRoute({
     <>
       <HeadContent />
       <Layout>
-        <Outlet />
+        <ErrorBoundary FallbackComponent={ErrorPage}>
+          <Outlet />
+        </ErrorBoundary>
       </Layout>
       {AppDevtools ? (
         <Suspense fallback={null}>

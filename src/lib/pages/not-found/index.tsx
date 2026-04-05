@@ -12,7 +12,7 @@ const Page404 = () => {
 
       <Box>
         <Image
-          src="/assets/404 Error-rafiki.svg"
+          src="/assets/404-not-found-rafiki.svg"
           width={{ base: "320px", sm: "400px" }}
         />
         <Link
