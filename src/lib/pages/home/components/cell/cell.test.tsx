@@ -4,7 +4,10 @@ import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Cell } from "@/lib/pages/home/components/cell/cell";
-import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import {
+  type UserSettings,
+  UserSettingsProvider,
+} from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   MARKUP_COLOR_BLUE,
   MARKUP_COLOR_GREEN,
@@ -20,7 +23,7 @@ import {
   getCellElement,
   getCellLocator,
   getStartingEmptyBoardState,
-  getStartingPuzzleHistoryFromBoardState,
+  getStartingPuzzleStateFromBoardState,
   getTargetCellStateFromBoardState,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
@@ -36,7 +39,7 @@ import {
   type CellId,
   type CellState,
   type ColumnNumber,
-  type PuzzleHistory,
+  type PuzzleState,
   type RowNumber,
 } from "@/lib/pages/home/utils/types";
 
@@ -140,18 +143,18 @@ const getNextBoardStateAfterDoubleClick = async ({
 }: {
   boardState: BoardState;
   targetCellId: CellId;
-  userSettings: typeof defaultUserSettings;
+  userSettings: UserSettings;
 }): Promise<BoardState> => {
   const targetCellState = getTargetCellStateFromBoardState(
     targetCellId,
     boardState,
   );
-  const setPuzzleHistory = vi.fn();
+  const setPuzzleState = vi.fn();
 
   const renderedCell = await renderCell({
     startingBoardState: boardState,
     cellState: targetCellState,
-    setPuzzleHistory,
+    setPuzzleState,
     userSettings,
   });
 
@@ -166,20 +169,15 @@ const getNextBoardStateAfterDoubleClick = async ({
 
   await waitForReactToFinishUpdating();
 
-  const setPuzzleHistoryUpdater = setPuzzleHistory.mock.calls[0]?.[0];
+  const setPuzzleStateUpdater = setPuzzleState.mock.calls[0]?.[0];
 
-  if (!setPuzzleHistoryUpdater || typeof setPuzzleHistoryUpdater !== "function")
-    throw Error(
-      "Expected a puzzle history updater function after double-click.",
-    );
+  if (!setPuzzleStateUpdater || typeof setPuzzleStateUpdater !== "function")
+    throw Error("Expected a puzzle state updater function after double-click.");
 
-  const startingPuzzleHistory =
-    getStartingPuzzleHistoryFromBoardState(boardState);
-  const nextPuzzleHistory = setPuzzleHistoryUpdater(startingPuzzleHistory);
+  const startingPuzzleState = getStartingPuzzleStateFromBoardState(boardState);
+  const nextPuzzleState = setPuzzleStateUpdater(startingPuzzleState);
 
-  return nextPuzzleHistory.boardStateHistory[
-    nextPuzzleHistory.currentBoardStateIndex
-  ];
+  return nextPuzzleState.puzzleHistory[nextPuzzleState.historyIndex];
 };
 
 const renderCell = async ({
@@ -192,7 +190,7 @@ const renderCell = async ({
   selectedColumnNumber,
   selectedRowNumber,
   handleCellPointerDown = vi.fn(),
-  setPuzzleHistory = vi.fn(),
+  setPuzzleState = vi.fn(),
   userSettings = defaultUserSettings,
 }: {
   cellState: CellState;
@@ -204,10 +202,10 @@ const renderCell = async ({
   selectedColumnNumber?: ColumnNumber;
   selectedRowNumber?: RowNumber;
   handleCellPointerDown?: (cellId: CellId) => void;
-  setPuzzleHistory?: (
-    value: PuzzleHistory | ((value: PuzzleHistory) => PuzzleHistory),
+  setPuzzleState?: (
+    value: PuzzleState | ((value: PuzzleState) => PuzzleState),
   ) => void;
-  userSettings?: typeof defaultUserSettings;
+  userSettings?: UserSettings;
 }) => {
   window.sessionStorage.setItem(
     USER_SETTINGS_SESSION_STORAGE_KEY,
@@ -229,7 +227,7 @@ const renderCell = async ({
           isSeenInRow={isSeenInRow}
           selectedColumnNumber={selectedColumnNumber}
           selectedRowNumber={selectedRowNumber}
-          setPuzzleHistory={setPuzzleHistory}
+          setPuzzleState={setPuzzleState}
         />
       </UserSettingsProvider>
     </Provider>,

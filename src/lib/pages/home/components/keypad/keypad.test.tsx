@@ -20,7 +20,7 @@ import {
   getBoardStateWithEnteredDigitInTargetCell,
   getBoardStateWithTargetCellsSelected,
   getStartingEmptyBoardState,
-  getStartingPuzzleHistoryFromBoardState,
+  getStartingPuzzleStateFromBoardState,
   getTargetCellStateFromBoardState,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
@@ -30,15 +30,15 @@ import {
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type KeypadMode,
-  type PuzzleHistory,
+  type PuzzleState,
 } from "@/lib/pages/home/utils/types";
 
 const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 
 // #region Shared Test Types
 type RenderedKeypad = Awaited<ReturnType<typeof render>>;
-type SetPuzzleHistory = (
-  value: PuzzleHistory | ((value: PuzzleHistory) => PuzzleHistory),
+type SetPuzzleState = (
+  value: PuzzleState | ((value: PuzzleState) => PuzzleState),
 ) => void;
 // #endregion
 
@@ -47,14 +47,14 @@ const renderKeypad = async ({
   isFlipKeypadEnabled = false,
   isMultiselectMode = false,
   keypadMode = "Digit",
-  puzzleHistory,
-  setPuzzleHistory,
+  puzzleState,
+  setPuzzleState,
 }: {
   isFlipKeypadEnabled?: boolean;
   isMultiselectMode?: boolean;
   keypadMode?: KeypadMode;
-  puzzleHistory?: PuzzleHistory;
-  setPuzzleHistory?: SetPuzzleHistory;
+  puzzleState?: PuzzleState;
+  setPuzzleState?: SetPuzzleState;
 } = {}): Promise<RenderedKeypad> => {
   window.sessionStorage.setItem(
     USER_SETTINGS_SESSION_STORAGE_KEY,
@@ -64,26 +64,25 @@ const renderKeypad = async ({
     }),
   );
 
-  const startingPuzzleHistory =
-    puzzleHistory ??
-    getStartingPuzzleHistoryFromBoardState(getStartingEmptyBoardState());
+  const startingPuzzleState =
+    puzzleState ??
+    getStartingPuzzleStateFromBoardState(getStartingEmptyBoardState());
 
   const TestKeypad = () => {
     const [currentIsMultiselectMode, setIsMultiselectMode] =
       useState(isMultiselectMode);
-    const [currentPuzzleHistory, setPuzzleHistoryState] = useState(
-      startingPuzzleHistory,
-    );
+    const [currentPuzzleState, setLocalPuzzleState] =
+      useState(startingPuzzleState);
 
-    const resolvedSetPuzzleHistory = setPuzzleHistory ?? setPuzzleHistoryState;
+    const resolvedSetPuzzleState = setPuzzleState ?? setLocalPuzzleState;
 
     return (
       <Keypad
         isMultiselectMode={currentIsMultiselectMode}
         keypadMode={keypadMode}
-        puzzleHistory={currentPuzzleHistory}
+        puzzleState={currentPuzzleState}
         setIsMultiselectMode={setIsMultiselectMode}
-        setPuzzleHistory={resolvedSetPuzzleHistory}
+        setPuzzleState={resolvedSetPuzzleState}
       />
     );
   };
@@ -183,39 +182,37 @@ const getDigitButtonsInRenderedOrder = async (
     );
 };
 
-const getNextPuzzleHistoryFromSetCall = (
-  setPuzzleHistory: ReturnType<typeof vi.fn>,
-  startingPuzzleHistory: PuzzleHistory,
-): PuzzleHistory => {
-  const candidatePuzzleHistoryUpdate = setPuzzleHistory.mock.calls[0]?.[0];
+const getNextPuzzleStateFromSetCall = (
+  setPuzzleState: ReturnType<typeof vi.fn>,
+  startingPuzzleState: PuzzleState,
+): PuzzleState => {
+  const candidatePuzzleStateUpdate = setPuzzleState.mock.calls[0]?.[0];
 
-  if (!candidatePuzzleHistoryUpdate)
-    throw Error("Expected setPuzzleHistory to be called at least once.");
+  if (!candidatePuzzleStateUpdate)
+    throw Error("Expected setPuzzleState to be called at least once.");
 
-  if (typeof candidatePuzzleHistoryUpdate === "function")
-    return candidatePuzzleHistoryUpdate(startingPuzzleHistory);
+  if (typeof candidatePuzzleStateUpdate === "function")
+    return candidatePuzzleStateUpdate(startingPuzzleState);
 
-  return candidatePuzzleHistoryUpdate;
+  return candidatePuzzleStateUpdate;
 };
 
-const getSelectedCellStateFromPuzzleHistory = (
-  puzzleHistory: PuzzleHistory,
-) => {
+const getSelectedCellStateFromPuzzleState = (puzzleState: PuzzleState) => {
   const selectedCellId = getBrandedCellId(1);
 
   return getTargetCellStateFromBoardState(
     selectedCellId,
-    puzzleHistory.boardStateHistory[puzzleHistory.currentBoardStateIndex],
+    puzzleState.puzzleHistory[puzzleState.historyIndex],
   );
 };
 
-const getPuzzleHistoryWithSelectedCell = () => {
+const getPuzzleStateWithSelectedCell = () => {
   const selectedCellId = getBrandedCellId(1);
   const boardStateWithSelectedCell = getBoardStateWithTargetCellsSelected([
     selectedCellId,
   ]);
 
-  return getStartingPuzzleHistoryFromBoardState(boardStateWithSelectedCell);
+  return getStartingPuzzleStateFromBoardState(boardStateWithSelectedCell);
 };
 
 // #endregion
@@ -313,24 +310,24 @@ describe("Keypad ordering", () => {
       colorSwatchIndex < flippedColors.length;
       colorSwatchIndex += 1
     ) {
-      const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
-      const setPuzzleHistory = vi.fn();
+      const startingPuzzleState = getPuzzleStateWithSelectedCell();
+      const setPuzzleState = vi.fn();
 
       const renderedKeypad = await renderKeypad({
         isFlipKeypadEnabled: true,
         keypadMode: "Color",
-        puzzleHistory: startingPuzzleHistory,
-        setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+        puzzleState: startingPuzzleState,
+        setPuzzleState: setPuzzleState as SetPuzzleState,
       });
 
       await clickColorSwatchAtIndex(renderedKeypad, colorSwatchIndex);
 
-      const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
-        setPuzzleHistory,
-        startingPuzzleHistory,
+      const nextPuzzleState = getNextPuzzleStateFromSetCall(
+        setPuzzleState,
+        startingPuzzleState,
       );
       const selectedCellState =
-        getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+        getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
       expect(selectedCellState.markupColors).toEqual([
         flippedColors[colorSwatchIndex],
@@ -344,24 +341,24 @@ describe("Keypad ordering", () => {
       colorSwatchIndex < markupColors.length;
       colorSwatchIndex += 1
     ) {
-      const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
-      const setPuzzleHistory = vi.fn();
+      const startingPuzzleState = getPuzzleStateWithSelectedCell();
+      const setPuzzleState = vi.fn();
 
       const renderedKeypad = await renderKeypad({
         isFlipKeypadEnabled: false,
         keypadMode: "Color",
-        puzzleHistory: startingPuzzleHistory,
-        setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+        puzzleState: startingPuzzleState,
+        setPuzzleState: setPuzzleState as SetPuzzleState,
       });
 
       await clickColorSwatchAtIndex(renderedKeypad, colorSwatchIndex);
 
-      const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
-        setPuzzleHistory,
-        startingPuzzleHistory,
+      const nextPuzzleState = getNextPuzzleStateFromSetCall(
+        setPuzzleState,
+        startingPuzzleState,
       );
       const selectedCellState =
-        getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+        getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
       expect(selectedCellState.markupColors).toEqual([
         markupColors[colorSwatchIndex],
@@ -373,25 +370,25 @@ describe("Keypad ordering", () => {
 describe("Keypad input actions", () => {
   it("enters the selected digit in Digit mode", async () => {
     // Arrange
-    const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
-    const setPuzzleHistory = vi.fn();
+    const startingPuzzleState = getPuzzleStateWithSelectedCell();
+    const setPuzzleState = vi.fn();
 
     const renderedKeypad = await renderKeypad({
       keypadMode: "Digit",
-      puzzleHistory: startingPuzzleHistory,
-      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+      puzzleState: startingPuzzleState,
+      setPuzzleState: setPuzzleState as SetPuzzleState,
     });
 
     // Act
     await (await getDigitButtonLocator(renderedKeypad, "9")).click();
 
     // Assert
-    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
-      setPuzzleHistory,
-      startingPuzzleHistory,
+    const nextPuzzleState = getNextPuzzleStateFromSetCall(
+      setPuzzleState,
+      startingPuzzleState,
     );
     const selectedCellState =
-      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+      getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
     expect(isEnteredDigitInCellContent(selectedCellState.content)).toBe(true);
 
@@ -401,25 +398,25 @@ describe("Keypad input actions", () => {
 
   it("enters center markups in Center mode", async () => {
     // Arrange
-    const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
-    const setPuzzleHistory = vi.fn();
+    const startingPuzzleState = getPuzzleStateWithSelectedCell();
+    const setPuzzleState = vi.fn();
 
     const renderedKeypad = await renderKeypad({
       keypadMode: "Center",
-      puzzleHistory: startingPuzzleHistory,
-      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+      puzzleState: startingPuzzleState,
+      setPuzzleState: setPuzzleState as SetPuzzleState,
     });
 
     // Act
     await (await getDigitButtonLocator(renderedKeypad, "3")).click();
 
     // Assert
-    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
-      setPuzzleHistory,
-      startingPuzzleHistory,
+    const nextPuzzleState = getNextPuzzleStateFromSetCall(
+      setPuzzleState,
+      startingPuzzleState,
     );
     const selectedCellState =
-      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+      getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
     expect(isMarkupDigitsInCellContent(selectedCellState.content)).toBe(true);
 
@@ -429,25 +426,25 @@ describe("Keypad input actions", () => {
 
   it("enters corner markups in Corner mode", async () => {
     // Arrange
-    const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
-    const setPuzzleHistory = vi.fn();
+    const startingPuzzleState = getPuzzleStateWithSelectedCell();
+    const setPuzzleState = vi.fn();
 
     const renderedKeypad = await renderKeypad({
       keypadMode: "Corner",
-      puzzleHistory: startingPuzzleHistory,
-      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+      puzzleState: startingPuzzleState,
+      setPuzzleState: setPuzzleState as SetPuzzleState,
     });
 
     // Act
     await (await getDigitButtonLocator(renderedKeypad, "7")).click();
 
     // Assert
-    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
-      setPuzzleHistory,
-      startingPuzzleHistory,
+    const nextPuzzleState = getNextPuzzleStateFromSetCall(
+      setPuzzleState,
+      startingPuzzleState,
     );
     const selectedCellState =
-      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+      getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
     expect(isMarkupDigitsInCellContent(selectedCellState.content)).toBe(true);
 
@@ -457,25 +454,25 @@ describe("Keypad input actions", () => {
 
   it("applies selected colors in Color mode", async () => {
     // Arrange
-    const startingPuzzleHistory = getPuzzleHistoryWithSelectedCell();
-    const setPuzzleHistory = vi.fn();
+    const startingPuzzleState = getPuzzleStateWithSelectedCell();
+    const setPuzzleState = vi.fn();
 
     const renderedKeypad = await renderKeypad({
       keypadMode: "Color",
-      puzzleHistory: startingPuzzleHistory,
-      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+      puzzleState: startingPuzzleState,
+      setPuzzleState: setPuzzleState as SetPuzzleState,
     });
 
     // Act
     await clickColorSwatchAtIndex(renderedKeypad, 0);
 
     // Assert
-    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
-      setPuzzleHistory,
-      startingPuzzleHistory,
+    const nextPuzzleState = getNextPuzzleStateFromSetCall(
+      setPuzzleState,
+      startingPuzzleState,
     );
     const selectedCellState =
-      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+      getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
     expect(selectedCellState.markupColors).toEqual([markupColors[0]]);
   });
@@ -489,15 +486,15 @@ describe("Keypad input actions", () => {
         getBrandedSudokuDigit("8"),
         getBoardStateWithTargetCellsSelected([selectedCellId]),
       );
-    const startingPuzzleHistory = getStartingPuzzleHistoryFromBoardState(
+    const startingPuzzleState = getStartingPuzzleStateFromBoardState(
       boardStateWithEnteredDigit,
     );
-    const setPuzzleHistory = vi.fn();
+    const setPuzzleState = vi.fn();
 
     const renderedKeypad = await renderKeypad({
       keypadMode: "Digit",
-      puzzleHistory: startingPuzzleHistory,
-      setPuzzleHistory: setPuzzleHistory as SetPuzzleHistory,
+      puzzleState: startingPuzzleState,
+      setPuzzleState: setPuzzleState as SetPuzzleState,
     });
     const clearButton = await getClearButtonElement(renderedKeypad);
 
@@ -505,12 +502,12 @@ describe("Keypad input actions", () => {
     await clearButton.click();
 
     // Assert
-    const nextPuzzleHistory = getNextPuzzleHistoryFromSetCall(
-      setPuzzleHistory,
-      startingPuzzleHistory,
+    const nextPuzzleState = getNextPuzzleStateFromSetCall(
+      setPuzzleState,
+      startingPuzzleState,
     );
     const selectedCellState =
-      getSelectedCellStateFromPuzzleHistory(nextPuzzleHistory);
+      getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
     expect(isEnteredDigitInCellContent(selectedCellState.content)).toBe(false);
   });

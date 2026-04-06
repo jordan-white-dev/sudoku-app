@@ -11,7 +11,7 @@ import {
   type ColumnNumber,
   type EmptyCellContent,
   type EncodedPuzzleString,
-  type PuzzleHistory,
+  type PuzzleState,
   type RawBoardState,
   type RawGivenDigit,
   type RawPuzzleString,
@@ -176,11 +176,10 @@ export const getBoardStateFromRawBoardState = (
     return cellState;
   });
 
-export const getCurrentBoardStateFromPuzzleHistory = (
-  puzzleHistory: PuzzleHistory,
+export const getCurrentBoardStateFromPuzzleState = (
+  puzzleState: PuzzleState,
 ): BoardState => {
-  const currentBoardState =
-    puzzleHistory.boardStateHistory[puzzleHistory.currentBoardStateIndex];
+  const currentBoardState = puzzleState.puzzleHistory[puzzleState.historyIndex];
 
   return currentBoardState;
 };

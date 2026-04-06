@@ -14,10 +14,12 @@ import {
   type BoardState,
   type CellId,
   type CellState,
-  type PuzzleHistory,
+  type PuzzleState,
   type RawBoardState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
+
+import { type UserSettings } from "../hooks/use-user-settings/use-user-settings";
 
 // #region Async Test Helpers
 export const waitForReactToFinishUpdating = async () => {
@@ -34,11 +36,11 @@ export const getEmptyRawBoardState = (): RawBoardState =>
 export const getStartingEmptyBoardState = (): BoardState =>
   getBoardStateFromRawBoardState(getEmptyRawBoardState());
 
-export const getStartingPuzzleHistoryFromBoardState = (
+export const getStartingPuzzleStateFromBoardState = (
   startingBoardState: BoardState,
-): PuzzleHistory => ({
-  currentBoardStateIndex: 0,
-  boardStateHistory: [startingBoardState],
+): PuzzleState => ({
+  historyIndex: 0,
+  puzzleHistory: [startingBoardState],
 });
 // #endregion
 
@@ -217,7 +219,7 @@ export const expectTargetCellToContainGivenDigit = (
 };
 // #endregion
 
-export const defaultUserSettings = {
+export const defaultUserSettings: UserSettings = {
   isConflictCheckerEnabled: false,
   isDashedGridEnabled: false,
   isStopwatchDisabled: false,

@@ -15,7 +15,7 @@ import {
   getBrandedColumnNumber,
   getBrandedRowNumber,
   getBrandedSudokuDigit,
-  getCurrentBoardStateFromPuzzleHistory,
+  getCurrentBoardStateFromPuzzleState,
   getEncodedPuzzleStringFromRawPuzzleString,
   getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
@@ -26,7 +26,7 @@ import {
   type CellContent,
   type CellId,
   type ColumnNumber,
-  type PuzzleHistory,
+  type PuzzleState,
   type RawBoardState,
   type RawGivenDigit,
   type RawPuzzleString,
@@ -78,17 +78,17 @@ const getRawBoardStateWithGivenDigitsInTargetCells = (
 };
 // #endregion
 
-// #region Puzzle History Builders
-const getPuzzleHistoryFromBoardStates = (
-  boardStates: Array<BoardState>,
-  currentBoardStateIndex: number,
-): PuzzleHistory => {
-  const puzzleHistory: PuzzleHistory = {
-    currentBoardStateIndex,
-    boardStateHistory: boardStates,
+// #region Puzzle State Builder
+const getPuzzleStateFromPuzzleHistory = (
+  puzzleHistory: Array<BoardState>,
+  historyIndex: number,
+): PuzzleState => {
+  const puzzleState: PuzzleState = {
+    historyIndex,
+    puzzleHistory,
   };
 
-  return puzzleHistory;
+  return puzzleState;
 };
 // #endregion
 
@@ -312,8 +312,8 @@ describe("Board State Transform", () => {
     });
   });
 
-  describe("getCurrentBoardStateFromPuzzleHistory", () => {
-    it("returns the board state for the player's current point in the puzzle history", () => {
+  describe("getCurrentBoardStateFromPuzzleState", () => {
+    it("returns the board state for the player's current point in their undo/redo history", () => {
       // Arrange
       const firstBoardState = getBoardStateFromRawBoardState(
         getEmptyRawBoardState(),
@@ -326,14 +326,14 @@ describe("Board State Transform", () => {
         [getBrandedCellId(9)],
         firstBoardState,
       );
-      const puzzleHistory = getPuzzleHistoryFromBoardStates(
+      const puzzleState = getPuzzleStateFromPuzzleHistory(
         [firstBoardState, secondBoardState, thirdBoardState],
         1,
       );
 
       // Act
       const currentBoardState =
-        getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
+        getCurrentBoardStateFromPuzzleState(puzzleState);
 
       // Assert
       expect(currentBoardState).toBe(secondBoardState);

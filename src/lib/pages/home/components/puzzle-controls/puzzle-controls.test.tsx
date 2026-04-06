@@ -7,10 +7,10 @@ import { PuzzleControls } from "@/lib/pages/home/components/puzzle-controls/puzz
 import {
   getEmptyRawBoardState,
   getStartingEmptyBoardState,
-  getStartingPuzzleHistoryFromBoardState,
+  getStartingPuzzleStateFromBoardState,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
-import { type PuzzleHistory } from "@/lib/pages/home/utils/types";
+import { type PuzzleState } from "@/lib/pages/home/utils/types";
 
 // #region Module Mocks
 const mockHandleCenterMarkupInput = vi.fn();
@@ -80,11 +80,11 @@ const KEYPAD_MODE_SESSION_STORAGE_KEY = "keypad-mode";
 
 const renderPuzzleControls = async ({
   initialIsMultiselectMode = false,
-  initialPuzzleHistory,
+  initialPuzzleState,
   startingBaseKeypadMode,
 }: {
   initialIsMultiselectMode?: boolean;
-  initialPuzzleHistory?: PuzzleHistory;
+  initialPuzzleState?: PuzzleState;
   startingBaseKeypadMode?: "Digit" | "Center" | "Corner" | "Color";
 } = {}): Promise<RenderedPuzzleControls> => {
   if (startingBaseKeypadMode !== undefined)
@@ -93,23 +93,23 @@ const renderPuzzleControls = async ({
       JSON.stringify(startingBaseKeypadMode),
     );
 
-  const startingPuzzleHistory =
-    initialPuzzleHistory ??
-    getStartingPuzzleHistoryFromBoardState(getStartingEmptyBoardState());
+  const startingPuzzleState =
+    initialPuzzleState ??
+    getStartingPuzzleStateFromBoardState(getStartingEmptyBoardState());
 
   const TestPuzzleControls = () => {
     const [isMultiselectMode, setIsMultiselectMode] = useState(
       initialIsMultiselectMode,
     );
-    const [puzzleHistory, setPuzzleHistory] = useState(startingPuzzleHistory);
+    const [puzzleState, setPuzzleState] = useState(startingPuzzleState);
 
     return (
       <PuzzleControls
         isMultiselectMode={isMultiselectMode}
-        puzzleHistory={puzzleHistory}
+        puzzleState={puzzleState}
         rawBoardState={getEmptyRawBoardState()}
         setIsMultiselectMode={setIsMultiselectMode}
-        setPuzzleHistory={setPuzzleHistory}
+        setPuzzleState={setPuzzleState}
       />
     );
   };

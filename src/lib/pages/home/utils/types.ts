@@ -80,9 +80,9 @@ export type CellState = {
 
 export type BoardState = Array<CellState>;
 
-export type PuzzleHistory = {
-  currentBoardStateIndex: number;
-  boardStateHistory: Array<BoardState>;
+export type PuzzleState = {
+  historyIndex: number;
+  puzzleHistory: Array<BoardState>;
 };
 // #endregion
 

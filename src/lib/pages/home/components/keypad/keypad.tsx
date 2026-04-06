@@ -44,7 +44,7 @@ import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/transforms/transfo
 import {
   type KeypadMode,
   type MarkupColor,
-  type PuzzleHistory,
+  type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 
@@ -83,16 +83,16 @@ const brandedSudokuDigits: ReadonlyArray<SudokuDigit> = sudokuDigits.map(
 // #region Color Button
 type ColorButtonProps = {
   markupColor: MarkupColor;
-  puzzleHistory: PuzzleHistory;
+  puzzleState: PuzzleState;
   tooltipText: string;
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
 const ColorButton = ({
   markupColor,
-  puzzleHistory,
+  puzzleState,
   tooltipText,
-  setPuzzleHistory,
+  setPuzzleState,
 }: ColorButtonProps) => (
   <GridItem colSpan={2} height={COLOR_SWATCH_SIZE} width={COLOR_SWATCH_SIZE}>
     <Tooltip content={tooltipText}>
@@ -102,7 +102,7 @@ const ColorButton = ({
         value={markupColor}
         width={COLOR_SWATCH_SIZE}
         onClick={() =>
-          handleColorPadInput(puzzleHistory, markupColor, setPuzzleHistory)
+          handleColorPadInput(puzzleState, markupColor, setPuzzleState)
         }
       />
     </Tooltip>
@@ -123,11 +123,11 @@ const colorPadTooltipTexts = {
 };
 
 type ColorPadProps = {
-  puzzleHistory: PuzzleHistory;
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
+  puzzleState: PuzzleState;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
-const ColorPad = ({ puzzleHistory, setPuzzleHistory }: ColorPadProps) => {
+const ColorPad = ({ puzzleState, setPuzzleState }: ColorPadProps) => {
   const { userSettings } = useUserSettings();
   const markupColorsInOrder = userSettings.isFlipKeypadEnabled
     ? flippedColors
@@ -139,9 +139,9 @@ const ColorPad = ({ puzzleHistory, setPuzzleHistory }: ColorPadProps) => {
         <ColorButton
           key={markupColor}
           markupColor={markupColor}
-          puzzleHistory={puzzleHistory}
+          puzzleState={puzzleState}
           tooltipText={colorPadTooltipTexts[markupColor]}
-          setPuzzleHistory={setPuzzleHistory}
+          setPuzzleState={setPuzzleState}
         />
       ))}
     </>
@@ -212,14 +212,14 @@ const getJustifyContentForCornerNumberButton = (sudokuDigit: SudokuDigit) => {
 
 type NumberPadProps = {
   keypadMode: KeypadMode;
-  puzzleHistory: PuzzleHistory;
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
+  puzzleState: PuzzleState;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
 const NumberPad = ({
   keypadMode,
-  puzzleHistory,
-  setPuzzleHistory,
+  puzzleState,
+  setPuzzleState,
 }: NumberPadProps) => {
   const { userSettings } = useUserSettings();
   const sudokuDigitsInOrder = userSettings.isFlipKeypadEnabled
@@ -236,7 +236,7 @@ const NumberPad = ({
               key={sudokuDigit}
               textStyle={ICON_BUTTON_TEXT_STYLE_DIGIT}
               onClick={() =>
-                handleDigitInput(puzzleHistory, sudokuDigit, setPuzzleHistory)
+                handleDigitInput(puzzleState, sudokuDigit, setPuzzleState)
               }
             />
           );
@@ -248,9 +248,9 @@ const NumberPad = ({
               textStyle={ICON_BUTTON_TEXT_STYLE_NONDIGIT}
               onClick={() =>
                 handleCenterMarkupInput(
-                  puzzleHistory,
+                  puzzleState,
                   sudokuDigit,
-                  setPuzzleHistory,
+                  setPuzzleState,
                 )
               }
             />
@@ -268,9 +268,9 @@ const NumberPad = ({
               textStyle={ICON_BUTTON_TEXT_STYLE_NONDIGIT}
               onClick={() =>
                 handleCornerMarkupInput(
-                  puzzleHistory,
+                  puzzleState,
                   sudokuDigit,
-                  setPuzzleHistory,
+                  setPuzzleState,
                 )
               }
             />
@@ -334,11 +334,11 @@ const MultiselectSwitch = ({
 
 // #region Clear Button
 type ClearButtonProps = {
-  puzzleHistory: PuzzleHistory;
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
+  puzzleState: PuzzleState;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
-const ClearButton = ({ puzzleHistory, setPuzzleHistory }: ClearButtonProps) => (
+const ClearButton = ({ puzzleState, setPuzzleState }: ClearButtonProps) => (
   <GridItem colSpan={3}>
     <Tooltip
       content="Clear the selected cells"
@@ -351,7 +351,7 @@ const ClearButton = ({ puzzleHistory, setPuzzleHistory }: ClearButtonProps) => (
         size={ICON_BUTTON_SIZE}
         textStyle={ICON_BUTTON_TEXT_STYLE_DIGIT}
         width="full"
-        onClick={() => handleClearCell(puzzleHistory, setPuzzleHistory)}
+        onClick={() => handleClearCell(puzzleState, setPuzzleState)}
       >
         <Icon height={ICON_SIZE} width={ICON_SIZE}>
           <FiDelete />
@@ -366,17 +366,17 @@ const ClearButton = ({ puzzleHistory, setPuzzleHistory }: ClearButtonProps) => (
 type KeypadProps = {
   isMultiselectMode: boolean;
   keypadMode: KeypadMode;
-  puzzleHistory: PuzzleHistory;
+  puzzleState: PuzzleState;
   setIsMultiselectMode: Dispatch<SetStateAction<boolean>>;
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
 export const Keypad = ({
   isMultiselectMode,
   keypadMode,
-  puzzleHistory,
+  puzzleState,
   setIsMultiselectMode,
-  setPuzzleHistory,
+  setPuzzleState,
 }: KeypadProps) => {
   return (
     <SimpleGrid
@@ -387,15 +387,15 @@ export const Keypad = ({
       {keypadMode === "Color" ? (
         <ColorPad
           key="color-pad"
-          puzzleHistory={puzzleHistory}
-          setPuzzleHistory={setPuzzleHistory}
+          puzzleState={puzzleState}
+          setPuzzleState={setPuzzleState}
         />
       ) : (
         <NumberPad
           key="number-pad"
           keypadMode={keypadMode}
-          puzzleHistory={puzzleHistory}
-          setPuzzleHistory={setPuzzleHistory}
+          puzzleState={puzzleState}
+          setPuzzleState={setPuzzleState}
         />
       )}
 
@@ -406,8 +406,8 @@ export const Keypad = ({
       />
       <ClearButton
         key="clear-button"
-        puzzleHistory={puzzleHistory}
-        setPuzzleHistory={setPuzzleHistory}
+        puzzleState={puzzleState}
+        setPuzzleState={setPuzzleState}
       />
     </SimpleGrid>
   );

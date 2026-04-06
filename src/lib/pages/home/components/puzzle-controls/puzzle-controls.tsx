@@ -25,7 +25,7 @@ import { exhaustiveGuard } from "@/lib/pages/home/utils/guards";
 import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type KeypadMode,
-  type PuzzleHistory,
+  type PuzzleState,
   type RawBoardState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
@@ -208,18 +208,18 @@ const getModifierKeyDownOrderWithRemovedModifier = (
 // #region Puzzle Controls Component
 type PuzzleControlsProps = {
   isMultiselectMode: boolean;
-  puzzleHistory: PuzzleHistory;
+  puzzleState: PuzzleState;
   rawBoardState: RawBoardState;
   setIsMultiselectMode: Dispatch<SetStateAction<boolean>>;
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
 export const PuzzleControls = ({
   isMultiselectMode,
-  puzzleHistory,
+  puzzleState,
   rawBoardState,
   setIsMultiselectMode,
-  setPuzzleHistory,
+  setPuzzleState,
 }: PuzzleControlsProps) => {
   const [baseKeypadMode, setBaseKeypadMode] =
     useSessionStorageState<KeypadMode>("keypad-mode", {
@@ -228,15 +228,15 @@ export const PuzzleControls = ({
   const [modifierKeyDownOrderForRender, setModifierKeyDownOrderForRender] =
     useState<Array<ModifierKeyboardKey>>([]);
 
-  const puzzleHistoryRef = useRef(puzzleHistory);
+  const puzzleStateRef = useRef(puzzleState);
   const baseKeypadModeRef = useRef(baseKeypadMode);
   const modifierKeyDownOrderRef = useRef<Array<ModifierKeyboardKey>>([]);
   const lastShiftKeyDownTimestampRef = useRef<number | null>(null);
   const lastShiftKeyUpTimestampRef = useRef<number | null>(null);
 
   useEffect(() => {
-    puzzleHistoryRef.current = puzzleHistory;
-  }, [puzzleHistory]);
+    puzzleStateRef.current = puzzleState;
+  }, [puzzleState]);
 
   useEffect(() => {
     baseKeypadModeRef.current = baseKeypadMode;
@@ -299,31 +299,27 @@ export const PuzzleControls = ({
 
       switch (effectiveKeypadMode) {
         case "Digit":
-          handleDigitInput(
-            puzzleHistoryRef.current,
-            sudokuDigit,
-            setPuzzleHistory,
-          );
+          handleDigitInput(puzzleStateRef.current, sudokuDigit, setPuzzleState);
           return;
         case "Center":
           handleCenterMarkupInput(
-            puzzleHistoryRef.current,
+            puzzleStateRef.current,
             sudokuDigit,
-            setPuzzleHistory,
+            setPuzzleState,
           );
           return;
         case "Corner":
           handleCornerMarkupInput(
-            puzzleHistoryRef.current,
+            puzzleStateRef.current,
             sudokuDigit,
-            setPuzzleHistory,
+            setPuzzleState,
           );
           return;
         case "Color":
           handleColorPadInput(
-            puzzleHistoryRef.current,
+            puzzleStateRef.current,
             sudokuDigit,
-            setPuzzleHistory,
+            setPuzzleState,
           );
           return;
         default:
@@ -354,15 +350,15 @@ export const PuzzleControls = ({
         event.preventDefault();
 
         if (modifierKeyDownOrderRef.current.includes("Shift"))
-          handleRedoMove(setPuzzleHistory);
-        else handleUndoMove(setPuzzleHistory);
+          handleRedoMove(setPuzzleState);
+        else handleUndoMove(setPuzzleState);
 
         return true;
       }
 
       if (isControlPressed && lowerCaseKey === "y") {
         event.preventDefault();
-        handleRedoMove(setPuzzleHistory);
+        handleRedoMove(setPuzzleState);
         return true;
       }
 
@@ -395,7 +391,7 @@ export const PuzzleControls = ({
         return false;
 
       event.preventDefault();
-      handleClearCell(puzzleHistoryRef.current, setPuzzleHistory);
+      handleClearCell(puzzleStateRef.current, setPuzzleState);
       return true;
     };
 
@@ -477,7 +473,7 @@ export const PuzzleControls = ({
   }, [
     setBaseKeypadMode,
     setIsMultiselectMode,
-    setPuzzleHistory,
+    setPuzzleState,
     resetModifierKeyDownOrder,
     setModifierKeyDownOrder,
   ]);
@@ -495,16 +491,16 @@ export const PuzzleControls = ({
       minWidth={{ lg: "52" }}
     >
       <PuzzleActions
-        puzzleHistory={puzzleHistory}
+        puzzleState={puzzleState}
         rawBoardState={rawBoardState}
-        setPuzzleHistory={setPuzzleHistory}
+        setPuzzleState={setPuzzleState}
       />
       <Keypad
         isMultiselectMode={isMultiselectMode}
         keypadMode={effectiveKeypadMode}
-        puzzleHistory={puzzleHistory}
+        puzzleState={puzzleState}
         setIsMultiselectMode={setIsMultiselectMode}
-        setPuzzleHistory={setPuzzleHistory}
+        setPuzzleState={setPuzzleState}
       />
       <KeypadModeSelector
         keypadMode={effectiveKeypadMode}

@@ -13,7 +13,7 @@ import { Cell } from "@/lib/pages/home/components/cell/cell";
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   getBoardStateWithNoCellsSelected,
-  getCurrentBoardStateFromPuzzleHistory,
+  getCurrentBoardStateFromPuzzleState,
   getGivenOrEnteredDigitInCellIfPresent,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -21,7 +21,7 @@ import {
   type CellId,
   type CellState,
   type ColumnNumber,
-  type PuzzleHistory,
+  type PuzzleState,
   type RowNumber,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
@@ -200,18 +200,18 @@ const handleMoveOrAddToCellSelection = (
     targetCellId: CellId,
   ) => BoardState,
   setLastSelectedCellId: (cellId: CellId) => void,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
-  setPuzzleHistory((currentPuzzleHistory) => {
+  setPuzzleState((currentPuzzleState) => {
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(currentPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(currentPuzzleState);
 
     const selectionAnchorCellId = getSelectionAnchorCellId(
       currentBoardState,
       lastSelectedCellId,
     );
 
-    if (selectionAnchorCellId === undefined) return currentPuzzleHistory;
+    if (selectionAnchorCellId === undefined) return currentPuzzleState;
 
     const nextCellId = getWrappedCellIdInDirection(
       arrowKeyDirection,
@@ -224,23 +224,23 @@ const handleMoveOrAddToCellSelection = (
     );
 
     if (!didBoardStateChange(currentBoardState, nextBoardState))
-      return currentPuzzleHistory;
+      return currentPuzzleState;
 
     setLastSelectedCellId(nextCellId);
 
-    const nextBoardStateHistory = currentPuzzleHistory.boardStateHistory.map(
-      (boardState, boardStateIndex) =>
-        boardStateIndex === currentPuzzleHistory.currentBoardStateIndex
+    const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
+      (boardState, historyIndex) =>
+        historyIndex === currentPuzzleState.historyIndex
           ? nextBoardState
           : boardState,
     );
 
-    const nextPuzzleHistory = {
-      currentBoardStateIndex: currentPuzzleHistory.currentBoardStateIndex,
-      boardStateHistory: nextBoardStateHistory,
+    const nextPuzzleState = {
+      historyIndex: currentPuzzleState.historyIndex,
+      puzzleHistory: nextPuzzleHistory,
     };
 
-    return nextPuzzleHistory;
+    return nextPuzzleState;
   });
 
 const getBoardStateWithTargetCellAddedToSelection = (
@@ -260,14 +260,14 @@ const handleAddToCellSelectionInDirection = (
   arrowKeyDirection: ArrowKeyDirection,
   lastSelectedCellId: CellId | undefined,
   setLastSelectedCellId: (cellId: CellId) => void,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
   handleMoveOrAddToCellSelection(
     arrowKeyDirection,
     lastSelectedCellId,
     getBoardStateWithTargetCellAddedToSelection,
     setLastSelectedCellId,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 
 const getBoardStateWithOnlyTargetCellSelected = (
@@ -292,52 +292,52 @@ const handleMoveSingleCellSelectionInDirection = (
   arrowKeyDirection: ArrowKeyDirection,
   lastSelectedCellId: CellId | undefined,
   setLastSelectedCellId: (cellId: CellId) => void,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
   handleMoveOrAddToCellSelection(
     arrowKeyDirection,
     lastSelectedCellId,
     getBoardStateWithOnlyTargetCellSelected,
     setLastSelectedCellId,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 // #endregion
 
 // #region All Cells Selection Change
 const handleAllCellsSelectionChange = (
   getNextBoardState: (currentBoardState: BoardState) => BoardState,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
-  setPuzzleHistory((currentPuzzleHistory) => {
+  setPuzzleState((currentPuzzleState) => {
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(currentPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(currentPuzzleState);
 
     const nextBoardState = getNextBoardState(currentBoardState);
 
     if (!didBoardStateChange(currentBoardState, nextBoardState))
-      return currentPuzzleHistory;
+      return currentPuzzleState;
 
-    const nextBoardStateHistory = currentPuzzleHistory.boardStateHistory.map(
-      (boardState, boardStateIndex) =>
-        boardStateIndex === currentPuzzleHistory.currentBoardStateIndex
+    const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
+      (boardState, historyIndex) =>
+        historyIndex === currentPuzzleState.historyIndex
           ? nextBoardState
           : boardState,
     );
 
-    const nextPuzzleHistory = {
-      currentBoardStateIndex: currentPuzzleHistory.currentBoardStateIndex,
-      boardStateHistory: nextBoardStateHistory,
+    const nextPuzzleState = {
+      historyIndex: currentPuzzleState.historyIndex,
+      puzzleHistory: nextPuzzleHistory,
     };
 
-    return nextPuzzleHistory;
+    return nextPuzzleState;
   });
 
 const handleDeselectAllCells = (
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
   handleAllCellsSelectionChange(
     getBoardStateWithNoCellsSelected,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 
 const getBoardStateWithAllCellsSelected = (
@@ -353,11 +353,11 @@ const getBoardStateWithAllCellsSelected = (
   );
 
 const handleSelectAllCells = (
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
   handleAllCellsSelectionChange(
     getBoardStateWithAllCellsSelected,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 
 const getBoardStateWithInvertedCellsSelected = (
@@ -369,11 +369,11 @@ const getBoardStateWithInvertedCellsSelected = (
   }));
 
 const handleInvertSelectedCells = (
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
   handleAllCellsSelectionChange(
     getBoardStateWithInvertedCellsSelected,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 // #endregion
 
@@ -446,11 +446,11 @@ const getBoardPositionFromPointerCoordinates = (
 
 const handleMultiCellSelectionDuringPointerDrag = (
   cellIdsCrossedDuringDrag: Array<CellId>,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
-  setPuzzleHistory((currentPuzzleHistory) => {
+  setPuzzleState((currentPuzzleState) => {
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(currentPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(currentPuzzleState);
 
     const draggedCellIds = new Set(cellIdsCrossedDuringDrag);
 
@@ -474,21 +474,21 @@ const handleMultiCellSelectionDuringPointerDrag = (
         cellState !== boardStateAfterSelectionsCheck[cellIndex],
     );
 
-    if (!didSelectedCellsChange) return currentPuzzleHistory;
+    if (!didSelectedCellsChange) return currentPuzzleState;
 
-    const nextBoardStateHistory = currentPuzzleHistory.boardStateHistory.map(
-      (boardState, boardStateIndex) =>
-        boardStateIndex === currentPuzzleHistory.currentBoardStateIndex
+    const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
+      (boardState, historyIndex) =>
+        historyIndex === currentPuzzleState.historyIndex
           ? boardStateAfterSelectionsCheck
           : boardState,
     );
 
-    const nextPuzzleHistory = {
-      currentBoardStateIndex: currentPuzzleHistory.currentBoardStateIndex,
-      boardStateHistory: nextBoardStateHistory,
+    const nextPuzzleState = {
+      historyIndex: currentPuzzleState.historyIndex,
+      puzzleHistory: nextPuzzleHistory,
     };
 
-    return nextPuzzleHistory;
+    return nextPuzzleState;
   });
 
 const getCellIdFromRowAndColumn = (
@@ -562,7 +562,7 @@ const handleBoardPointerMove = (
   event: PointerEvent<HTMLDivElement>,
   isPointerDraggingAcrossBoardRef: RefObject<boolean>,
   lastSelectedCellIdRef: RefObject<CellId | undefined>,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
   if (!isPointerDraggingAcrossBoardRef.current) return;
 
@@ -592,7 +592,7 @@ const handleBoardPointerMove = (
 
     handleMultiCellSelectionDuringPointerDrag(
       [candidateBoardPosition.cellId],
-      setPuzzleHistory,
+      setPuzzleState,
     );
 
     return;
@@ -605,7 +605,7 @@ const handleBoardPointerMove = (
 
   handleMultiCellSelectionDuringPointerDrag(
     cellIdsCrossedBetweenPositions,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 
   lastSelectedCellIdRef.current = candidateBoardPosition.cellId;
@@ -676,11 +676,11 @@ const getCellStateAfterSelectionCheck = (
 const handleCellSelection = (
   isMultiselectMode: boolean,
   targetCellId: CellId,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
-  setPuzzleHistory((currentPuzzleHistory) => {
+  setPuzzleState((currentPuzzleState) => {
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(currentPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(currentPuzzleState);
 
     const selectedCellsCount = currentBoardState.reduce(
       (selectedCount, cellState) =>
@@ -709,21 +709,21 @@ const handleCellSelection = (
         cellState !== boardStateAfterSelectionCheck[cellIndex],
     );
 
-    if (!didBoardStateChange) return currentPuzzleHistory;
+    if (!didBoardStateChange) return currentPuzzleState;
 
-    const nextBoardStateHistory = currentPuzzleHistory.boardStateHistory.map(
-      (boardState, boardStateIndex) =>
-        boardStateIndex === currentPuzzleHistory.currentBoardStateIndex
+    const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
+      (boardState, historyIndex) =>
+        historyIndex === currentPuzzleState.historyIndex
           ? boardStateAfterSelectionCheck
           : boardState,
     );
 
-    const nextPuzzleHistory = {
-      currentBoardStateIndex: currentPuzzleHistory.currentBoardStateIndex,
-      boardStateHistory: nextBoardStateHistory,
+    const nextPuzzleState = {
+      historyIndex: currentPuzzleState.historyIndex,
+      puzzleHistory: nextPuzzleHistory,
     };
 
-    return nextPuzzleHistory;
+    return nextPuzzleState;
   });
 
 const handleCellPointerDown = (
@@ -733,7 +733,7 @@ const handleCellPointerDown = (
   isPointerDraggingAcrossBoardRef: RefObject<boolean>,
   lastSelectedCellIdRef: RefObject<CellId | undefined>,
   targetCellId: CellId,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
   isPointerDraggingAcrossBoardRef.current = true;
 
@@ -752,26 +752,25 @@ const handleCellPointerDown = (
 
   lastSelectedCellIdRef.current = targetCellId;
 
-  handleCellSelection(isMultiselectMode, targetCellId, setPuzzleHistory);
+  handleCellSelection(isMultiselectMode, targetCellId, setPuzzleState);
 };
 // #endregion
 
 // #region Board Component
 type BoardProps = {
   isMultiselectMode: boolean;
-  puzzleHistory: PuzzleHistory;
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
+  puzzleState: PuzzleState;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
 export const Board = ({
   isMultiselectMode,
-  puzzleHistory,
-  setPuzzleHistory,
+  puzzleState,
+  setPuzzleState,
 }: BoardProps) => {
   const { userSettings } = useUserSettings();
 
-  const currentBoardState =
-    getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
+  const currentBoardState = getCurrentBoardStateFromPuzzleState(puzzleState);
 
   const conflictedCellIds = userSettings.isConflictCheckerEnabled
     ? getConflictedCellIds(currentBoardState)
@@ -807,10 +806,10 @@ export const Board = ({
         isPointerDraggingAcrossBoardRef,
         lastSelectedCellIdRef,
         targetCellId,
-        setPuzzleHistory,
+        setPuzzleState,
       );
     },
-    [isMultiselectMode, setPuzzleHistory],
+    [isMultiselectMode, setPuzzleState],
   );
 
   useEffect(() => {
@@ -827,7 +826,7 @@ export const Board = ({
           arrowKeyDirection,
           lastSelectedCellIdRef.current,
           (cellId) => (lastSelectedCellIdRef.current = cellId),
-          setPuzzleHistory,
+          setPuzzleState,
         );
 
         return;
@@ -839,7 +838,7 @@ export const Board = ({
         arrowKeyDirection,
         lastSelectedCellIdRef.current,
         (cellId) => (lastSelectedCellIdRef.current = cellId),
-        setPuzzleHistory,
+        setPuzzleState,
       );
 
       return;
@@ -853,19 +852,19 @@ export const Board = ({
 
       if (lowerCaseKey === "a" && event.shiftKey) {
         event.preventDefault();
-        handleDeselectAllCells(setPuzzleHistory);
+        handleDeselectAllCells(setPuzzleState);
         return;
       }
 
       if (lowerCaseKey === "a") {
         event.preventDefault();
-        handleSelectAllCells(setPuzzleHistory);
+        handleSelectAllCells(setPuzzleState);
         return;
       }
 
       if (lowerCaseKey === "i") {
         event.preventDefault();
-        handleInvertSelectedCells(setPuzzleHistory);
+        handleInvertSelectedCells(setPuzzleState);
       }
     };
 
@@ -882,7 +881,7 @@ export const Board = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [setPuzzleHistory]);
+  }, [setPuzzleState]);
 
   return (
     <SimpleGrid
@@ -915,7 +914,7 @@ export const Board = ({
           event,
           isPointerDraggingAcrossBoardRef,
           lastSelectedCellIdRef,
-          setPuzzleHistory,
+          setPuzzleState,
         )
       }
       onPointerUp={() =>
@@ -947,7 +946,7 @@ export const Board = ({
           key={cellState.id}
           selectedColumnNumber={selectedColumnNumber}
           selectedRowNumber={selectedRowNumber}
-          setPuzzleHistory={setPuzzleHistory}
+          setPuzzleState={setPuzzleState}
         />
       ))}
     </SimpleGrid>

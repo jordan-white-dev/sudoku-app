@@ -7,43 +7,43 @@ import {
   isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/utils/guards";
-import { getCurrentBoardStateFromPuzzleHistory } from "@/lib/pages/home/utils/transforms/transforms";
+import { getCurrentBoardStateFromPuzzleState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellState,
   type KeypadMode,
   type MarkupColor,
   type MarkupDigitsCellContent,
-  type PuzzleHistory,
+  type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region Input Actions
-const commitBoardStateToHistoryIfChanged = (
+const commitBoardStateToPuzzleHistoryIfChanged = (
   currentBoardState: BoardState,
   nextBoardState: BoardState,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
   const didBoardStateChange =
     JSON.stringify(nextBoardState) !== JSON.stringify(currentBoardState);
 
   if (!didBoardStateChange) return;
 
-  setPuzzleHistory((currentPuzzleHistory) => {
-    const nextBoardStateIndex = currentPuzzleHistory.currentBoardStateIndex + 1;
+  setPuzzleState((currentPuzzleState) => {
+    const nextHistoryIndex = currentPuzzleState.historyIndex + 1;
 
-    const nextBoardStateHistory = [
-      ...currentPuzzleHistory.boardStateHistory.slice(0, nextBoardStateIndex),
+    const nextPuzzleHistory = [
+      ...currentPuzzleState.puzzleHistory.slice(0, nextHistoryIndex),
       nextBoardState,
     ];
 
-    const nextPuzzleHistory = {
-      currentBoardStateIndex: nextBoardStateIndex,
-      boardStateHistory: nextBoardStateHistory,
+    const nextPuzzleState = {
+      historyIndex: nextHistoryIndex,
+      puzzleHistory: nextPuzzleHistory,
     };
 
-    return nextPuzzleHistory;
+    return nextPuzzleState;
   });
 };
 
@@ -93,12 +93,11 @@ const getEnteredDigitCellState = (
 };
 
 export const handleDigitInput = (
-  puzzleHistory: PuzzleHistory,
+  puzzleState: PuzzleState,
   sudokuDigit: SudokuDigit,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
-  const currentBoardState =
-    getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
+  const currentBoardState = getCurrentBoardStateFromPuzzleState(puzzleState);
 
   const shouldEnteredDigitBeRemoved =
     areAllSelectedCellsGivenOrContainSudokuDigitAsEnteredDigit(
@@ -114,10 +113,10 @@ export const handleDigitInput = (
     ),
   );
 
-  commitBoardStateToHistoryIfChanged(
+  commitBoardStateToPuzzleHistoryIfChanged(
     currentBoardState,
     nextBoardState,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 };
 // #endregion
@@ -298,12 +297,11 @@ const getMarkupDigitsCellState = (
 
 const handleMarkupInput = (
   markupType: MarkupType,
-  puzzleHistory: PuzzleHistory,
+  puzzleState: PuzzleState,
   sudokuDigit: SudokuDigit,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
-  const currentBoardState =
-    getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
+  const currentBoardState = getCurrentBoardStateFromPuzzleState(puzzleState);
 
   const shouldMarkupDigitBeRemoved =
     areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup(
@@ -321,27 +319,27 @@ const handleMarkupInput = (
     ),
   );
 
-  commitBoardStateToHistoryIfChanged(
+  commitBoardStateToPuzzleHistoryIfChanged(
     currentBoardState,
     nextBoardState,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 };
 
 // #region Center Markup Input Action
 export const handleCenterMarkupInput = (
-  puzzleHistory: PuzzleHistory,
+  puzzleState: PuzzleState,
   sudokuDigit: SudokuDigit,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
-) => handleMarkupInput("Center", puzzleHistory, sudokuDigit, setPuzzleHistory);
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
+) => handleMarkupInput("Center", puzzleState, sudokuDigit, setPuzzleState);
 // #endregion
 
 // #region Corner Markup Input Action
 export const handleCornerMarkupInput = (
-  puzzleHistory: PuzzleHistory,
+  puzzleState: PuzzleState,
   sudokuDigit: SudokuDigit,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
-) => handleMarkupInput("Corner", puzzleHistory, sudokuDigit, setPuzzleHistory);
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
+) => handleMarkupInput("Corner", puzzleState, sudokuDigit, setPuzzleState);
 // #endregion
 
 // #endregion
@@ -432,16 +430,15 @@ const getMarkupColorsCellState = (
 };
 
 export const handleColorPadInput = (
-  puzzleHistory: PuzzleHistory,
+  puzzleState: PuzzleState,
   markupValue: MarkupColor | SudokuDigit,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
   const markupColor: MarkupColor = isSudokuDigit(markupValue)
     ? markupColors[getZeroBasedIndexFromSudokuDigit(markupValue)]
     : markupValue;
 
-  const currentBoardState =
-    getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
+  const currentBoardState = getCurrentBoardStateFromPuzzleState(puzzleState);
 
   const shouldMarkupColorBeRemoved = doAllSelectedCellsHaveTheMarkupColor(
     currentBoardState,
@@ -456,10 +453,10 @@ export const handleColorPadInput = (
     ),
   );
 
-  commitBoardStateToHistoryIfChanged(
+  commitBoardStateToPuzzleHistoryIfChanged(
     currentBoardState,
     nextBoardState,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 };
 // #endregion
@@ -468,11 +465,10 @@ export const handleColorPadInput = (
 
 // #region Clear Cell Action
 export const handleClearCell = (
-  puzzleHistory: PuzzleHistory,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  puzzleState: PuzzleState,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
-  const currentBoardState =
-    getCurrentBoardStateFromPuzzleHistory(puzzleHistory);
+  const currentBoardState = getCurrentBoardStateFromPuzzleState(puzzleState);
 
   const nextBoardState: BoardState = currentBoardState.map(
     (currentCellState) => {
@@ -499,62 +495,54 @@ export const handleClearCell = (
     },
   );
 
-  commitBoardStateToHistoryIfChanged(
+  commitBoardStateToPuzzleHistoryIfChanged(
     currentBoardState,
     nextBoardState,
-    setPuzzleHistory,
+    setPuzzleState,
   );
 };
 // #endregion
 
 // #region Undo/Redo Actions
-const canMoveBoardStateIndex = (
-  indexDelta: -1 | 1,
-  puzzleHistory: PuzzleHistory,
-) => {
-  const candidateIndex = puzzleHistory.currentBoardStateIndex + indexDelta;
+const canMoveHistoryIndex = (indexDelta: -1 | 1, puzzleState: PuzzleState) => {
+  const candidateIndex = puzzleState.historyIndex + indexDelta;
 
   const canMoveIndex =
-    candidateIndex >= 0 &&
-    candidateIndex < puzzleHistory.boardStateHistory.length;
+    candidateIndex >= 0 && candidateIndex < puzzleState.puzzleHistory.length;
 
   return canMoveIndex;
 };
 
-const getPuzzleHistoryWithUpdatedIndex = (
-  currentPuzzleHistory: PuzzleHistory,
+const getPuzzleStateWithUpdatedIndex = (
+  currentPuzzleState: PuzzleState,
   indexDelta: -1 | 1,
-): PuzzleHistory => ({
-  ...currentPuzzleHistory,
-  currentBoardStateIndex:
-    currentPuzzleHistory.currentBoardStateIndex + indexDelta,
+): PuzzleState => ({
+  ...currentPuzzleState,
+  historyIndex: currentPuzzleState.historyIndex + indexDelta,
 });
 
-const updateBoardStateIndex = (
+const updateHistoryIndex = (
   indexDelta: -1 | 1,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
-  setPuzzleHistory((currentPuzzleHistory) => {
-    const nextPuzzleHistory = canMoveBoardStateIndex(
-      indexDelta,
-      currentPuzzleHistory,
-    )
-      ? getPuzzleHistoryWithUpdatedIndex(currentPuzzleHistory, indexDelta)
-      : currentPuzzleHistory;
+  setPuzzleState((currentPuzzleState) => {
+    const nextPuzzleState = canMoveHistoryIndex(indexDelta, currentPuzzleState)
+      ? getPuzzleStateWithUpdatedIndex(currentPuzzleState, indexDelta)
+      : currentPuzzleState;
 
-    return nextPuzzleHistory;
+    return nextPuzzleState;
   });
 
 // #region Undo Move Action
 export const handleUndoMove = (
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
-) => updateBoardStateIndex(-1, setPuzzleHistory);
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
+) => updateHistoryIndex(-1, setPuzzleState);
 // #endregion
 
 // #region Redo Move Action
 export const handleRedoMove = (
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
-) => updateBoardStateIndex(1, setPuzzleHistory);
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
+) => updateHistoryIndex(1, setPuzzleState);
 // #endregion
 
 // #endregion

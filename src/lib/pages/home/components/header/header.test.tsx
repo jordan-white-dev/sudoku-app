@@ -5,7 +5,10 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import { Header } from "@/lib/pages/home/components/header/header";
 import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
-import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import {
+  type UserSettings,
+  UserSettingsProvider,
+} from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   defaultUserSettings,
   getEmptyRawBoardState,
@@ -43,7 +46,7 @@ const HISTORY_LABEL_REGEX = SuperExpressive()
 const renderHeader = async ({
   userSettings = defaultUserSettings,
 }: {
-  userSettings?: typeof defaultUserSettings;
+  userSettings?: UserSettings;
 } = {}): Promise<RenderedHeader> => {
   window.sessionStorage.setItem(
     USER_SETTINGS_SESSION_STORAGE_KEY,

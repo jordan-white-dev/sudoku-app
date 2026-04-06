@@ -8,7 +8,7 @@ import {
   getBoardStateWithEnteredDigitsInTargetCells,
   getEmptyRawBoardState,
   getStartingEmptyBoardState,
-  getStartingPuzzleHistoryFromBoardState,
+  getStartingPuzzleStateFromBoardState,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
@@ -16,7 +16,7 @@ import {
   getBrandedSudokuDigit,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
-  type PuzzleHistory,
+  type PuzzleState,
   type RawBoardState,
 } from "@/lib/pages/home/utils/types";
 
@@ -88,11 +88,11 @@ const WHITESPACE_SEQUENCE_REGEX =
   SuperExpressive().allowMultipleMatches.oneOrMore.whitespaceChar.toRegex();
 // #endregion
 
-// #region Puzzle History Factories
-const getUnsolvedPuzzleHistory = (): PuzzleHistory =>
-  getStartingPuzzleHistoryFromBoardState(getStartingEmptyBoardState());
+// #region Puzzle State Factories
+const getUnsolvedPuzzleState = (): PuzzleState =>
+  getStartingPuzzleStateFromBoardState(getStartingEmptyBoardState());
 
-const getSolvedPuzzleHistory = (): PuzzleHistory => {
+const getSolvedPuzzleState = (): PuzzleState => {
   const digitsInAllCells = Array.from({ length: 81 }, (_, index) => {
     const rowIndex = Math.floor(index / 9);
     const columnIndex = index % 9;
@@ -108,24 +108,24 @@ const getSolvedPuzzleHistory = (): PuzzleHistory => {
   const solvedBoardState =
     getBoardStateWithEnteredDigitsInTargetCells(digitsInAllCells);
 
-  return getStartingPuzzleHistoryFromBoardState(solvedBoardState);
+  return getStartingPuzzleStateFromBoardState(solvedBoardState);
 };
 // #endregion
 
 // #region Render Puzzle Actions
 const renderPuzzleActions = async ({
   isStopwatchDisabled = false,
-  puzzleHistory = getUnsolvedPuzzleHistory(),
+  puzzleState = getUnsolvedPuzzleState(),
   rawBoardState,
-  setPuzzleHistory,
+  setPuzzleState,
 }: {
   isStopwatchDisabled?: boolean;
-  puzzleHistory?: PuzzleHistory;
+  puzzleState?: PuzzleState;
   rawBoardState?: RawBoardState;
-  setPuzzleHistory?: (value: unknown) => void;
+  setPuzzleState?: (value: unknown) => void;
 } = {}): Promise<{
   renderedPuzzleActions: RenderedPuzzleActions;
-  setPuzzleHistorySpy: ReturnType<typeof vi.fn>;
+  setPuzzleStateSpy: ReturnType<typeof vi.fn>;
 }> => {
   mockUseUserSettings.mockReturnValue({
     userSettings: {
@@ -141,14 +141,14 @@ const renderPuzzleActions = async ({
     setUserSettings: vi.fn(),
   });
 
-  const resolvedSetPuzzleHistorySpy = vi.fn(setPuzzleHistory);
+  const resolvedSetPuzzleStateSpy = vi.fn(setPuzzleState);
 
   const renderedPuzzleActions = await render(
     <Provider>
       <PuzzleActions
-        puzzleHistory={puzzleHistory}
+        puzzleState={puzzleState}
         rawBoardState={rawBoardState ?? getEmptyRawBoardState()}
-        setPuzzleHistory={resolvedSetPuzzleHistorySpy}
+        setPuzzleState={resolvedSetPuzzleStateSpy}
       />
     </Provider>,
   );
@@ -157,7 +157,7 @@ const renderPuzzleActions = async ({
 
   return {
     renderedPuzzleActions,
-    setPuzzleHistorySpy: resolvedSetPuzzleHistorySpy,
+    setPuzzleStateSpy: resolvedSetPuzzleStateSpy,
   };
 };
 // #endregion
@@ -266,7 +266,7 @@ describe("PuzzleActions rendering", () => {
 describe("Undo and redo actions", () => {
   it("calls handleUndoMove when undo is pressed", async () => {
     // Arrange
-    const { renderedPuzzleActions, setPuzzleHistorySpy } =
+    const { renderedPuzzleActions, setPuzzleStateSpy } =
       await renderPuzzleActions();
 
     // Act
@@ -276,12 +276,12 @@ describe("Undo and redo actions", () => {
 
     // Assert
     expect(mockHandleUndoMove).toHaveBeenCalledTimes(1);
-    expect(mockHandleUndoMove).toHaveBeenCalledWith(setPuzzleHistorySpy);
+    expect(mockHandleUndoMove).toHaveBeenCalledWith(setPuzzleStateSpy);
   });
 
   it("calls handleRedoMove when redo is pressed", async () => {
     // Arrange
-    const { renderedPuzzleActions, setPuzzleHistorySpy } =
+    const { renderedPuzzleActions, setPuzzleStateSpy } =
       await renderPuzzleActions();
 
     // Act
@@ -291,7 +291,7 @@ describe("Undo and redo actions", () => {
 
     // Assert
     expect(mockHandleRedoMove).toHaveBeenCalledTimes(1);
-    expect(mockHandleRedoMove).toHaveBeenCalledWith(setPuzzleHistorySpy);
+    expect(mockHandleRedoMove).toHaveBeenCalledWith(setPuzzleStateSpy);
   });
 });
 
@@ -336,7 +336,7 @@ describe("Check solution dialog", () => {
     // Arrange
     const { renderedPuzzleActions } = await renderPuzzleActions({
       isStopwatchDisabled: false,
-      puzzleHistory: getUnsolvedPuzzleHistory(),
+      puzzleState: getUnsolvedPuzzleState(),
     });
 
     // Act
@@ -365,7 +365,7 @@ describe("Check solution dialog", () => {
     const { renderedPuzzleActions: solvedWithTime } = await renderPuzzleActions(
       {
         isStopwatchDisabled: false,
-        puzzleHistory: getSolvedPuzzleHistory(),
+        puzzleState: getSolvedPuzzleState(),
       },
     );
 
@@ -392,7 +392,7 @@ describe("Check solution dialog", () => {
     const { renderedPuzzleActions: solvedWithoutTime } =
       await renderPuzzleActions({
         isStopwatchDisabled: true,
-        puzzleHistory: getSolvedPuzzleHistory(),
+        puzzleState: getSolvedPuzzleState(),
       });
 
     // Act
@@ -427,7 +427,7 @@ describe("Restart puzzle dialog", () => {
 
   it("resets puzzle and stopwatch with Restart", async () => {
     // Arrange
-    const { renderedPuzzleActions, setPuzzleHistorySpy } =
+    const { renderedPuzzleActions, setPuzzleStateSpy } =
       await renderPuzzleActions();
 
     // Act
@@ -439,16 +439,14 @@ describe("Restart puzzle dialog", () => {
 
     // Assert
     expect(mockResetStopwatch).toHaveBeenCalledTimes(1);
-    expect(setPuzzleHistorySpy).toHaveBeenCalledTimes(1);
-    expect(setPuzzleHistorySpy.mock.calls[0][0].currentBoardStateIndex).toBe(0);
-    expect(setPuzzleHistorySpy.mock.calls[0][0].boardStateHistory).toHaveLength(
-      1,
-    );
+    expect(setPuzzleStateSpy).toHaveBeenCalledTimes(1);
+    expect(setPuzzleStateSpy.mock.calls[0][0].historyIndex).toBe(0);
+    expect(setPuzzleStateSpy.mock.calls[0][0].puzzleHistory).toHaveLength(1);
   });
 
   it("resets puzzle and keeps time with Keep Time", async () => {
     // Arrange
-    const { renderedPuzzleActions, setPuzzleHistorySpy } =
+    const { renderedPuzzleActions, setPuzzleStateSpy } =
       await renderPuzzleActions();
 
     // Act
@@ -461,6 +459,6 @@ describe("Restart puzzle dialog", () => {
     // Assert
     expect(mockStartStopwatch).toHaveBeenCalledTimes(1);
     expect(mockResetStopwatch).not.toHaveBeenCalled();
-    expect(setPuzzleHistorySpy).toHaveBeenCalledTimes(1);
+    expect(setPuzzleStateSpy).toHaveBeenCalledTimes(1);
   });
 });

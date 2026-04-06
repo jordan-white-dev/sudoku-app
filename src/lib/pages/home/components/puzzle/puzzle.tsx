@@ -12,38 +12,38 @@ import { Board } from "@/lib/pages/home/components/board/board";
 import { PuzzleControls } from "@/lib/pages/home/components/puzzle-controls/puzzle-controls";
 import {
   getBoardStateWithNoCellsSelected,
-  getCurrentBoardStateFromPuzzleHistory,
+  getCurrentBoardStateFromPuzzleState,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
-  type PuzzleHistory,
+  type PuzzleState,
   type RawBoardState,
 } from "@/lib/pages/home/utils/types";
 
 // #region Outside Click Handler
 const handleClearAllSelections = (
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
-  setPuzzleHistory((currentPuzzleHistory) => {
+  setPuzzleState((currentPuzzleState) => {
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(currentPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(currentPuzzleState);
 
     const nextBoardStateWithNoCellsSelected =
       getBoardStateWithNoCellsSelected(currentBoardState);
 
-    const nextBoardStateHistory = currentPuzzleHistory.boardStateHistory.map(
-      (boardState, boardStateIndex) =>
-        boardStateIndex === currentPuzzleHistory.currentBoardStateIndex
+    const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
+      (boardState, historyIndex) =>
+        historyIndex === currentPuzzleState.historyIndex
           ? nextBoardStateWithNoCellsSelected
           : boardState,
     );
 
-    const nextPuzzleHistory: PuzzleHistory = {
-      currentBoardStateIndex: currentPuzzleHistory.currentBoardStateIndex,
-      boardStateHistory: nextBoardStateHistory,
+    const nextPuzzleState: PuzzleState = {
+      historyIndex: currentPuzzleState.historyIndex,
+      puzzleHistory: nextPuzzleHistory,
     };
 
-    return nextPuzzleHistory;
+    return nextPuzzleState;
   });
 };
 // #endregion
@@ -60,16 +60,15 @@ export const Puzzle = memo(
       useSessionStorageState<boolean>("multiselect-mode", {
         defaultValue: false,
       });
-    const [puzzleHistory, setPuzzleHistory] =
-      useSessionStorageState<PuzzleHistory>(
-        `puzzle-history-${JSON.stringify(rawBoardState)}`,
-        {
-          defaultValue: {
-            currentBoardStateIndex: 0,
-            boardStateHistory: [startingBoardState],
-          },
+    const [puzzleState, setPuzzleState] = useSessionStorageState<PuzzleState>(
+      `puzzle-state-${JSON.stringify(rawBoardState)}`,
+      {
+        defaultValue: {
+          historyIndex: 0,
+          puzzleHistory: [startingBoardState],
         },
-      );
+      },
+    );
     const puzzleRef = useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
@@ -78,14 +77,14 @@ export const Puzzle = memo(
           puzzleRef.current &&
           !puzzleRef.current.contains(event.target as Node)
         )
-          handleClearAllSelections(setPuzzleHistory);
+          handleClearAllSelections(setPuzzleState);
       };
 
       document.addEventListener("pointerdown", handlePointerDownOutside);
 
       return () =>
         document.removeEventListener("pointerdown", handlePointerDownOutside);
-    }, [setPuzzleHistory]);
+    }, [setPuzzleState]);
 
     return (
       <Flex
@@ -98,15 +97,15 @@ export const Puzzle = memo(
       >
         <Board
           isMultiselectMode={isMultiselectMode}
-          puzzleHistory={puzzleHistory}
-          setPuzzleHistory={setPuzzleHistory}
+          puzzleState={puzzleState}
+          setPuzzleState={setPuzzleState}
         />
         <PuzzleControls
           isMultiselectMode={isMultiselectMode}
-          puzzleHistory={puzzleHistory}
+          puzzleState={puzzleState}
           rawBoardState={rawBoardState}
           setIsMultiselectMode={setIsMultiselectMode}
-          setPuzzleHistory={setPuzzleHistory}
+          setPuzzleState={setPuzzleState}
         />
       </Flex>
     );

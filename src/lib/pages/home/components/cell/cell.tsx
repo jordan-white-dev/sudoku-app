@@ -20,7 +20,7 @@ import {
   isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/utils/guards";
 import {
-  getCurrentBoardStateFromPuzzleHistory,
+  getCurrentBoardStateFromPuzzleState,
   getGivenOrEnteredDigitInCellIfPresent,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -32,7 +32,7 @@ import {
   type MarkupColor,
   type MarkupDigits,
   type MarkupDigitsCellContent,
-  type PuzzleHistory,
+  type PuzzleState,
   type RowNumber,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
@@ -1188,11 +1188,11 @@ const getSelectedCellStateWithPartialMatching = (
 const handleCellDoubleClick = (
   sourceCellState: CellState,
   isStrictHighlightsEnabled: boolean,
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
-  setPuzzleHistory((currentPuzzleHistory) => {
+  setPuzzleState((currentPuzzleState) => {
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(currentPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(currentPuzzleState);
 
     const boardStateWithNoCellsSelected: BoardState = currentBoardState.map(
       (cellState) => ({
@@ -1210,16 +1210,16 @@ const handleCellDoubleClick = (
             getSelectedCellStateWithPartialMatching(sourceCellState, cellState),
           );
 
-    const nextBoardStateHistory = [...currentPuzzleHistory.boardStateHistory];
-    nextBoardStateHistory[currentPuzzleHistory.currentBoardStateIndex] =
+    const nextPuzzleHistory = [...currentPuzzleState.puzzleHistory];
+    nextPuzzleHistory[currentPuzzleState.historyIndex] =
       boardStateWithMatchingCellsSelected;
 
-    const nextPuzzleHistory = {
-      currentBoardStateIndex: currentPuzzleHistory.currentBoardStateIndex,
-      boardStateHistory: nextBoardStateHistory,
+    const nextPuzzleState = {
+      historyIndex: currentPuzzleState.historyIndex,
+      puzzleHistory: nextPuzzleHistory,
     };
 
-    return nextPuzzleHistory;
+    return nextPuzzleState;
   });
 };
 // #endregion
@@ -1245,7 +1245,7 @@ type CellProps = {
   selectedColumnNumber: ColumnNumber | undefined;
   selectedRowNumber: RowNumber | undefined;
   handleCellPointerDown: (cellId: CellId) => void;
-  setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
 export const Cell = memo(
@@ -1259,7 +1259,7 @@ export const Cell = memo(
     selectedColumnNumber,
     selectedRowNumber,
     handleCellPointerDown,
-    setPuzzleHistory,
+    setPuzzleState,
   }: CellProps) => {
     const { userSettings } = useUserSettings();
     const {
@@ -1319,7 +1319,7 @@ export const Cell = memo(
           handleCellDoubleClick(
             cellState,
             isStrictHighlightsEnabled,
-            setPuzzleHistory,
+            setPuzzleState,
           )
         }
         onPointerDown={(event) => {

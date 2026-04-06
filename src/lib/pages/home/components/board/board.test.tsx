@@ -4,7 +4,10 @@ import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Board } from "@/lib/pages/home/components/board/board";
-import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import {
+  type UserSettings,
+  UserSettingsProvider,
+} from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   defaultUserSettings,
   expectSeenCellHighlightOrNotInTargetCell,
@@ -17,7 +20,7 @@ import {
   getCellElement,
   getCellLocator,
   getStartingEmptyBoardState,
-  getStartingPuzzleHistoryFromBoardState,
+  getStartingPuzzleStateFromBoardState,
   type RenderedBoard,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
@@ -30,7 +33,7 @@ import {
   type CellId,
   type CellState,
   type KeypadMode,
-  type PuzzleHistory,
+  type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 
@@ -70,7 +73,7 @@ const renderBoard = async ({
 }: {
   startingBoardState?: BoardState;
   isMultiselectMode?: boolean;
-  userSettings?: typeof defaultUserSettings;
+  userSettings?: UserSettings;
 } = {}): Promise<RenderedBoard> => {
   window.sessionStorage.setItem(
     USER_SETTINGS_SESSION_STORAGE_KEY,
@@ -78,19 +81,17 @@ const renderBoard = async ({
   );
 
   const boardState = startingBoardState ?? getStartingEmptyBoardState();
-  const startingPuzzleHistory =
-    getStartingPuzzleHistoryFromBoardState(boardState);
+  const startingPuzzleState = getStartingPuzzleStateFromBoardState(boardState);
 
   const TestBoard = () => {
-    const [puzzleHistory, setPuzzleHistory] = useState<PuzzleHistory>(
-      startingPuzzleHistory,
-    );
+    const [puzzleState, setPuzzleState] =
+      useState<PuzzleState>(startingPuzzleState);
 
     return (
       <Board
         isMultiselectMode={isMultiselectMode}
-        puzzleHistory={puzzleHistory}
-        setPuzzleHistory={setPuzzleHistory}
+        puzzleState={puzzleState}
+        setPuzzleState={setPuzzleState}
       />
     );
   };

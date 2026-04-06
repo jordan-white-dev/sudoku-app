@@ -32,70 +32,68 @@ import {
   getBoardStateWithGivenDigitInTargetCell,
   getBoardStateWithTargetCellsSelected,
   getStartingEmptyBoardState,
-  getStartingPuzzleHistoryFromBoardState,
+  getStartingPuzzleStateFromBoardState,
   getTargetCellStateFromBoardState,
 } from "@/lib/pages/home/utils/testing";
 import {
   getBrandedCellId,
   getBrandedSudokuDigit,
-  getCurrentBoardStateFromPuzzleHistory,
+  getCurrentBoardStateFromPuzzleState,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellId,
   type CellState,
   type MarkupColor,
-  type PuzzleHistory,
+  type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 
-// #region Puzzle History Update Helpers
-const getPuzzleHistoryAfterStateUpdate = (
-  startingPuzzleHistory: PuzzleHistory,
-  invokePuzzleHistoryUpdate: (
-    setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>>,
+// #region Puzzle State Update Helpers
+const getPuzzleStateAfterStateUpdate = (
+  startingPuzzleState: PuzzleState,
+  invokePuzzleStateUpdate: (
+    setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
   ) => void,
-): PuzzleHistory => {
-  let nextPuzzleHistory = startingPuzzleHistory;
+): PuzzleState => {
+  let nextPuzzleState = startingPuzzleState;
 
-  const setPuzzleHistory: Dispatch<SetStateAction<PuzzleHistory>> = (value) => {
-    nextPuzzleHistory =
+  const setPuzzleState: Dispatch<SetStateAction<PuzzleState>> = (value) => {
+    nextPuzzleState =
       typeof value === "function"
-        ? (value as (current: PuzzleHistory) => PuzzleHistory)(
-            nextPuzzleHistory,
-          )
+        ? (value as (current: PuzzleState) => PuzzleState)(nextPuzzleState)
         : value;
   };
 
-  invokePuzzleHistoryUpdate(setPuzzleHistory);
+  invokePuzzleStateUpdate(setPuzzleState);
 
-  return nextPuzzleHistory;
+  return nextPuzzleState;
 };
 
-const getPuzzleHistoryAfterUndoingMove = (
-  puzzleHistory: PuzzleHistory,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
-      handleUndoMove(setPuzzleHistory);
+const getPuzzleStateAfterUndoingMove = (
+  puzzleState: PuzzleState,
+): PuzzleState => {
+  const nextPuzzleState = getPuzzleStateAfterStateUpdate(
+    puzzleState,
+    (setPuzzleState) => {
+      handleUndoMove(setPuzzleState);
     },
   );
 
-  return nextPuzzleHistory;
+  return nextPuzzleState;
 };
 
-const getPuzzleHistoryAfterRedoingMove = (
-  puzzleHistory: PuzzleHistory,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
-      handleRedoMove(setPuzzleHistory);
+const getPuzzleStateAfterRedoingMove = (
+  puzzleState: PuzzleState,
+): PuzzleState => {
+  const nextPuzzleState = getPuzzleStateAfterStateUpdate(
+    puzzleState,
+    (setPuzzleState) => {
+      handleRedoMove(setPuzzleState);
     },
   );
 
-  return nextPuzzleHistory;
+  return nextPuzzleState;
 };
 // #endregion
 
@@ -120,101 +118,101 @@ const getBoardStateWithSequentialTransformsApplied = (
   return transformedBoardState;
 };
 
-const getStartingPuzzleHistoryWithSequentialTransformsApplied = (
+const getStartingPuzzleStateWithSequentialTransformsApplied = (
   boardStateTransformFunctions: Array<
     (currentBoardState: BoardState) => BoardState
   > = [],
-): PuzzleHistory => {
+): PuzzleState => {
   const startingBoardState = getBoardStateWithSequentialTransformsApplied(
     boardStateTransformFunctions,
   );
 
-  const startingPuzzleHistory =
-    getStartingPuzzleHistoryFromBoardState(startingBoardState);
+  const startingPuzzleState =
+    getStartingPuzzleStateFromBoardState(startingBoardState);
 
-  return startingPuzzleHistory;
+  return startingPuzzleState;
 };
 // #endregion
 
 // #region Action Invocation Helpers
-const getPuzzleHistoryAfterDigitInput = (
-  puzzleHistory: PuzzleHistory,
+const getPuzzleStateAfterDigitInput = (
+  puzzleState: PuzzleState,
   sudokuDigit: SudokuDigit,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
+): PuzzleState => {
+  const nextPuzzleState = getPuzzleStateAfterStateUpdate(
+    puzzleState,
+    (setPuzzleState) => {
       handleDigitInput(
-        puzzleHistory,
+        puzzleState,
         getBrandedSudokuDigit(sudokuDigit),
-        setPuzzleHistory,
+        setPuzzleState,
       );
     },
   );
 
-  return nextPuzzleHistory;
+  return nextPuzzleState;
 };
 
-const getPuzzleHistoryAfterCenterMarkupInput = (
-  puzzleHistory: PuzzleHistory,
+const getPuzzleStateAfterCenterMarkupInput = (
+  puzzleState: PuzzleState,
   sudokuDigit: SudokuDigit,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
+): PuzzleState => {
+  const nextPuzzleState = getPuzzleStateAfterStateUpdate(
+    puzzleState,
+    (setPuzzleState) => {
       handleCenterMarkupInput(
-        puzzleHistory,
+        puzzleState,
         getBrandedSudokuDigit(sudokuDigit),
-        setPuzzleHistory,
+        setPuzzleState,
       );
     },
   );
 
-  return nextPuzzleHistory;
+  return nextPuzzleState;
 };
 
-const getPuzzleHistoryAfterCornerMarkupInput = (
-  puzzleHistory: PuzzleHistory,
+const getPuzzleStateAfterCornerMarkupInput = (
+  puzzleState: PuzzleState,
   sudokuDigit: SudokuDigit,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
+): PuzzleState => {
+  const nextPuzzleState = getPuzzleStateAfterStateUpdate(
+    puzzleState,
+    (setPuzzleState) => {
       handleCornerMarkupInput(
-        puzzleHistory,
+        puzzleState,
         getBrandedSudokuDigit(sudokuDigit),
-        setPuzzleHistory,
+        setPuzzleState,
       );
     },
   );
 
-  return nextPuzzleHistory;
+  return nextPuzzleState;
 };
 
-const getPuzzleHistoryAfterColorPadInput = (
-  puzzleHistory: PuzzleHistory,
+const getPuzzleStateAfterColorPadInput = (
+  puzzleState: PuzzleState,
   markupValue: MarkupColor | SudokuDigit,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) =>
-      handleColorPadInput(puzzleHistory, markupValue, setPuzzleHistory),
+): PuzzleState => {
+  const nextPuzzleState = getPuzzleStateAfterStateUpdate(
+    puzzleState,
+    (setPuzzleState) =>
+      handleColorPadInput(puzzleState, markupValue, setPuzzleState),
   );
 
-  return nextPuzzleHistory;
+  return nextPuzzleState;
 };
 
-const getPuzzleHistoryAfterClearingSelectedCells = (
-  puzzleHistory: PuzzleHistory,
-): PuzzleHistory => {
-  const nextPuzzleHistory = getPuzzleHistoryAfterStateUpdate(
-    puzzleHistory,
-    (setPuzzleHistory) => {
-      handleClearCell(puzzleHistory, setPuzzleHistory);
+const getPuzzleStateAfterClearingSelectedCells = (
+  puzzleState: PuzzleState,
+): PuzzleState => {
+  const nextPuzzleState = getPuzzleStateAfterStateUpdate(
+    puzzleState,
+    (setPuzzleState) => {
+      handleClearCell(puzzleState, setPuzzleState);
     },
   );
 
-  return nextPuzzleHistory;
+  return nextPuzzleState;
 };
 // #endregion
 
@@ -396,19 +394,18 @@ const expectTargetCellToContainMarkupColors = (
 };
 // #endregion
 
-// #region Puzzle History Assertions
-const expectPuzzleHistoryToMatchItsStartingState = (
-  nextPuzzleHistory: PuzzleHistory,
-  startingPuzzleHistory: PuzzleHistory,
+// #region Puzzle State Assertions
+const expectPuzzleStateToMatchItsStartingState = (
+  nextPuzzleState: PuzzleState,
+  startingPuzzleState: PuzzleState,
 ) => {
   const currentBoardState =
-    getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
-  const startingBoardState = getCurrentBoardStateFromPuzzleHistory(
-    startingPuzzleHistory,
-  );
+    getCurrentBoardStateFromPuzzleState(nextPuzzleState);
+  const startingBoardState =
+    getCurrentBoardStateFromPuzzleState(startingPuzzleState);
 
-  expect(nextPuzzleHistory.currentBoardStateIndex).toBe(0);
-  expect(nextPuzzleHistory.boardStateHistory).toHaveLength(1);
+  expect(nextPuzzleState.historyIndex).toBe(0);
+  expect(nextPuzzleState.puzzleHistory).toHaveLength(1);
   expect(currentBoardState).toEqual(startingBoardState);
 };
 // #endregion
@@ -416,8 +413,8 @@ const expectPuzzleHistoryToMatchItsStartingState = (
 describe("Digit entry", () => {
   it("fills all selected editable cells with the entered digit when they're empty", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState: BoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1), getBrandedCellId(2), getBrandedCellId(3)],
@@ -426,16 +423,16 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expect(nextPuzzleHistory.currentBoardStateIndex).toBe(1);
-    expect(nextPuzzleHistory.boardStateHistory).toHaveLength(2);
+    expect(nextPuzzleState.historyIndex).toBe(1);
+    expect(nextPuzzleState.puzzleHistory).toHaveLength(2);
     for (const cellId of [
       getBrandedCellId(1),
       getBrandedCellId(2),
@@ -451,8 +448,8 @@ describe("Digit entry", () => {
 
   it("replaces a different existing entered digit in selected editable cells", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -467,12 +464,12 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainEnteredDigit(
@@ -484,8 +481,8 @@ describe("Digit entry", () => {
 
   it("replaces markup digits in selected editable cells with the entered digit", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
@@ -501,12 +498,12 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainEnteredDigit(
@@ -518,8 +515,8 @@ describe("Digit entry", () => {
 
   it("preserves color markups in the selected cells when entering a digit", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
@@ -539,12 +536,12 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainEnteredDigit(
@@ -561,8 +558,8 @@ describe("Digit entry", () => {
 
   it("preserves given digits in the selected cells when entering a digit", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
             getBrandedCellId(1),
@@ -577,12 +574,12 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainGivenDigit(
@@ -599,8 +596,8 @@ describe("Digit entry", () => {
 
   it("removes the entered digit from all selected editable cells when they already contain it", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -621,12 +618,12 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("5"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     for (const cellId of [getBrandedCellId(1), getBrandedCellId(2)]) {
@@ -636,8 +633,8 @@ describe("Digit entry", () => {
 
   it("removes the entered digit from all selected *editable* cells when all selected cells are either a given digit or already contain it", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
             getBrandedCellId(1),
@@ -658,12 +655,12 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("5"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainGivenDigit(
@@ -679,8 +676,8 @@ describe("Digit entry", () => {
 
   it("sets all selected editable cells to the entered digit when one already contains it and another contains a different editable value", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -702,12 +699,12 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("5"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainEnteredDigit(
@@ -724,8 +721,8 @@ describe("Digit entry", () => {
 
   it("leaves unselected cells unchanged when entering a digit", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -746,12 +743,12 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainEnteredDigit(
@@ -766,28 +763,28 @@ describe("Digit entry", () => {
     );
   });
 
-  it("doesn't add a move to the game's history when entering a digit with no cells selected", () => {
+  it("doesn't add a move to the undo/redo history when entering a digit with no cells selected", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied();
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied();
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
 
     // Assert
-    expectPuzzleHistoryToMatchItsStartingState(
-      nextPuzzleHistory,
-      startingPuzzleHistory,
+    expectPuzzleStateToMatchItsStartingState(
+      nextPuzzleState,
+      startingPuzzleState,
     );
   });
 
-  it("doesn't add a move to the game's history when entering a digit doesn't change the board state", () => {
+  it("doesn't add a move to the undo/redo history when entering a digit doesn't change the board state", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
             getBrandedCellId(1),
@@ -802,53 +799,53 @@ describe("Digit entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
 
     // Assert
-    expectPuzzleHistoryToMatchItsStartingState(
-      nextPuzzleHistory,
-      startingPuzzleHistory,
+    expectPuzzleStateToMatchItsStartingState(
+      nextPuzzleState,
+      startingPuzzleState,
     );
   });
 
   it("discards all undone moves when a new digit is entered after undoing a move", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("1"),
     );
-    const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterTwoMoves = getPuzzleStateAfterDigitInput(
+      puzzleStateAfterOneMove,
       getBrandedSudokuDigit("2"),
     );
-    const puzzleHistoryUndoneToMoveOne = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterTwoMoves,
+    const puzzleStateUndoneToMoveOne = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterTwoMoves,
     );
 
     // Act
-    const branchedHistory = getPuzzleHistoryAfterDigitInput(
-      puzzleHistoryUndoneToMoveOne,
+    const branchedHistory = getPuzzleStateAfterDigitInput(
+      puzzleStateUndoneToMoveOne,
       getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(branchedHistory);
+      getCurrentBoardStateFromPuzzleState(branchedHistory);
 
     // Assert
-    expect(puzzleHistoryUndoneToMoveOne.currentBoardStateIndex).toBe(1);
-    expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
-    expect(branchedHistory.currentBoardStateIndex).toBe(2);
-    expect(branchedHistory.boardStateHistory).toHaveLength(3);
+    expect(puzzleStateUndoneToMoveOne.historyIndex).toBe(1);
+    expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
+    expect(branchedHistory.historyIndex).toBe(2);
+    expect(branchedHistory.puzzleHistory).toHaveLength(3);
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
       getBrandedCellId(1),
@@ -860,8 +857,8 @@ describe("Digit entry", () => {
 describe("Center markup entry", () => {
   it("fills all selected editable cells with the entered center markup when they're empty", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
@@ -875,12 +872,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -897,8 +894,8 @@ describe("Center markup entry", () => {
 
   it("adds the entered center markup to a cell that doesn't contain it but contains another center markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
@@ -913,12 +910,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -930,8 +927,8 @@ describe("Center markup entry", () => {
 
   it("adds a center markup only to a cell that doesn't contain it when cells that both contain it and don't contain it are selected", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
@@ -952,12 +949,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -974,8 +971,8 @@ describe("Center markup entry", () => {
 
   it("adds the entered center markup only to selected, empty editable cells while leaving selected digit cells unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
@@ -995,12 +992,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1017,8 +1014,8 @@ describe("Center markup entry", () => {
 
   it("adds the entered center markup to selected editable cells that already contain other center markups while leaving cells that already contain the entered center markup unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
@@ -1039,12 +1036,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1061,8 +1058,8 @@ describe("Center markup entry", () => {
 
   it("adds the entered center markup to selected editable cells with an empty entered digit while leaving selected non-empty entered digit cells unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
@@ -1082,12 +1079,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1109,8 +1106,8 @@ describe("Center markup entry", () => {
 
   it("adds the entered center markup to selected editable markup cells while preserving their existing corner markups and leaving selected starting digit cells unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
@@ -1132,12 +1129,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1159,8 +1156,8 @@ describe("Center markup entry", () => {
 
   it("removes the entered center markup from all selected cells when they're editable and already contain it", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) => {
           const nextBoardState: BoardState = currentBoardState.map(
             (cellState) => {
@@ -1189,12 +1186,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1211,8 +1208,8 @@ describe("Center markup entry", () => {
 
   it("removes only the entered center markup from all selected cells when they contain the markup and another center markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
@@ -1227,12 +1224,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1244,8 +1241,8 @@ describe("Center markup entry", () => {
 
   it("preserves corner markups in the selected cells when entering a center markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
@@ -1261,12 +1258,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1283,8 +1280,8 @@ describe("Center markup entry", () => {
 
   it("leaves selected digit cells unchanged when entering a center markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
             getBrandedCellId(1),
@@ -1305,12 +1302,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainGivenDigit(
@@ -1327,8 +1324,8 @@ describe("Center markup entry", () => {
 
   it("removes the entered center markup from all selected editable cells when all selected cells are either a digit or already contain it", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
             getBrandedCellId(1),
@@ -1355,12 +1352,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainGivenDigit(
@@ -1382,8 +1379,8 @@ describe("Center markup entry", () => {
 
   it("leaves unselected cells unchanged when entering a center markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCenterMarkupsInTargetCell(
             currentBoardState,
@@ -1404,12 +1401,12 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1424,28 +1421,28 @@ describe("Center markup entry", () => {
     );
   });
 
-  it("doesn't add a move to the game's history when entering a center markup with no cells selected", () => {
+  it("doesn't add a move to the undo/redo history when entering a center markup with no cells selected", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied();
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied();
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
 
     // Assert
-    expectPuzzleHistoryToMatchItsStartingState(
-      nextPuzzleHistory,
-      startingPuzzleHistory,
+    expectPuzzleStateToMatchItsStartingState(
+      nextPuzzleState,
+      startingPuzzleState,
     );
   });
 
-  it("doesn't add a move to the game's history when entering a center markup doesn't change the board state", () => {
+  it("doesn't add a move to the undo/redo history when entering a center markup doesn't change the board state", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -1460,53 +1457,53 @@ describe("Center markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
 
     // Assert
-    expectPuzzleHistoryToMatchItsStartingState(
-      nextPuzzleHistory,
-      startingPuzzleHistory,
+    expectPuzzleStateToMatchItsStartingState(
+      nextPuzzleState,
+      startingPuzzleState,
     );
   });
 
   it("discards all undone moves when a new center markup is entered after undoing a move", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterCenterMarkupInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("1"),
     );
-    const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterCenterMarkupInput(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterTwoMoves = getPuzzleStateAfterCenterMarkupInput(
+      puzzleStateAfterOneMove,
       getBrandedSudokuDigit("2"),
     );
-    const puzzleHistoryUndoneToMoveOne = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterTwoMoves,
+    const puzzleStateUndoneToMoveOne = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterTwoMoves,
     );
 
     // Act
-    const branchedHistory = getPuzzleHistoryAfterCenterMarkupInput(
-      puzzleHistoryUndoneToMoveOne,
+    const branchedHistory = getPuzzleStateAfterCenterMarkupInput(
+      puzzleStateUndoneToMoveOne,
       getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(branchedHistory);
+      getCurrentBoardStateFromPuzzleState(branchedHistory);
 
     // Assert
-    expect(puzzleHistoryUndoneToMoveOne.currentBoardStateIndex).toBe(1);
-    expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
-    expect(branchedHistory.currentBoardStateIndex).toBe(2);
-    expect(branchedHistory.boardStateHistory).toHaveLength(3);
+    expect(puzzleStateUndoneToMoveOne.historyIndex).toBe(1);
+    expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
+    expect(branchedHistory.historyIndex).toBe(2);
+    expect(branchedHistory.puzzleHistory).toHaveLength(3);
     expectTargetCellToContainCenterMarkups(
       currentBoardState,
       getBrandedCellId(1),
@@ -1518,8 +1515,8 @@ describe("Center markup entry", () => {
 describe("Corner markup entry", () => {
   it("fills all selected editable cells with the entered corner markup when they're empty", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
@@ -1533,12 +1530,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1555,8 +1552,8 @@ describe("Corner markup entry", () => {
 
   it("adds the entered corner markup to a cell that doesn't contain it but contains another corner markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
@@ -1571,12 +1568,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCornerMarkups(
@@ -1588,8 +1585,8 @@ describe("Corner markup entry", () => {
 
   it("adds a corner markup only to a cell that doesn't contain it when cells that both contain it and don't contain it are selected", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
@@ -1610,12 +1607,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCornerMarkups(
@@ -1632,8 +1629,8 @@ describe("Corner markup entry", () => {
 
   it("adds the entered corner markup only to selected, empty editable cells while leaving selected digit cells unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
@@ -1653,12 +1650,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCornerMarkups(
@@ -1675,8 +1672,8 @@ describe("Corner markup entry", () => {
 
   it("adds the entered corner markup to selected editable cells that already contain other corner markups while leaving cells that already contain the entered corner markup unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
@@ -1697,12 +1694,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCornerMarkups(
@@ -1719,8 +1716,8 @@ describe("Corner markup entry", () => {
 
   it("adds the entered corner markup to selected editable cells with an empty entered digit while leaving selected non-empty entered digit cells unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
@@ -1740,12 +1737,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1767,8 +1764,8 @@ describe("Corner markup entry", () => {
 
   it("adds the entered corner markup to selected editable markup cells while preserving their existing center markups and leaving selected given digit cells unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
@@ -1790,12 +1787,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1817,8 +1814,8 @@ describe("Corner markup entry", () => {
 
   it("removes the entered corner markup from all selected cells when they're editable and already contain it", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) => {
           const nextBoardState: BoardState = currentBoardState.map(
             (cellState) => {
@@ -1847,12 +1844,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCornerMarkups(
@@ -1864,8 +1861,8 @@ describe("Corner markup entry", () => {
 
   it("removes only the entered corner markup from all selected cells when they contain the markup and another corner markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
@@ -1880,12 +1877,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCornerMarkups(
@@ -1897,8 +1894,8 @@ describe("Corner markup entry", () => {
 
   it("preserves center markups in the selected cells when entering a corner markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
@@ -1914,12 +1911,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -1936,8 +1933,8 @@ describe("Corner markup entry", () => {
 
   it("leaves selected digit cells unchanged when entering a corner markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
             getBrandedCellId(1),
@@ -1958,12 +1955,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainGivenDigit(
@@ -1980,8 +1977,8 @@ describe("Corner markup entry", () => {
 
   it("removes the entered corner markup from all selected editable cells when all selected cells are either a digit or already contain it", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
             getBrandedCellId(1),
@@ -2008,12 +2005,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainGivenDigit(
@@ -2035,8 +2032,8 @@ describe("Corner markup entry", () => {
 
   it("leaves unselected cells unchanged when entering a corner markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithCornerMarkupsInTargetCell(
             currentBoardState,
@@ -2057,12 +2054,12 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCornerMarkups(
@@ -2077,28 +2074,28 @@ describe("Corner markup entry", () => {
     );
   });
 
-  it("doesn't add a move to the game's history when entering a corner markup with no cells selected", () => {
+  it("doesn't add a move to the undo/redo history when entering a corner markup with no cells selected", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied();
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied();
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
 
     // Assert
-    expectPuzzleHistoryToMatchItsStartingState(
-      nextPuzzleHistory,
-      startingPuzzleHistory,
+    expectPuzzleStateToMatchItsStartingState(
+      nextPuzzleState,
+      startingPuzzleState,
     );
   });
 
-  it("doesn't add a move to the game's history when entering a corner markup doesn't change the board state", () => {
+  it("doesn't add a move to the undo/redo history when entering a corner markup doesn't change the board state", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -2113,53 +2110,53 @@ describe("Corner markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("7"),
     );
 
     // Assert
-    expectPuzzleHistoryToMatchItsStartingState(
-      nextPuzzleHistory,
-      startingPuzzleHistory,
+    expectPuzzleStateToMatchItsStartingState(
+      nextPuzzleState,
+      startingPuzzleState,
     );
   });
 
   it("discards all undone moves when a new corner markup is entered after undoing a move", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterCornerMarkupInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterCornerMarkupInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("1"),
     );
-    const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterCornerMarkupInput(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterTwoMoves = getPuzzleStateAfterCornerMarkupInput(
+      puzzleStateAfterOneMove,
       getBrandedSudokuDigit("2"),
     );
-    const puzzleHistoryUndoneToMoveOne = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterTwoMoves,
+    const puzzleStateUndoneToMoveOne = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterTwoMoves,
     );
 
     // Act
-    const branchedHistory = getPuzzleHistoryAfterCornerMarkupInput(
-      puzzleHistoryUndoneToMoveOne,
+    const branchedHistory = getPuzzleStateAfterCornerMarkupInput(
+      puzzleStateUndoneToMoveOne,
       getBrandedSudokuDigit("3"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(branchedHistory);
+      getCurrentBoardStateFromPuzzleState(branchedHistory);
 
     // Assert
-    expect(puzzleHistoryUndoneToMoveOne.currentBoardStateIndex).toBe(1);
-    expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
-    expect(branchedHistory.currentBoardStateIndex).toBe(2);
-    expect(branchedHistory.boardStateHistory).toHaveLength(3);
+    expect(puzzleStateUndoneToMoveOne.historyIndex).toBe(1);
+    expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
+    expect(branchedHistory.historyIndex).toBe(2);
+    expect(branchedHistory.puzzleHistory).toHaveLength(3);
     expectTargetCellToContainCornerMarkups(
       currentBoardState,
       getBrandedCellId(1),
@@ -2171,8 +2168,8 @@ describe("Corner markup entry", () => {
 describe("Color markup entry", () => {
   it("adds the keypad color to all selected cells", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1), getBrandedCellId(2)],
@@ -2181,12 +2178,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_RED,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainMarkupColors(
@@ -2203,8 +2200,8 @@ describe("Color markup entry", () => {
 
   it("adds the keyboard shortcut color to all selected cells", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
@@ -2213,12 +2210,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("8"),
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expect(
@@ -2239,8 +2236,8 @@ describe("Color markup entry", () => {
     [getBrandedSudokuDigit("9"), "purple", MARKUP_COLOR_PURPLE],
   ] as const)("applies %s's %s markup to the selected cell", (sudokuDigit, _colorName, expectedColor) => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
@@ -2249,12 +2246,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       sudokuDigit,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainMarkupColors(
@@ -2266,8 +2263,8 @@ describe("Color markup entry", () => {
 
   it("removes the entered color markup when all selected cells already contain it", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
@@ -2288,12 +2285,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_RED,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainMarkupColors(
@@ -2310,8 +2307,8 @@ describe("Color markup entry", () => {
 
   it("adds the entered color markup to a cell that doesn't contain it but contains another color markup", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
@@ -2326,12 +2323,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_BLUE,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainMarkupColors(
@@ -2343,8 +2340,8 @@ describe("Color markup entry", () => {
 
   it("adds a color markup only to a cell that doesn't contain it when cells that both contain it and don't contain it are selected", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
@@ -2365,12 +2362,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_RED,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainMarkupColors(
@@ -2387,8 +2384,8 @@ describe("Color markup entry", () => {
 
   it("preserves a selected given digit when entering a color", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
             getBrandedCellId(1),
@@ -2403,12 +2400,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_RED,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainGivenDigit(
@@ -2425,8 +2422,8 @@ describe("Color markup entry", () => {
 
   it("preserves a selected entered digit when entering a color", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -2441,12 +2438,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_RED,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainEnteredDigit(
@@ -2463,8 +2460,8 @@ describe("Color markup entry", () => {
 
   it("preserves selected markup digits when entering a color", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupDigitsInTargetCell(
             currentBoardState,
@@ -2480,12 +2477,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_BLUE,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainCenterMarkups(
@@ -2507,8 +2504,8 @@ describe("Color markup entry", () => {
 
   it("leaves unselected cells unchanged when entering a color", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithMarkupColorsInTargetCell(
             currentBoardState,
@@ -2529,12 +2526,12 @@ describe("Color markup entry", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_RED,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainMarkupColors(
@@ -2549,59 +2546,59 @@ describe("Color markup entry", () => {
     );
   });
 
-  it("doesn't add a move to the game's history when trying to enter a color with no cells selected", () => {
+  it("doesn't add a move to the undo/redo history when trying to enter a color with no cells selected", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied();
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied();
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_RED,
     );
 
     // Assert
-    expectPuzzleHistoryToMatchItsStartingState(
-      nextPuzzleHistory,
-      startingPuzzleHistory,
+    expectPuzzleStateToMatchItsStartingState(
+      nextPuzzleState,
+      startingPuzzleState,
     );
   });
 
   it("discards all undone moves when a new color markup is entered after undoing a move", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterColorPadInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterColorPadInput(
+      startingPuzzleState,
       MARKUP_COLOR_BLUE,
     );
-    const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterColorPadInput(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterTwoMoves = getPuzzleStateAfterColorPadInput(
+      puzzleStateAfterOneMove,
       MARKUP_COLOR_RED,
     );
-    const puzzleHistoryUndoneToMoveOne = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterTwoMoves,
+    const puzzleStateUndoneToMoveOne = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterTwoMoves,
     );
 
     // Act
-    const branchedHistory = getPuzzleHistoryAfterColorPadInput(
-      puzzleHistoryUndoneToMoveOne,
+    const branchedHistory = getPuzzleStateAfterColorPadInput(
+      puzzleStateUndoneToMoveOne,
       MARKUP_COLOR_GREEN,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(branchedHistory);
+      getCurrentBoardStateFromPuzzleState(branchedHistory);
 
     // Assert
-    expect(puzzleHistoryUndoneToMoveOne.currentBoardStateIndex).toBe(1);
-    expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
-    expect(branchedHistory.currentBoardStateIndex).toBe(2);
-    expect(branchedHistory.boardStateHistory).toHaveLength(3);
+    expect(puzzleStateUndoneToMoveOne.historyIndex).toBe(1);
+    expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
+    expect(branchedHistory.historyIndex).toBe(2);
+    expect(branchedHistory.puzzleHistory).toHaveLength(3);
     expectTargetCellToContainMarkupColors(
       currentBoardState,
       getBrandedCellId(1),
@@ -2613,8 +2610,8 @@ describe("Color markup entry", () => {
 describe("Clearing selected cells", () => {
   it("removes all digits and all center, corner, and color markups from all selected editable cells while leaving given digit cells unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -2659,11 +2656,10 @@ describe("Clearing selected cells", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterClearingSelectedCells(
-      startingPuzzleHistory,
-    );
+    const nextPuzzleState =
+      getPuzzleStateAfterClearingSelectedCells(startingPuzzleState);
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainEmptyCellContent(
@@ -2704,8 +2700,8 @@ describe("Clearing selected cells", () => {
 
   it("clears just colors and not digits from selected given digit cells", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithGivenDigitInTargetCell(
             getBrandedCellId(1),
@@ -2726,11 +2722,10 @@ describe("Clearing selected cells", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterClearingSelectedCells(
-      startingPuzzleHistory,
-    );
+    const nextPuzzleState =
+      getPuzzleStateAfterClearingSelectedCells(startingPuzzleState);
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainGivenDigit(
@@ -2747,8 +2742,8 @@ describe("Clearing selected cells", () => {
 
   it("clears digits and colors from selected editable cells that contain both while leaving other cells unchanged", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -2781,11 +2776,10 @@ describe("Clearing selected cells", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterClearingSelectedCells(
-      startingPuzzleHistory,
-    );
+    const nextPuzzleState =
+      getPuzzleStateAfterClearingSelectedCells(startingPuzzleState);
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainEmptyCellContent(
@@ -2812,8 +2806,8 @@ describe("Clearing selected cells", () => {
 
   it("leaves unselected cells unchanged when clearing selected cells", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEnteredDigitInTargetCell(
             getBrandedCellId(1),
@@ -2847,11 +2841,10 @@ describe("Clearing selected cells", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterClearingSelectedCells(
-      startingPuzzleHistory,
-    );
+    const nextPuzzleState =
+      getPuzzleStateAfterClearingSelectedCells(startingPuzzleState);
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(nextPuzzleHistory);
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
     expectTargetCellToContainEmptyCellContent(
@@ -2881,27 +2874,26 @@ describe("Clearing selected cells", () => {
     );
   });
 
-  it("doesn't add a move to the game's history when clearing selected cells with no cells selected", () => {
+  it("doesn't add a move to the undo/redo history when clearing selected cells with no cells selected", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied();
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied();
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterClearingSelectedCells(
-      startingPuzzleHistory,
-    );
+    const nextPuzzleState =
+      getPuzzleStateAfterClearingSelectedCells(startingPuzzleState);
 
     // Assert
-    expectPuzzleHistoryToMatchItsStartingState(
-      nextPuzzleHistory,
-      startingPuzzleHistory,
+    expectPuzzleStateToMatchItsStartingState(
+      nextPuzzleState,
+      startingPuzzleState,
     );
   });
 
-  it("doesn't add a move to the game's history when clearing cells doesn't change the board state", () => {
+  it("doesn't add a move to the undo/redo history when clearing cells doesn't change the board state", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithEmptyCellContentInTargetCell(
             currentBoardState,
@@ -2915,51 +2907,50 @@ describe("Clearing selected cells", () => {
       ]);
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterClearingSelectedCells(
-      startingPuzzleHistory,
-    );
+    const nextPuzzleState =
+      getPuzzleStateAfterClearingSelectedCells(startingPuzzleState);
 
     // Assert
-    expectPuzzleHistoryToMatchItsStartingState(
-      nextPuzzleHistory,
-      startingPuzzleHistory,
+    expectPuzzleStateToMatchItsStartingState(
+      nextPuzzleState,
+      startingPuzzleState,
     );
   });
 
   it("discards all undone moves when selected cells are cleared after undoing a move", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("1"),
     );
-    const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterColorPadInput(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterTwoMoves = getPuzzleStateAfterColorPadInput(
+      puzzleStateAfterOneMove,
       MARKUP_COLOR_RED,
     );
-    const puzzleHistoryUndoneToMoveOne = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterTwoMoves,
+    const puzzleStateUndoneToMoveOne = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterTwoMoves,
     );
 
     // Act
-    const branchedHistory = getPuzzleHistoryAfterClearingSelectedCells(
-      puzzleHistoryUndoneToMoveOne,
+    const branchedHistory = getPuzzleStateAfterClearingSelectedCells(
+      puzzleStateUndoneToMoveOne,
     );
     const currentBoardState =
-      getCurrentBoardStateFromPuzzleHistory(branchedHistory);
+      getCurrentBoardStateFromPuzzleState(branchedHistory);
 
     // Assert
-    expect(puzzleHistoryUndoneToMoveOne.currentBoardStateIndex).toBe(1);
-    expect(puzzleHistoryUndoneToMoveOne.boardStateHistory).toHaveLength(3);
-    expect(branchedHistory.currentBoardStateIndex).toBe(2);
-    expect(branchedHistory.boardStateHistory).toHaveLength(3);
+    expect(puzzleStateUndoneToMoveOne.historyIndex).toBe(1);
+    expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
+    expect(branchedHistory.historyIndex).toBe(2);
+    expect(branchedHistory.puzzleHistory).toHaveLength(3);
     expectTargetCellToContainEmptyCellContent(
       currentBoardState,
       getBrandedCellId(1),
@@ -2975,217 +2966,212 @@ describe("Clearing selected cells", () => {
 describe("Undoing moves", () => {
   it("returns the game to how it looked immediately before the most recent move was taken", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
-    const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterTwoMoves = getPuzzleStateAfterDigitInput(
+      puzzleStateAfterOneMove,
       getBrandedSudokuDigit("7"),
     );
 
     // Act
-    const puzzleHistoryAfterUndo = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterTwoMoves,
+    const puzzleStateAfterUndo = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterTwoMoves,
     );
 
     // Assert
-    expect(puzzleHistoryAfterTwoMoves.currentBoardStateIndex).toBe(2);
-    expect(puzzleHistoryAfterUndo.currentBoardStateIndex).toBe(1);
-    expect(
-      getCurrentBoardStateFromPuzzleHistory(puzzleHistoryAfterUndo),
-    ).toEqual(getCurrentBoardStateFromPuzzleHistory(puzzleHistoryAfterOneMove));
+    expect(puzzleStateAfterTwoMoves.historyIndex).toBe(2);
+    expect(puzzleStateAfterUndo.historyIndex).toBe(1);
+    expect(getCurrentBoardStateFromPuzzleState(puzzleStateAfterUndo)).toEqual(
+      getCurrentBoardStateFromPuzzleState(puzzleStateAfterOneMove),
+    );
   });
 
-  it("can step backwards through multiple earlier moves without changing the amount of history that exists", () => {
+  it("can step backwards through multiple earlier moves without changing the amount of undo/redo history that exists", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("1"),
     );
-    const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterTwoMoves = getPuzzleStateAfterDigitInput(
+      puzzleStateAfterOneMove,
       getBrandedSudokuDigit("2"),
     );
-    const puzzleHistoryAfterThreeMoves = getPuzzleHistoryAfterDigitInput(
-      puzzleHistoryAfterTwoMoves,
+    const puzzleStateAfterThreeMoves = getPuzzleStateAfterDigitInput(
+      puzzleStateAfterTwoMoves,
       getBrandedSudokuDigit("3"),
     );
 
     // Act
-    const puzzleHistoryAfterFirstUndo = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterThreeMoves,
+    const puzzleStateAfterFirstUndo = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterThreeMoves,
     );
-    const puzzleHistoryAfterSecondUndo = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterFirstUndo,
+    const puzzleStateAfterSecondUndo = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterFirstUndo,
     );
 
     // Assert
-    expect(puzzleHistoryAfterThreeMoves.boardStateHistory).toHaveLength(4);
-    expect(puzzleHistoryAfterFirstUndo.boardStateHistory).toHaveLength(4);
-    expect(puzzleHistoryAfterSecondUndo.boardStateHistory).toHaveLength(4);
+    expect(puzzleStateAfterThreeMoves.puzzleHistory).toHaveLength(4);
+    expect(puzzleStateAfterFirstUndo.puzzleHistory).toHaveLength(4);
+    expect(puzzleStateAfterSecondUndo.puzzleHistory).toHaveLength(4);
 
-    expect(puzzleHistoryAfterFirstUndo.currentBoardStateIndex).toBe(2);
-    expect(puzzleHistoryAfterSecondUndo.currentBoardStateIndex).toBe(1);
+    expect(puzzleStateAfterFirstUndo.historyIndex).toBe(2);
+    expect(puzzleStateAfterSecondUndo.historyIndex).toBe(1);
 
     expect(
-      getCurrentBoardStateFromPuzzleHistory(puzzleHistoryAfterSecondUndo),
-    ).toEqual(getCurrentBoardStateFromPuzzleHistory(puzzleHistoryAfterOneMove));
+      getCurrentBoardStateFromPuzzleState(puzzleStateAfterSecondUndo),
+    ).toEqual(getCurrentBoardStateFromPuzzleState(puzzleStateAfterOneMove));
   });
 
   it("does nothing when there are no moves to undo", () => {
     // Arrange
     const boardState = getStartingEmptyBoardState();
-    const puzzleHistory: PuzzleHistory = {
-      currentBoardStateIndex: 0,
-      boardStateHistory: [boardState],
+    const puzzleState: PuzzleState = {
+      historyIndex: 0,
+      puzzleHistory: [boardState],
     };
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterUndoingMove(puzzleHistory);
+    const nextPuzzleState = getPuzzleStateAfterUndoingMove(puzzleState);
 
     // Assert
-    expect(nextPuzzleHistory.currentBoardStateIndex).toBe(0);
-    expect(nextPuzzleHistory.boardStateHistory).toHaveLength(1);
+    expect(nextPuzzleState.historyIndex).toBe(0);
+    expect(nextPuzzleState.puzzleHistory).toHaveLength(1);
   });
 });
 
 describe("Redoing moves", () => {
   it("restores the game to how it looked immediately before the most recent move was undone", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("4"),
     );
-    const puzzleHistoryAfterUndo = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterUndo = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterOneMove,
     );
 
     // Act
-    const puzzleHistoryAfterRedo = getPuzzleHistoryAfterRedoingMove(
-      puzzleHistoryAfterUndo,
-    );
+    const puzzleStateAfterRedo =
+      getPuzzleStateAfterRedoingMove(puzzleStateAfterUndo);
 
     // Assert
-    expect(puzzleHistoryAfterUndo.currentBoardStateIndex).toBe(0);
-    expect(puzzleHistoryAfterRedo.currentBoardStateIndex).toBe(1);
-    expect(
-      getCurrentBoardStateFromPuzzleHistory(puzzleHistoryAfterRedo),
-    ).toEqual(getCurrentBoardStateFromPuzzleHistory(puzzleHistoryAfterOneMove));
+    expect(puzzleStateAfterUndo.historyIndex).toBe(0);
+    expect(puzzleStateAfterRedo.historyIndex).toBe(1);
+    expect(getCurrentBoardStateFromPuzzleState(puzzleStateAfterRedo)).toEqual(
+      getCurrentBoardStateFromPuzzleState(puzzleStateAfterOneMove),
+    );
   });
 
-  it("can step forwards through multiple undone moves without changing the amount of history that exists", () => {
+  it("can step forwards through multiple undone moves without changing the amount of undo/redohistory that exists", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("1"),
     );
-    const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterTwoMoves = getPuzzleStateAfterDigitInput(
+      puzzleStateAfterOneMove,
       getBrandedSudokuDigit("2"),
     );
-    const puzzleHistoryAfterThreeMoves = getPuzzleHistoryAfterDigitInput(
-      puzzleHistoryAfterTwoMoves,
+    const puzzleStateAfterThreeMoves = getPuzzleStateAfterDigitInput(
+      puzzleStateAfterTwoMoves,
       getBrandedSudokuDigit("3"),
     );
-    const puzzleHistoryAfterUndoingTwice = getPuzzleHistoryAfterUndoingMove(
-      getPuzzleHistoryAfterUndoingMove(puzzleHistoryAfterThreeMoves),
+    const puzzleStateAfterUndoingTwice = getPuzzleStateAfterUndoingMove(
+      getPuzzleStateAfterUndoingMove(puzzleStateAfterThreeMoves),
     );
 
     // Act
-    const puzzleHistoryAfterFirstRedo = getPuzzleHistoryAfterRedoingMove(
-      puzzleHistoryAfterUndoingTwice,
+    const puzzleStateAfterFirstRedo = getPuzzleStateAfterRedoingMove(
+      puzzleStateAfterUndoingTwice,
     );
-    const puzzleHistoryAfterSecondRedo = getPuzzleHistoryAfterRedoingMove(
-      puzzleHistoryAfterFirstRedo,
+    const puzzleStateAfterSecondRedo = getPuzzleStateAfterRedoingMove(
+      puzzleStateAfterFirstRedo,
     );
 
     // Assert
-    expect(puzzleHistoryAfterUndoingTwice.boardStateHistory).toHaveLength(4);
-    expect(puzzleHistoryAfterFirstRedo.boardStateHistory).toHaveLength(4);
-    expect(puzzleHistoryAfterSecondRedo.boardStateHistory).toHaveLength(4);
+    expect(puzzleStateAfterUndoingTwice.puzzleHistory).toHaveLength(4);
+    expect(puzzleStateAfterFirstRedo.puzzleHistory).toHaveLength(4);
+    expect(puzzleStateAfterSecondRedo.puzzleHistory).toHaveLength(4);
 
-    expect(puzzleHistoryAfterFirstRedo.currentBoardStateIndex).toBe(2);
-    expect(puzzleHistoryAfterSecondRedo.currentBoardStateIndex).toBe(3);
+    expect(puzzleStateAfterFirstRedo.historyIndex).toBe(2);
+    expect(puzzleStateAfterSecondRedo.historyIndex).toBe(3);
 
     expect(
-      getCurrentBoardStateFromPuzzleHistory(puzzleHistoryAfterSecondRedo),
-    ).toEqual(
-      getCurrentBoardStateFromPuzzleHistory(puzzleHistoryAfterThreeMoves),
-    );
+      getCurrentBoardStateFromPuzzleState(puzzleStateAfterSecondRedo),
+    ).toEqual(getCurrentBoardStateFromPuzzleState(puzzleStateAfterThreeMoves));
   });
 
-  it("doesn't restore discarded moves after a new move is made from an earlier point in history", () => {
+  it("doesn't restore discarded moves after a new move is made from an earlier point in the undo/redo history", () => {
     // Arrange
-    const startingPuzzleHistory =
-      getStartingPuzzleHistoryWithSequentialTransformsApplied([
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
         (currentBoardState) =>
           getBoardStateWithTargetCellsSelected(
             [getBrandedCellId(1)],
             currentBoardState,
           ),
       ]);
-    const puzzleHistoryAfterOneMove = getPuzzleHistoryAfterDigitInput(
-      startingPuzzleHistory,
+    const puzzleStateAfterOneMove = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
       getBrandedSudokuDigit("1"),
     );
-    const puzzleHistoryAfterTwoMoves = getPuzzleHistoryAfterDigitInput(
-      puzzleHistoryAfterOneMove,
+    const puzzleStateAfterTwoMoves = getPuzzleStateAfterDigitInput(
+      puzzleStateAfterOneMove,
       getBrandedSudokuDigit("2"),
     );
-    const puzzleHistoryAfterUndo = getPuzzleHistoryAfterUndoingMove(
-      puzzleHistoryAfterTwoMoves,
+    const puzzleStateAfterUndo = getPuzzleStateAfterUndoingMove(
+      puzzleStateAfterTwoMoves,
     );
-    const branchedPuzzleHistory = getPuzzleHistoryAfterDigitInput(
-      puzzleHistoryAfterUndo,
+    const branchedPuzzleState = getPuzzleStateAfterDigitInput(
+      puzzleStateAfterUndo,
       getBrandedSudokuDigit("3"),
     );
 
     // Act
-    const puzzleHistoryAfterRedo = getPuzzleHistoryAfterRedoingMove(
-      branchedPuzzleHistory,
-    );
-    const currentBoardState = getCurrentBoardStateFromPuzzleHistory(
-      puzzleHistoryAfterRedo,
-    );
+    const puzzleStateAfterRedo =
+      getPuzzleStateAfterRedoingMove(branchedPuzzleState);
+    const currentBoardState =
+      getCurrentBoardStateFromPuzzleState(puzzleStateAfterRedo);
 
     // Assert
-    expect(branchedPuzzleHistory.currentBoardStateIndex).toBe(2);
-    expect(branchedPuzzleHistory.boardStateHistory).toHaveLength(3);
-    expect(puzzleHistoryAfterRedo.currentBoardStateIndex).toBe(2);
-    expect(puzzleHistoryAfterRedo.boardStateHistory).toHaveLength(3);
+    expect(branchedPuzzleState.historyIndex).toBe(2);
+    expect(branchedPuzzleState.puzzleHistory).toHaveLength(3);
+    expect(puzzleStateAfterRedo.historyIndex).toBe(2);
+    expect(puzzleStateAfterRedo.puzzleHistory).toHaveLength(3);
     expectTargetCellToContainEnteredDigit(
       currentBoardState,
       getBrandedCellId(1),
@@ -3196,16 +3182,16 @@ describe("Redoing moves", () => {
   it("does nothing when there are no undone moves to redo", () => {
     // Arrange
     const boardState = getStartingEmptyBoardState();
-    const puzzleHistory: PuzzleHistory = {
-      currentBoardStateIndex: 0,
-      boardStateHistory: [boardState],
+    const puzzleState: PuzzleState = {
+      historyIndex: 0,
+      puzzleHistory: [boardState],
     };
 
     // Act
-    const nextPuzzleHistory = getPuzzleHistoryAfterRedoingMove(puzzleHistory);
+    const nextPuzzleState = getPuzzleStateAfterRedoingMove(puzzleState);
 
     // Assert
-    expect(nextPuzzleHistory.currentBoardStateIndex).toBe(0);
-    expect(nextPuzzleHistory.boardStateHistory).toHaveLength(1);
+    expect(nextPuzzleState.historyIndex).toBe(0);
+    expect(nextPuzzleState.puzzleHistory).toHaveLength(1);
   });
 });

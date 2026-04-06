@@ -5,7 +5,10 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import { Stopwatch } from "@/lib/pages/home/components/stopwatch/stopwatch";
 import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
-import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import {
+  type UserSettings,
+  UserSettingsProvider,
+} from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   defaultUserSettings,
   getEmptyRawBoardState,
@@ -73,7 +76,7 @@ const setSessionStorageForRender = ({
   userSettings = defaultUserSettings,
 }: {
   persistedStopwatchTotalSeconds?: number;
-  userSettings?: typeof defaultUserSettings;
+  userSettings?: UserSettings;
 }) => {
   window.sessionStorage.setItem(
     USER_SETTINGS_SESSION_STORAGE_KEY,
@@ -95,7 +98,7 @@ const renderStopwatch = async ({
 }: {
   persistedStopwatchTotalSeconds?: number;
   stopwatchHookValue?: Partial<MockStopwatchHookValue>;
-  userSettings?: typeof defaultUserSettings;
+  userSettings?: UserSettings;
 } = {}): Promise<RenderedStopwatch> => {
   setSessionStorageForRender({
     persistedStopwatchTotalSeconds,
