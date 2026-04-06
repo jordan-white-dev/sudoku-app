@@ -141,24 +141,6 @@ const dispatchWindowKeyboardEvent = async (
 
   await waitForReactToFinishUpdating();
 };
-
-const dispatchKeyboardEventFromEditableInput = async (
-  keyboardEventInit: KeyboardEventInit,
-) => {
-  const editableInputElement = document.createElement("input");
-  document.body.append(editableInputElement);
-
-  editableInputElement.dispatchEvent(
-    new KeyboardEvent("keydown", {
-      bubbles: true,
-      cancelable: true,
-      ...keyboardEventInit,
-    }),
-  );
-
-  await waitForReactToFinishUpdating();
-  editableInputElement.remove();
-};
 // #endregion
 
 beforeEach(() => {
@@ -421,19 +403,6 @@ describe("Numpad and editable element handling", () => {
     expect(mockHandleDigitInput.mock.calls[0][1]).toBe("1");
     expect(mockHandleDigitInput.mock.calls[1][1]).toBe("2");
   });
-
-  it("ignores shortcut input when the event target is an editable element", async () => {
-    // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
-
-    // Act
-    await dispatchKeyboardEventFromEditableInput({ code: "Digit1", key: "1" });
-    await dispatchKeyboardEventFromEditableInput({ key: "Escape" });
-
-    // Assert
-    expect(mockHandleDigitInput).not.toHaveBeenCalled();
-    expect(mockHandleClearCell).not.toHaveBeenCalled();
-  });
 });
 
 describe("Window blur behavior", () => {
@@ -451,6 +420,62 @@ describe("Window blur behavior", () => {
 
     window.dispatchEvent(new Event("blur"));
     await waitForReactToFinishUpdating();
+
+    // Assert
+    await expect
+      .element(renderedPuzzleControls.getByText("Active mode: Digit"))
+      .toBeInTheDocument();
+  });
+});
+
+describe("Numpad modifier key behavior", () => {
+  it("uses Corner mode for a numpad digit key when Shift is held", async () => {
+    // Arrange
+    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
+
+    // Act
+    await dispatchWindowKeyboardEvent("keydown", { key: "Shift" });
+    await dispatchWindowKeyboardEvent("keydown", {
+      code: "Numpad7",
+      key: "7",
+      location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      shiftKey: true,
+    });
+
+    // Assert
+    expect(mockHandleCornerMarkupInput).toHaveBeenCalledTimes(1);
+    expect(mockHandleCornerMarkupInput.mock.calls[0][1]).toBe("7");
+  });
+});
+
+describe("Keypad mode shortcut blocking", () => {
+  it("does not switch keypad mode when Alt is held alongside a shortcut key", async () => {
+    // Arrange
+    const renderedPuzzleControls = await renderPuzzleControls({
+      startingBaseKeypadMode: "Digit",
+    });
+
+    // Act
+    await dispatchWindowKeyboardEvent("keydown", { key: "Alt" });
+    await dispatchWindowKeyboardEvent("keydown", { key: "x" });
+    await dispatchWindowKeyboardEvent("keyup", { key: "Alt" });
+
+    // Assert
+    await expect
+      .element(renderedPuzzleControls.getByText("Active mode: Digit"))
+      .toBeInTheDocument();
+  });
+
+  it("does not switch keypad mode when Control is held alongside a shortcut key", async () => {
+    // Arrange
+    const renderedPuzzleControls = await renderPuzzleControls({
+      startingBaseKeypadMode: "Digit",
+    });
+
+    // Act
+    await dispatchWindowKeyboardEvent("keydown", { key: "Control" });
+    await dispatchWindowKeyboardEvent("keydown", { key: "x" });
+    await dispatchWindowKeyboardEvent("keyup", { key: "Control" });
 
     // Assert
     await expect

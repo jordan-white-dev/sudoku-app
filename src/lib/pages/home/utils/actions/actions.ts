@@ -29,10 +29,9 @@ const commitBoardStateToPuzzleHistoryIfChanged = (
   const hasReferenceDifferences = currentBoardState.some(
     (cellState, cellIndex) => cellState !== nextBoardState[cellIndex],
   );
-
   const didBoardStateChange =
     hasReferenceDifferences &&
-    JSON.stringify(nextBoardState) !== JSON.stringify(currentBoardState);
+    JSON.stringify(currentBoardState) !== JSON.stringify(nextBoardState);
 
   if (!didBoardStateChange) return;
 

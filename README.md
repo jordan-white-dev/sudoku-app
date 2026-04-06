@@ -63,7 +63,7 @@ The app includes controls for generating a new puzzle, undoing and redoing moves
 
 ### Selection
 
-- **`Arrows`:** Move the current selection in the indicated direction if only one cell is selected.
+- **`Arrows`:** Move the current selection in the indicated direction.
 - **`Ctrl + Arrow`, `Shift + Arrow`:** Add a cell to the current selection.
 - **`Ctrl + A`:** Select all cells.
 - **`Ctrl + Shift + A`:** Deselect all cells.

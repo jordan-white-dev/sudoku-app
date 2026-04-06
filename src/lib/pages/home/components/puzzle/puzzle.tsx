@@ -50,18 +50,19 @@ const handleClearAllSelections = (
 
 // #region Puzzle Component
 type PuzzleProps = {
+  encodedPuzzleString: string;
   rawBoardState: RawBoardState;
   startingBoardState: BoardState;
 };
 
 export const Puzzle = memo(
-  ({ rawBoardState, startingBoardState }: PuzzleProps) => {
+  ({ encodedPuzzleString, rawBoardState, startingBoardState }: PuzzleProps) => {
     const [isMultiselectMode, setIsMultiselectMode] =
       useSessionStorageState<boolean>("multiselect-mode", {
         defaultValue: false,
       });
     const [puzzleState, setPuzzleState] = useSessionStorageState<PuzzleState>(
-      `puzzle-state-${JSON.stringify(rawBoardState)}`,
+      `puzzle-state-${encodedPuzzleString}`,
       {
         defaultValue: {
           historyIndex: 0,

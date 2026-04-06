@@ -275,10 +275,63 @@ describe("PuzzleActions rendering", () => {
 });
 
 describe("Undo and redo actions", () => {
+  it("disables the undo button when there are no moves to undo", async () => {
+    // Arrange
+    const puzzleState: PuzzleState = {
+      historyIndex: 0,
+      puzzleHistory: [getStartingEmptyBoardState()],
+    };
+
+    // Act
+    const { renderedPuzzleActions } = await renderPuzzleActions({
+      puzzleState,
+    });
+
+    // Assert
+    await expect
+      .element(
+        await getActionButton(renderedPuzzleActions, "Undo the last move"),
+      )
+      .toBeDisabled();
+  });
+
+  it("disables the redo button when there are no moves to redo", async () => {
+    // Arrange
+    const puzzleState: PuzzleState = {
+      historyIndex: 1,
+      puzzleHistory: [
+        getStartingEmptyBoardState(),
+        getStartingEmptyBoardState(),
+      ],
+    };
+
+    // Act
+    const { renderedPuzzleActions } = await renderPuzzleActions({
+      puzzleState,
+    });
+
+    // Assert
+    await expect
+      .element(
+        await getActionButton(
+          renderedPuzzleActions,
+          "Redo the last undone move",
+        ),
+      )
+      .toBeDisabled();
+  });
+
   it("calls handleUndoMove when undo is pressed", async () => {
     // Arrange
+    const puzzleState: PuzzleState = {
+      historyIndex: 1,
+      puzzleHistory: [
+        getStartingEmptyBoardState(),
+        getStartingEmptyBoardState(),
+      ],
+    };
     const { renderedPuzzleActions, setPuzzleStateSpy } =
-      await renderPuzzleActions();
+      await renderPuzzleActions({ puzzleState });
 
     // Act
     await (
@@ -292,8 +345,15 @@ describe("Undo and redo actions", () => {
 
   it("calls handleRedoMove when redo is pressed", async () => {
     // Arrange
+    const puzzleState: PuzzleState = {
+      historyIndex: 0,
+      puzzleHistory: [
+        getStartingEmptyBoardState(),
+        getStartingEmptyBoardState(),
+      ],
+    };
     const { renderedPuzzleActions, setPuzzleStateSpy } =
-      await renderPuzzleActions();
+      await renderPuzzleActions({ puzzleState });
 
     // Act
     await (

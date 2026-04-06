@@ -12,6 +12,7 @@ import { Route } from "@/routes/puzzle.$encodedPuzzleString";
 
 const HomeInner = () => {
   const { boardState, rawBoardState } = Route.useLoaderData();
+  const { encodedPuzzleString } = Route.useParams();
   const { userSettings, setUserSettings } = useUserSettings();
 
   const handleIsStopwatchDisabledChange = useCallback(
@@ -26,15 +27,16 @@ const HomeInner = () => {
 
   return (
     <SudokuStopwatchProvider
-      key={JSON.stringify(rawBoardState)}
+      key={encodedPuzzleString}
+      encodedPuzzleString={encodedPuzzleString}
       isStopwatchDisabled={userSettings.isStopwatchDisabled}
       onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
-      rawBoardState={rawBoardState}
     >
       <Header />
       <Box width="full" as="main" justifyItems="center" marginY={22}>
         <Puzzle
-          key={JSON.stringify(rawBoardState)}
+          key={encodedPuzzleString}
+          encodedPuzzleString={encodedPuzzleString}
           rawBoardState={rawBoardState}
           startingBoardState={boardState}
         />

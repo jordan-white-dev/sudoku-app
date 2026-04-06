@@ -38,13 +38,7 @@ type RenderedPuzzle = Awaited<ReturnType<typeof render>>;
 // #endregion
 
 // #region Provider Bridge
-const StopwatchBridge = ({
-  children,
-  rawBoardState,
-}: {
-  children: ReactNode;
-  rawBoardState: RawBoardState;
-}) => {
+const StopwatchBridge = ({ children }: { children: ReactNode }) => {
   const { userSettings, setUserSettings } = useUserSettings();
 
   const handleIsStopwatchDisabledChange = useCallback(
@@ -59,7 +53,7 @@ const StopwatchBridge = ({
 
   return (
     <SudokuStopwatchProvider
-      rawBoardState={rawBoardState}
+      encodedPuzzleString="test-puzzle"
       isStopwatchDisabled={userSettings.isStopwatchDisabled}
       onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
     >
@@ -84,8 +78,9 @@ const renderPuzzle = async ({
   const renderedPuzzle = await render(
     <Provider>
       <UserSettingsProvider>
-        <StopwatchBridge rawBoardState={resolvedRawBoardState}>
+        <StopwatchBridge>
           <Puzzle
+            encodedPuzzleString="test-puzzle"
             rawBoardState={resolvedRawBoardState}
             startingBoardState={resolvedStartingBoardState}
           />

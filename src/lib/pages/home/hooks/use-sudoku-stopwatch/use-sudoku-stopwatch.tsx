@@ -10,8 +10,6 @@ import {
 import { useStopwatch } from "react-timer-hook";
 import useSessionStorageState from "use-session-storage-state";
 
-import { type RawBoardState } from "@/lib/pages/home/utils/types";
-
 // #region Formatting and Offset Utilities
 const getFormattedStopwatchMinutes = (
   hours: number,
@@ -59,20 +57,20 @@ const SudokuStopwatchContext = createContext<
 
 // #region Provider
 interface SudokuStopwatchProviderProps extends PropsWithChildren {
+  encodedPuzzleString: string;
   isStopwatchDisabled: boolean;
   onIsStopwatchDisabledChange: (nextIsStopwatchDisabled: boolean) => void;
-  rawBoardState: RawBoardState;
 }
 
 export const SudokuStopwatchProvider = ({
   children,
+  encodedPuzzleString,
   isStopwatchDisabled,
   onIsStopwatchDisabledChange,
-  rawBoardState,
 }: SudokuStopwatchProviderProps) => {
   const [persistedStopwatchTotalSeconds, setPersistedStopwatchTotalSeconds] =
     useSessionStorageState<number>(
-      `sudoku-stopwatch-persisted-total-seconds-${JSON.stringify(rawBoardState)}`,
+      `sudoku-stopwatch-persisted-total-seconds-${encodedPuzzleString}`,
       {
         defaultValue: 0,
       },
@@ -119,16 +117,8 @@ export const SudokuStopwatchProvider = ({
   // #endregion
 
   // #region Stopwatch Visibility + Disabled State
-  const isStopwatchRunningRef = useRef(isStopwatchRunning);
-  const isStopwatchDisabledRef = useRef(isStopwatchDisabled);
-
-  useEffect(() => {
-    isStopwatchRunningRef.current = isStopwatchRunning;
-  }, [isStopwatchRunning]);
-
-  useEffect(() => {
-    isStopwatchDisabledRef.current = isStopwatchDisabled;
-  }, [isStopwatchDisabled]);
+  const stopwatchStateRef = useRef({ isStopwatchRunning, isStopwatchDisabled });
+  stopwatchStateRef.current = { isStopwatchRunning, isStopwatchDisabled };
 
   const wasStopwatchRunningBeforePageWasHiddenRef = useRef(false);
 
@@ -136,16 +126,16 @@ export const SudokuStopwatchProvider = ({
     const handleVisibilityChange = () => {
       if (document.hidden) {
         wasStopwatchRunningBeforePageWasHiddenRef.current =
-          isStopwatchRunningRef.current;
+          stopwatchStateRef.current.isStopwatchRunning;
 
-        if (isStopwatchRunningRef.current) pauseStopwatch();
+        if (stopwatchStateRef.current.isStopwatchRunning) pauseStopwatch();
 
         return;
       }
 
       const shouldResumeStopwatch =
         wasStopwatchRunningBeforePageWasHiddenRef.current &&
-        !isStopwatchDisabledRef.current;
+        !stopwatchStateRef.current.isStopwatchDisabled;
 
       if (shouldResumeStopwatch) startStopwatch();
 

@@ -12,10 +12,7 @@ import {
   UserSettingsProvider,
   useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
-import {
-  EMPTY_RAW_BOARD_STATE,
-  waitForReactToFinishUpdating,
-} from "@/lib/pages/home/utils/testing";
+import { waitForReactToFinishUpdating } from "@/lib/pages/home/utils/testing";
 
 // #region Module Mocks
 const mockPauseStopwatch = vi.fn();
@@ -81,7 +78,7 @@ const StopwatchBridge = ({ children }: { children: ReactNode }) => {
 
   return (
     <SudokuStopwatchProvider
-      rawBoardState={EMPTY_RAW_BOARD_STATE}
+      encodedPuzzleString="test-puzzle"
       isStopwatchDisabled={userSettings.isStopwatchDisabled}
       onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
     >
@@ -94,7 +91,7 @@ const StopwatchBridge = ({ children }: { children: ReactNode }) => {
 // #region Session Storage
 const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 const getStopwatchSessionStorageKey = () =>
-  `sudoku-stopwatch-persisted-total-seconds-${JSON.stringify(EMPTY_RAW_BOARD_STATE)}`;
+  `sudoku-stopwatch-persisted-total-seconds-test-puzzle`;
 
 const setSessionStorageForRender = ({
   persistedStopwatchTotalSeconds = 0,

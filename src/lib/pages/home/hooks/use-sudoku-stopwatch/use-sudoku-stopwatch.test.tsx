@@ -7,10 +7,7 @@ import {
   SudokuStopwatchProvider,
   useSudokuStopwatch,
 } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
-import {
-  EMPTY_RAW_BOARD_STATE,
-  waitForReactToFinishUpdating,
-} from "@/lib/pages/home/utils/testing";
+import { waitForReactToFinishUpdating } from "@/lib/pages/home/utils/testing";
 
 // #region Module Mocks
 const mockPauseStopwatch = vi.fn();
@@ -106,7 +103,7 @@ const renderWithProvider = async ({
   const rendered = await render(
     <Provider>
       <SudokuStopwatchProvider
-        rawBoardState={EMPTY_RAW_BOARD_STATE}
+        encodedPuzzleString="test-puzzle"
         isStopwatchDisabled={isStopwatchDisabled}
         onIsStopwatchDisabledChange={onIsStopwatchDisabledChange}
       >

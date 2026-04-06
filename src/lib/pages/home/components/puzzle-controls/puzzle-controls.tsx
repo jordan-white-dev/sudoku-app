@@ -97,13 +97,6 @@ const shiftedNumpadKeyToDigit: Partial<Record<string, SudokuDigit>> = {
   PageUp: getBrandedSudokuDigit("9"),
 };
 
-const isEditableHtmlElement = (eventTarget: EventTarget | null): boolean =>
-  eventTarget instanceof HTMLElement &&
-  (eventTarget.isContentEditable ||
-    eventTarget.tagName === "INPUT" ||
-    eventTarget.tagName === "TEXTAREA" ||
-    eventTarget.tagName === "SELECT");
-
 const isNumpadKeyboardEvent = (keyboardEvent: KeyboardEvent): boolean =>
   keyboardEvent.location === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD;
 
@@ -414,8 +407,6 @@ export const PuzzleControls = ({
         handleModifierKeyDown(event, event.key);
         return;
       }
-
-      if (isEditableHtmlElement(event.target)) return;
 
       const lowerCaseKey = event.key.toLowerCase();
 

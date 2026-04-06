@@ -17,6 +17,7 @@ import {
   type PropsWithChildren,
   type ReactNode,
   type SetStateAction,
+  useMemo,
 } from "react";
 import { ImCheckmark, ImRedo, ImStopwatch, ImUndo } from "react-icons/im";
 import { MdOutlineFiberNew, MdRestartAlt } from "react-icons/md";
@@ -82,6 +83,7 @@ const BUTTON_ROUNDED: ButtonProps["rounded"] = {
 // #region Action Button
 interface ActionButtonProps extends PropsWithChildren {
   ariaLabel: IconButtonProps["aria-label"];
+  disabled?: boolean;
   iconSize: IconProps["width"];
   onClick?: () => void;
 }
@@ -258,13 +260,15 @@ type UndoButtonProps = {
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
-const UndoButton = ({ setPuzzleState }: UndoButtonProps) => {
+const UndoButton = ({ puzzleState, setPuzzleState }: UndoButtonProps) => {
   const tooltipText = "Undo the last move";
+  const isDisabled = puzzleState.historyIndex === 0;
 
   return (
     <ActionTooltip tooltipText={tooltipText}>
       <ActionButton
         ariaLabel={tooltipText}
+        disabled={isDisabled}
         iconSize={IM_ICON_SIZE}
         onClick={() => handleUndoMove(setPuzzleState)}
       >
@@ -281,13 +285,16 @@ type RedoButtonProps = {
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
-const RedoButton = ({ setPuzzleState }: RedoButtonProps) => {
+const RedoButton = ({ puzzleState, setPuzzleState }: RedoButtonProps) => {
   const tooltipText = "Redo the last undone move";
+  const isDisabled =
+    puzzleState.historyIndex === puzzleState.puzzleHistory.length - 1;
 
   return (
     <ActionTooltip tooltipText={tooltipText}>
       <ActionButton
         ariaLabel={tooltipText}
+        disabled={isDisabled}
         iconSize={IM_ICON_SIZE}
         onClick={() => handleRedoMove(setPuzzleState)}
       >
@@ -413,7 +420,10 @@ const CheckSolutionButton = ({ puzzleState }: CheckSolutionButtonProps) => {
 
   const currentBoardState = getCurrentBoardStateFromPuzzleState(puzzleState);
 
-  const isPuzzleSolved = getIsPuzzleSolved(currentBoardState);
+  const isPuzzleSolved = useMemo(
+    () => getIsPuzzleSolved(currentBoardState),
+    [currentBoardState],
+  );
 
   const dialogBodyText = getDialogBodyText(
     isPuzzleSolved,

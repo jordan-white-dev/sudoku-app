@@ -12,10 +12,7 @@ import {
   UserSettingsProvider,
   useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
-import {
-  EMPTY_RAW_BOARD_STATE,
-  waitForReactToFinishUpdating,
-} from "@/lib/pages/home/utils/testing";
+import { waitForReactToFinishUpdating } from "@/lib/pages/home/utils/testing";
 
 const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 
@@ -58,7 +55,7 @@ const StopwatchBridge = ({ children }: { children: ReactNode }) => {
 
   return (
     <SudokuStopwatchProvider
-      rawBoardState={EMPTY_RAW_BOARD_STATE}
+      encodedPuzzleString="test-puzzle"
       isStopwatchDisabled={userSettings.isStopwatchDisabled}
       onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
     >
