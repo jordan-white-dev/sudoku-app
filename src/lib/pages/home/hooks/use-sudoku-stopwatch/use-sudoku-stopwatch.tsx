@@ -10,7 +10,6 @@ import {
 import { useStopwatch } from "react-timer-hook";
 import useSessionStorageState from "use-session-storage-state";
 
-import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { type RawBoardState } from "@/lib/pages/home/utils/types";
 
 // #region Formatting and Offset Utilities
@@ -60,15 +59,17 @@ const SudokuStopwatchContext = createContext<
 
 // #region Provider
 interface SudokuStopwatchProviderProps extends PropsWithChildren {
+  isStopwatchDisabled: boolean;
+  onIsStopwatchDisabledChange: (nextIsStopwatchDisabled: boolean) => void;
   rawBoardState: RawBoardState;
 }
 
 export const SudokuStopwatchProvider = ({
   children,
+  isStopwatchDisabled,
+  onIsStopwatchDisabledChange,
   rawBoardState,
 }: SudokuStopwatchProviderProps) => {
-  const { userSettings, setUserSettings } = useUserSettings();
-
   const [persistedStopwatchTotalSeconds, setPersistedStopwatchTotalSeconds] =
     useSessionStorageState<number>(
       `sudoku-stopwatch-persisted-total-seconds-${JSON.stringify(rawBoardState)}`,
@@ -86,7 +87,7 @@ export const SudokuStopwatchProvider = ({
     totalSeconds,
     pause: pauseStopwatch,
     reset,
-    start,
+    start: startStopwatch,
   } = useStopwatch({
     autoStart: false,
     interval: 500,
@@ -108,8 +109,8 @@ export const SudokuStopwatchProvider = ({
       persistedStopwatchTotalSeconds,
     );
 
-    reset(hydratedOffsetDate, !userSettings.isStopwatchDisabled);
-  }, [persistedStopwatchTotalSeconds, userSettings.isStopwatchDisabled, reset]);
+    reset(hydratedOffsetDate, !isStopwatchDisabled);
+  }, [persistedStopwatchTotalSeconds, isStopwatchDisabled, reset]);
 
   useEffect(
     () => setPersistedStopwatchTotalSeconds(totalSeconds),
@@ -119,15 +120,15 @@ export const SudokuStopwatchProvider = ({
 
   // #region Stopwatch Visibility + Disabled State
   const isStopwatchRunningRef = useRef(isStopwatchRunning);
-  const isStopwatchDisabledRef = useRef(userSettings.isStopwatchDisabled);
+  const isStopwatchDisabledRef = useRef(isStopwatchDisabled);
 
   useEffect(() => {
     isStopwatchRunningRef.current = isStopwatchRunning;
   }, [isStopwatchRunning]);
 
   useEffect(() => {
-    isStopwatchDisabledRef.current = userSettings.isStopwatchDisabled;
-  }, [userSettings.isStopwatchDisabled]);
+    isStopwatchDisabledRef.current = isStopwatchDisabled;
+  }, [isStopwatchDisabled]);
 
   const wasStopwatchRunningBeforePageWasHiddenRef = useRef(false);
 
@@ -146,17 +147,16 @@ export const SudokuStopwatchProvider = ({
         wasStopwatchRunningBeforePageWasHiddenRef.current &&
         !isStopwatchDisabledRef.current;
 
-      if (shouldResumeStopwatch) start();
+      if (shouldResumeStopwatch) startStopwatch();
 
       wasStopwatchRunningBeforePageWasHiddenRef.current = false;
     };
 
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    return () => {
+    return () =>
       document.removeEventListener("visibilitychange", handleVisibilityChange);
-    };
-  }, [pauseStopwatch, start]);
+  }, [pauseStopwatch, startStopwatch]);
   // #endregion
 
   // #region Context Values + Actions
@@ -172,13 +172,9 @@ export const SudokuStopwatchProvider = ({
   }, [hours, minutes, seconds, totalSeconds]);
 
   const setIsStopwatchDisabled = useCallback(
-    (nextIsStopwatchDisabled: boolean) => {
-      setUserSettings((currentUserSettings) => ({
-        ...currentUserSettings,
-        isStopwatchDisabled: nextIsStopwatchDisabled,
-      }));
-    },
-    [setUserSettings],
+    (nextIsStopwatchDisabled: boolean) =>
+      onIsStopwatchDisabledChange(nextIsStopwatchDisabled),
+    [onIsStopwatchDisabledChange],
   );
 
   const pauseStopwatchAndDisable = useCallback(() => {
@@ -192,15 +188,13 @@ export const SudokuStopwatchProvider = ({
   }, [reset, setPersistedStopwatchTotalSeconds]);
 
   const resumeStopwatchAndEnable = useCallback(() => {
-    start();
+    startStopwatch();
     setIsStopwatchDisabled(false);
-  }, [setIsStopwatchDisabled, start]);
-
-  const startStopwatch = useCallback(() => start(), [start]);
+  }, [setIsStopwatchDisabled, startStopwatch]);
 
   const startStopwatchIfEnabled = useCallback(() => {
-    if (!userSettings.isStopwatchDisabled) start();
-  }, [userSettings.isStopwatchDisabled, start]);
+    if (!isStopwatchDisabled) startStopwatch();
+  }, [isStopwatchDisabled, startStopwatch]);
 
   const sudokuStopwatchValue = useMemo(
     () => ({

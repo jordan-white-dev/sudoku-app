@@ -1,3 +1,4 @@
+import { type ReactNode, useCallback } from "react";
 import SuperExpressive from "super-expressive";
 import { beforeEach, describe, expect, it } from "vitest";
 import { render } from "vitest-browser-react";
@@ -6,12 +7,13 @@ import { Provider } from "@/lib/components/ui/provider";
 import { Header } from "@/lib/pages/home/components/header/header";
 import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
 import {
+  defaultUserSettings,
   type UserSettings,
   UserSettingsProvider,
+  useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
-  defaultUserSettings,
-  getEmptyRawBoardState,
+  EMPTY_RAW_BOARD_STATE,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 
@@ -40,6 +42,30 @@ const MARKUP_ENTRY_LABEL_REGEX = SuperExpressive()
 const HISTORY_LABEL_REGEX = SuperExpressive()
   .startOfInput.string("History")
   .endOfInput.toRegex();
+
+const StopwatchBridge = ({ children }: { children: ReactNode }) => {
+  const { userSettings, setUserSettings } = useUserSettings();
+
+  const handleIsStopwatchDisabledChange = useCallback(
+    (nextIsStopwatchDisabled: boolean) => {
+      setUserSettings((current) => ({
+        ...current,
+        isStopwatchDisabled: nextIsStopwatchDisabled,
+      }));
+    },
+    [setUserSettings],
+  );
+
+  return (
+    <SudokuStopwatchProvider
+      rawBoardState={EMPTY_RAW_BOARD_STATE}
+      isStopwatchDisabled={userSettings.isStopwatchDisabled}
+      onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
+    >
+      {children}
+    </SudokuStopwatchProvider>
+  );
+};
 // #endregion
 
 // #region Render Header
@@ -53,14 +79,12 @@ const renderHeader = async ({
     JSON.stringify(userSettings),
   );
 
-  const emptyRawBoardState = getEmptyRawBoardState();
-
   const renderedHeader = await render(
     <Provider>
       <UserSettingsProvider>
-        <SudokuStopwatchProvider rawBoardState={emptyRawBoardState}>
+        <StopwatchBridge>
           <Header />
-        </SudokuStopwatchProvider>
+        </StopwatchBridge>
       </UserSettingsProvider>
     </Provider>,
   );

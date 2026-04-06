@@ -4,7 +4,10 @@ import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Keypad } from "@/lib/pages/home/components/keypad/keypad";
-import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import {
+  defaultUserSettings,
+  UserSettingsProvider,
+} from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   flippedColors,
   flippedDigits,
@@ -16,7 +19,6 @@ import {
   isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/utils/guards";
 import {
-  defaultUserSettings,
   getBoardStateWithEnteredDigitInTargetCell,
   getBoardStateWithTargetCellsSelected,
   getStartingEmptyBoardState,

@@ -5,6 +5,7 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import { Cell } from "@/lib/pages/home/components/cell/cell";
 import {
+  defaultUserSettings,
   type UserSettings,
   UserSettingsProvider,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
@@ -15,7 +16,6 @@ import {
 } from "@/lib/pages/home/utils/constants";
 import {
   CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN,
-  defaultUserSettings,
   expectSeenCellHighlightOrNotInTargetCell,
   expectTargetCellToHaveConflictHighlightOrNot,
   getBoardStateWithTargetCellsSelected,

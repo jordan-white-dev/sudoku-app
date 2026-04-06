@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  EMPTY_RAW_BOARD_STATE,
   expectTargetCellToContainEmptyCellContent,
   expectTargetCellToContainGivenDigit,
   getBoardStateWithTargetCellsSelected,
@@ -158,9 +159,7 @@ describe("Puzzle String Transforms", () => {
 
     it("serializes an empty board as a puzzle string with no given digits", () => {
       // Arrange
-      const rawBoardState = getEmptyRawBoardState();
-
-      // Act
+      const rawBoardState = EMPTY_RAW_BOARD_STATE;
       const rawPuzzleString =
         getRawPuzzleStringFromRawBoardState(rawBoardState);
 
@@ -197,9 +196,7 @@ describe("Board State Transform", () => {
   describe("getBoardStateFromRawBoardState", () => {
     it("creates a full 81-cell board for a puzzle", () => {
       // Arrange
-      const rawBoardState = getEmptyRawBoardState();
-
-      // Act
+      const rawBoardState = EMPTY_RAW_BOARD_STATE;
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
@@ -208,9 +205,7 @@ describe("Board State Transform", () => {
 
     it("treats blank cells as editable cells with no entered digit", () => {
       // Arrange
-      const rawBoardState = getEmptyRawBoardState();
-
-      // Act
+      const rawBoardState = EMPTY_RAW_BOARD_STATE;
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
@@ -264,9 +259,7 @@ describe("Board State Transform", () => {
 
     it("places each cell in the correct row, column, and box", () => {
       // Arrange
-      const rawBoardState = getEmptyRawBoardState();
-
-      // Act
+      const rawBoardState = EMPTY_RAW_BOARD_STATE;
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
@@ -299,9 +292,7 @@ describe("Board State Transform", () => {
 
     it("starts every cell unselected and without color markups", () => {
       // Arrange
-      const rawBoardState = getEmptyRawBoardState();
-
-      // Act
+      const rawBoardState = EMPTY_RAW_BOARD_STATE;
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
@@ -315,9 +306,8 @@ describe("Board State Transform", () => {
   describe("getCurrentBoardStateFromPuzzleState", () => {
     it("returns the board state for the player's current point in their undo/redo history", () => {
       // Arrange
-      const firstBoardState = getBoardStateFromRawBoardState(
-        getEmptyRawBoardState(),
-      );
+      const rawBoardState = EMPTY_RAW_BOARD_STATE;
+      const firstBoardState = getBoardStateFromRawBoardState(rawBoardState);
       const secondBoardState = getBoardStateWithTargetCellsSelected(
         [getBrandedCellId(1), getBrandedCellId(2), getBrandedCellId(3)],
         firstBoardState,
@@ -343,9 +333,10 @@ describe("Board State Transform", () => {
   describe("getBoardStateWithNoCellsSelected", () => {
     it("clears selection from every cell when the board is deselected", () => {
       // Arrange
+      const rawBoardState = EMPTY_RAW_BOARD_STATE;
       const startingBoardState = getBoardStateWithTargetCellsSelected(
         [getBrandedCellId(1), getBrandedCellId(5), getBrandedCellId(9)],
-        getBoardStateFromRawBoardState(getEmptyRawBoardState()),
+        getBoardStateFromRawBoardState(rawBoardState),
       );
 
       // Act
@@ -360,9 +351,8 @@ describe("Board State Transform", () => {
 
     it("leaves the board unchanged when no cells are selected and the board is deselected", () => {
       // Arrange
-      const startingBoardState = getBoardStateFromRawBoardState(
-        getEmptyRawBoardState(),
-      );
+      const rawBoardState = EMPTY_RAW_BOARD_STATE;
+      const startingBoardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Act
       const nextBoardState =

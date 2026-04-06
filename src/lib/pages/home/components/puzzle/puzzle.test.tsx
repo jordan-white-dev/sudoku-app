@@ -1,16 +1,20 @@
+import { type ReactNode, useCallback } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Puzzle } from "@/lib/pages/home/components/puzzle/puzzle";
 import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
-import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
+  UserSettingsProvider,
+  useUserSettings,
+} from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import {
+  EMPTY_RAW_BOARD_STATE,
   getBoardStateWithGivenDigitsInTargetCells,
   getBoardStateWithTargetCellsSelected,
   getCellElement,
   getCellLocator,
-  getEmptyRawBoardState,
   getStartingEmptyBoardState,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
@@ -33,6 +37,38 @@ vi.mock("@tanstack/react-router", () => ({
 type RenderedPuzzle = Awaited<ReturnType<typeof render>>;
 // #endregion
 
+// #region Provider Bridge
+const StopwatchBridge = ({
+  children,
+  rawBoardState,
+}: {
+  children: ReactNode;
+  rawBoardState: RawBoardState;
+}) => {
+  const { userSettings, setUserSettings } = useUserSettings();
+
+  const handleIsStopwatchDisabledChange = useCallback(
+    (nextIsStopwatchDisabled: boolean) => {
+      setUserSettings((current) => ({
+        ...current,
+        isStopwatchDisabled: nextIsStopwatchDisabled,
+      }));
+    },
+    [setUserSettings],
+  );
+
+  return (
+    <SudokuStopwatchProvider
+      rawBoardState={rawBoardState}
+      isStopwatchDisabled={userSettings.isStopwatchDisabled}
+      onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
+    >
+      {children}
+    </SudokuStopwatchProvider>
+  );
+};
+// #endregion
+
 // #region Render Puzzle
 const renderPuzzle = async ({
   rawBoardState,
@@ -41,19 +77,19 @@ const renderPuzzle = async ({
   rawBoardState?: RawBoardState;
   startingBoardState?: BoardState;
 } = {}): Promise<RenderedPuzzle> => {
-  const resolvedRawBoardState = rawBoardState ?? getEmptyRawBoardState();
+  const resolvedRawBoardState = rawBoardState ?? EMPTY_RAW_BOARD_STATE;
   const resolvedStartingBoardState =
     startingBoardState ?? getStartingEmptyBoardState();
 
   const renderedPuzzle = await render(
     <Provider>
       <UserSettingsProvider>
-        <SudokuStopwatchProvider rawBoardState={resolvedRawBoardState}>
+        <StopwatchBridge rawBoardState={resolvedRawBoardState}>
           <Puzzle
             rawBoardState={resolvedRawBoardState}
             startingBoardState={resolvedStartingBoardState}
           />
-        </SudokuStopwatchProvider>
+        </StopwatchBridge>
       </UserSettingsProvider>
     </Provider>,
   );

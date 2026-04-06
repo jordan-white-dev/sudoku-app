@@ -5,7 +5,7 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import { PuzzleControls } from "@/lib/pages/home/components/puzzle-controls/puzzle-controls";
 import {
-  getEmptyRawBoardState,
+  EMPTY_RAW_BOARD_STATE,
   getStartingEmptyBoardState,
   getStartingPuzzleStateFromBoardState,
   waitForReactToFinishUpdating,
@@ -107,7 +107,7 @@ const renderPuzzleControls = async ({
       <PuzzleControls
         isMultiselectMode={isMultiselectMode}
         puzzleState={puzzleState}
-        rawBoardState={getEmptyRawBoardState()}
+        rawBoardState={EMPTY_RAW_BOARD_STATE}
         setIsMultiselectMode={setIsMultiselectMode}
         setPuzzleState={setPuzzleState}
       />

@@ -1,3 +1,4 @@
+import { type ReactNode, useCallback } from "react";
 import SuperExpressive from "super-expressive";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
@@ -6,12 +7,13 @@ import { Provider } from "@/lib/components/ui/provider";
 import { Stopwatch } from "@/lib/pages/home/components/stopwatch/stopwatch";
 import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
 import {
+  defaultUserSettings,
   type UserSettings,
   UserSettingsProvider,
+  useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
-  defaultUserSettings,
-  getEmptyRawBoardState,
+  EMPTY_RAW_BOARD_STATE,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 
@@ -63,7 +65,30 @@ const STAY_PAUSED_BUTTON_ACCESSIBLE_NAME = SuperExpressive()
 const GAME_PAUSED_TEXT = "Game Paused";
 const PAUSE_STOPWATCH_BUTTON_ACCESSIBLE_NAME = "Pause stopwatch";
 const RESUME_STOPWATCH_BUTTON_ACCESSIBLE_NAME = "Resume stopwatch";
-const EMPTY_RAW_BOARD_STATE = getEmptyRawBoardState();
+
+const StopwatchBridge = ({ children }: { children: ReactNode }) => {
+  const { userSettings, setUserSettings } = useUserSettings();
+
+  const handleIsStopwatchDisabledChange = useCallback(
+    (nextIsStopwatchDisabled: boolean) => {
+      setUserSettings((current) => ({
+        ...current,
+        isStopwatchDisabled: nextIsStopwatchDisabled,
+      }));
+    },
+    [setUserSettings],
+  );
+
+  return (
+    <SudokuStopwatchProvider
+      rawBoardState={EMPTY_RAW_BOARD_STATE}
+      isStopwatchDisabled={userSettings.isStopwatchDisabled}
+      onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
+    >
+      {children}
+    </SudokuStopwatchProvider>
+  );
+};
 // #endregion
 
 // #region Session Storage
@@ -113,9 +138,9 @@ const renderStopwatch = async ({
   const renderedStopwatch = await render(
     <Provider>
       <UserSettingsProvider>
-        <SudokuStopwatchProvider rawBoardState={EMPTY_RAW_BOARD_STATE}>
+        <StopwatchBridge>
           <Stopwatch />
-        </SudokuStopwatchProvider>
+        </StopwatchBridge>
       </UserSettingsProvider>
     </Provider>,
   );

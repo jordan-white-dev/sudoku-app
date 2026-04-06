@@ -25,7 +25,7 @@ type UserSettingsContextValue = {
   setUserSettings: Dispatch<SetStateAction<UserSettings>>;
 };
 
-const defaultSettings: UserSettings = {
+export const defaultUserSettings: UserSettings = {
   isConflictCheckerEnabled: false,
   isDashedGridEnabled: false,
   isStopwatchDisabled: false,
@@ -46,7 +46,7 @@ export const UserSettingsProvider = ({ children }: PropsWithChildren) => {
   const [userSettings, setUserSettings] = useSessionStorageState<UserSettings>(
     "user-settings",
     {
-      defaultValue: defaultSettings,
+      defaultValue: defaultUserSettings,
     },
   );
 

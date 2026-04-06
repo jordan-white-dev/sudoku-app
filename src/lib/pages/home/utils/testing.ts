@@ -19,8 +19,6 @@ import {
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 
-import { type UserSettings } from "../hooks/use-user-settings/use-user-settings";
-
 // #region Async Test Helpers
 export const waitForReactToFinishUpdating = async () => {
   await Promise.resolve();
@@ -33,8 +31,12 @@ export const waitForReactToFinishUpdating = async () => {
 export const getEmptyRawBoardState = (): RawBoardState =>
   Array.from({ length: 81 }, () => null);
 
+export const EMPTY_RAW_BOARD_STATE: RawBoardState = Object.freeze(
+  getEmptyRawBoardState(),
+) as RawBoardState;
+
 export const getStartingEmptyBoardState = (): BoardState =>
-  getBoardStateFromRawBoardState(getEmptyRawBoardState());
+  getBoardStateFromRawBoardState(EMPTY_RAW_BOARD_STATE);
 
 export const getStartingPuzzleStateFromBoardState = (
   startingBoardState: BoardState,
@@ -218,17 +220,6 @@ export const expectTargetCellToContainGivenDigit = (
     expect(cellState.content.givenDigit).toBe(expectedGivenDigit);
 };
 // #endregion
-
-export const defaultUserSettings: UserSettings = {
-  isConflictCheckerEnabled: false,
-  isDashedGridEnabled: false,
-  isStopwatchDisabled: false,
-  isFlipKeypadEnabled: false,
-  isHideStopwatchEnabled: false,
-  isShowRowAndColumnLabelsEnabled: false,
-  isShowSeenCellsEnabled: false,
-  isStrictHighlightsEnabled: false,
-};
 
 const SEEN_CELL_HIGHLIGHT_COLOR_TOKEN = "ffd700";
 export const CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN = "179%2c%2058%2c%2058";

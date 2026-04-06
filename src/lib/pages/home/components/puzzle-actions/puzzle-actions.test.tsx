@@ -5,8 +5,8 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import { PuzzleActions } from "@/lib/pages/home/components/puzzle-actions/puzzle-actions";
 import {
+  EMPTY_RAW_BOARD_STATE,
   getBoardStateWithEnteredDigitsInTargetCells,
-  getEmptyRawBoardState,
   getStartingEmptyBoardState,
   getStartingPuzzleStateFromBoardState,
   waitForReactToFinishUpdating,
@@ -63,9 +63,20 @@ vi.mock(
   }),
 );
 
-vi.mock("@/lib/pages/home/hooks/use-user-settings/use-user-settings", () => ({
-  useUserSettings: () => mockUseUserSettings(),
-}));
+vi.mock(
+  "@/lib/pages/home/hooks/use-user-settings/use-user-settings",
+  async (importOriginal) => {
+    const original =
+      await importOriginal<
+        typeof import("@/lib/pages/home/hooks/use-user-settings/use-user-settings")
+      >();
+
+    return {
+      ...original,
+      useUserSettings: () => mockUseUserSettings(),
+    };
+  },
+);
 // #endregion
 
 // #region Shared Test Types and Constants
@@ -147,7 +158,7 @@ const renderPuzzleActions = async ({
     <Provider>
       <PuzzleActions
         puzzleState={puzzleState}
-        rawBoardState={rawBoardState ?? getEmptyRawBoardState()}
+        rawBoardState={rawBoardState ?? EMPTY_RAW_BOARD_STATE}
         setPuzzleState={resolvedSetPuzzleStateSpy}
       />
     </Provider>,
@@ -213,7 +224,7 @@ beforeEach(() => {
 
   mockNavigate.mockReset();
   mockMakePuzzle.mockReset();
-  mockMakePuzzle.mockReturnValue(getEmptyRawBoardState());
+  mockMakePuzzle.mockReturnValue(EMPTY_RAW_BOARD_STATE);
 
   mockPauseStopwatch.mockReset();
   mockResetStopwatch.mockReset();

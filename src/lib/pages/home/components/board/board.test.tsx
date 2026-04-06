@@ -5,11 +5,11 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import { Board } from "@/lib/pages/home/components/board/board";
 import {
+  defaultUserSettings,
   type UserSettings,
   UserSettingsProvider,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
-  defaultUserSettings,
   expectSeenCellHighlightOrNotInTargetCell,
   expectTargetCellToHaveConflictHighlightOrNot,
   getBoardStateWithEnteredDigitInTargetCell,
@@ -36,8 +36,6 @@ import {
   type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
-
-const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 
 // #region Board Lookup
 const getBoardElement = async (
@@ -66,6 +64,8 @@ const getBoardElement = async (
 // #endregion
 
 // #region Render Board
+const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
+
 const renderBoard = async ({
   startingBoardState,
   isMultiselectMode = false,
@@ -146,15 +146,13 @@ const expectTargetCellsToBeSelectedOrNot = async (
 
 const expectAllCellsToBeSelected = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-) => {
+) =>
   await expectTargetCellsToBeSelectedOrNot(renderedBoard, ALL_CELL_IDS, true);
-};
 
 const expectNoCellsToBeSelected = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-) => {
+) =>
   await expectTargetCellsToBeSelectedOrNot(renderedBoard, ALL_CELL_IDS, false);
-};
 
 const expectOnlyTargetCellsToBeSelected = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
@@ -200,11 +198,11 @@ const expectOnlyTargetCellsToNotBeSelected = async (
 // #region Seen Cell Expectations
 const getZeroBasedCellIndex = (cellId: CellId): number => Number(cellId) - 1;
 
-const getRowIndex = (cellId: CellId): number =>
-  Math.floor(getZeroBasedCellIndex(cellId) / 9);
-
 const getColumnIndex = (cellId: CellId): number =>
   getZeroBasedCellIndex(cellId) % 9;
+
+const getRowIndex = (cellId: CellId): number =>
+  Math.floor(getZeroBasedCellIndex(cellId) / 9);
 
 const getBoxIndex = (cellId: CellId): number =>
   Math.floor(getRowIndex(cellId) / 3) * 3 +
@@ -241,15 +239,14 @@ const expectTargetCellsToHaveSeenCellHighlightOrNot = async (
 
 const expectNoCellsToHaveSeenCellHighlight = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-) => {
+) =>
   await expectTargetCellsToHaveSeenCellHighlightOrNot(
     renderedBoard,
     ALL_CELL_IDS,
     false,
   );
-};
 
-const expectOnlySeenCellsOfTargetCellToBeHighlighted = async (
+const expectOnlyCellsSeenByTargetCellToBeHighlighted = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   targetCellId: CellId,
 ) => {
@@ -290,13 +287,12 @@ const expectTargetCellsToHaveConflictHighlightOrNot = async (
 
 const expectNoCellsToHaveConflictHighlight = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
-) => {
+) =>
   await expectTargetCellsToHaveConflictHighlightOrNot(
     renderedBoard,
     ALL_CELL_IDS,
     false,
   );
-};
 
 const expectOnlyTargetCellsToHaveConflictHighlight = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
@@ -732,7 +728,7 @@ describe("Show seen cells highlights", () => {
     await cellToClickLocator.click();
 
     // Assert
-    await expectOnlySeenCellsOfTargetCellToBeHighlighted(
+    await expectOnlyCellsSeenByTargetCellToBeHighlighted(
       renderedBoard,
       getBrandedCellId(1),
     );
@@ -756,7 +752,7 @@ describe("Show seen cells highlights", () => {
     await cellToClickLocator.click();
 
     // Assert
-    await expectOnlySeenCellsOfTargetCellToBeHighlighted(
+    await expectOnlyCellsSeenByTargetCellToBeHighlighted(
       renderedBoard,
       getBrandedCellId(1),
     );
