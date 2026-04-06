@@ -44,7 +44,6 @@ import {
 } from "@/lib/pages/home/utils/types";
 
 const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
-
 const SELECTED_CELL_HIGHLIGHT_COLOR_TOKEN = "4ca4ff";
 
 // Equivalent to: /url\("data:image\/svg\+xml,([^"]+)"\)/g
@@ -1827,7 +1826,6 @@ describe("Double-click selection (strict highlight mode)", () => {
     const sourceCellId = getBrandedCellId(10);
     const exactMatchCellId = getBrandedCellId(20);
     let boardState = getStartingEmptyBoardState();
-
     boardState = getBoardStateWithUpdatedTargetCell(
       sourceCellId,
       {
@@ -1869,12 +1867,11 @@ describe("Double-click selection (strict highlight mode)", () => {
     expect(getSelectedCellIds(nextBoardState)).toEqual([10, 20]);
   });
 
-  it("does not select cells that match only partially when strict mode is on", async () => {
+  it("does not select cells that match only partially when strict highlights is on", async () => {
     // Arrange
     const sourceCellId = getBrandedCellId(10);
     const partialMatchCellId = getBrandedCellId(20);
     let boardState = getStartingEmptyBoardState();
-
     boardState = getBoardStateWithUpdatedTargetCell(
       sourceCellId,
       {
@@ -1916,12 +1913,11 @@ describe("Double-click selection (strict highlight mode)", () => {
     ).toBe(false);
   });
 
-  it("does not select empty cells when strict mode is on", async () => {
+  it("does not select empty cells when strict highlights is on", async () => {
     // Arrange
     const sourceCellId = getBrandedCellId(10);
     const emptyCellId = getBrandedCellId(20);
     let boardState = getStartingEmptyBoardState();
-
     boardState = getBoardStateWithUpdatedTargetCell(
       sourceCellId,
       {

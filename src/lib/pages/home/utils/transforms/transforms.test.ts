@@ -6,6 +6,7 @@ import {
   expectTargetCellToContainGivenDigit,
   getBoardStateWithTargetCellsSelected,
   getEmptyRawBoardState,
+  getStartingEmptyBoardState,
   getTargetCellStateFromBoardState,
 } from "@/lib/pages/home/utils/testing";
 import {
@@ -20,6 +21,7 @@ import {
   getEncodedPuzzleStringFromRawPuzzleString,
   getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
+  updatePuzzleStateWithCurrentBoardState,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
@@ -360,6 +362,60 @@ describe("Board State Transform", () => {
 
       // Assert
       expect(nextBoardState).toEqual(startingBoardState);
+    });
+  });
+
+  describe("updatePuzzleStateWithCurrentBoardState", () => {
+    it("returns the original puzzle state when the board state is unchanged", () => {
+      // Arrange
+      const startingBoardState = getStartingEmptyBoardState();
+      const startingPuzzleState = getPuzzleStateFromPuzzleHistory(
+        [startingBoardState],
+        0,
+      );
+
+      // Act
+      const nextPuzzleState = updatePuzzleStateWithCurrentBoardState(
+        startingPuzzleState,
+        startingBoardState,
+      );
+
+      // Assert
+      expect(nextPuzzleState).toBe(startingPuzzleState);
+    });
+
+    it("replaces the board state at the current history index when the board changes", () => {
+      // Arrange
+      const firstBoardState = getStartingEmptyBoardState();
+      const secondBoardState = getBoardStateWithTargetCellsSelected(
+        [getBrandedCellId(1)],
+        firstBoardState,
+      );
+      const thirdBoardState = getBoardStateWithTargetCellsSelected(
+        [getBrandedCellId(9)],
+        firstBoardState,
+      );
+      const startingPuzzleState = getPuzzleStateFromPuzzleHistory(
+        [firstBoardState, secondBoardState, thirdBoardState],
+        1,
+      );
+      const replacementBoardState = getBoardStateWithTargetCellsSelected(
+        [getBrandedCellId(2), getBrandedCellId(3)],
+        secondBoardState,
+      );
+
+      // Act
+      const nextPuzzleState = updatePuzzleStateWithCurrentBoardState(
+        startingPuzzleState,
+        replacementBoardState,
+      );
+
+      // Assert
+      expect(nextPuzzleState).not.toBe(startingPuzzleState);
+      expect(nextPuzzleState.historyIndex).toBe(1);
+      expect(nextPuzzleState.puzzleHistory[0]).toBe(firstBoardState);
+      expect(nextPuzzleState.puzzleHistory[1]).toBe(replacementBoardState);
+      expect(nextPuzzleState.puzzleHistory[2]).toBe(thirdBoardState);
     });
   });
 });

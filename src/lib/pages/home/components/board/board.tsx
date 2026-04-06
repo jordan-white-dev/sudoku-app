@@ -15,6 +15,7 @@ import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleState,
   getGivenOrEnteredDigitInCellIfPresent,
+  updatePuzzleStateWithCurrentBoardState,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
@@ -228,19 +229,10 @@ const handleMoveOrAddToCellSelection = (
 
     setLastSelectedCellId(nextCellId);
 
-    const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
-      (boardState, historyIndex) =>
-        historyIndex === currentPuzzleState.historyIndex
-          ? nextBoardState
-          : boardState,
+    return updatePuzzleStateWithCurrentBoardState(
+      currentPuzzleState,
+      nextBoardState,
     );
-
-    const nextPuzzleState = {
-      historyIndex: currentPuzzleState.historyIndex,
-      puzzleHistory: nextPuzzleHistory,
-    };
-
-    return nextPuzzleState;
   });
 
 const getBoardStateWithTargetCellAddedToSelection = (
@@ -317,19 +309,10 @@ const handleAllCellsSelectionChange = (
     if (!didBoardStateChange(currentBoardState, nextBoardState))
       return currentPuzzleState;
 
-    const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
-      (boardState, historyIndex) =>
-        historyIndex === currentPuzzleState.historyIndex
-          ? nextBoardState
-          : boardState,
+    return updatePuzzleStateWithCurrentBoardState(
+      currentPuzzleState,
+      nextBoardState,
     );
-
-    const nextPuzzleState = {
-      historyIndex: currentPuzzleState.historyIndex,
-      puzzleHistory: nextPuzzleHistory,
-    };
-
-    return nextPuzzleState;
   });
 
 const handleDeselectAllCells = (
@@ -476,19 +459,10 @@ const handleMultiCellSelectionDuringPointerDrag = (
 
     if (!didSelectedCellsChange) return currentPuzzleState;
 
-    const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
-      (boardState, historyIndex) =>
-        historyIndex === currentPuzzleState.historyIndex
-          ? boardStateAfterSelectionsCheck
-          : boardState,
+    return updatePuzzleStateWithCurrentBoardState(
+      currentPuzzleState,
+      boardStateAfterSelectionsCheck,
     );
-
-    const nextPuzzleState = {
-      historyIndex: currentPuzzleState.historyIndex,
-      puzzleHistory: nextPuzzleHistory,
-    };
-
-    return nextPuzzleState;
   });
 
 const getCellIdFromRowAndColumn = (
@@ -711,19 +685,10 @@ const handleCellSelection = (
 
     if (!didBoardStateChange) return currentPuzzleState;
 
-    const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
-      (boardState, historyIndex) =>
-        historyIndex === currentPuzzleState.historyIndex
-          ? boardStateAfterSelectionCheck
-          : boardState,
+    return updatePuzzleStateWithCurrentBoardState(
+      currentPuzzleState,
+      boardStateAfterSelectionCheck,
     );
-
-    const nextPuzzleState = {
-      historyIndex: currentPuzzleState.historyIndex,
-      puzzleHistory: nextPuzzleHistory,
-    };
-
-    return nextPuzzleState;
   });
 
 const handleCellPointerDown = (

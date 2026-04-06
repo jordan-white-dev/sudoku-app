@@ -1,4 +1,7 @@
-import { type CellContent } from "@/lib/pages/home/utils/types";
+import {
+  type CellContent,
+  type MarkupColor,
+} from "@/lib/pages/home/utils/types";
 
 // #region Cell Content Guards
 export const isGivenDigitInCellContent = (cellContent: CellContent) =>
@@ -15,6 +18,10 @@ export const isEmptyCellContent = (cellContent: CellContent) =>
 
 export const isGivenOrEnteredDigitInCellContent = (cellContent: CellContent) =>
   "enteredDigit" in cellContent || "givenDigit" in cellContent;
+
+export const isNonEmptyMarkupColor = (
+  markupColor: MarkupColor | "",
+): markupColor is MarkupColor => markupColor !== "";
 // #endregion
 
 // #region Exhaustive Guard

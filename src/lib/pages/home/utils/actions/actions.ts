@@ -6,6 +6,7 @@ import {
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
+  isNonEmptyMarkupColor,
 } from "@/lib/pages/home/utils/guards";
 import { getCurrentBoardStateFromPuzzleState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -25,7 +26,12 @@ const commitBoardStateToPuzzleHistoryIfChanged = (
   nextBoardState: BoardState,
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) => {
+  const hasReferenceDifferences = currentBoardState.some(
+    (cellState, cellIndex) => cellState !== nextBoardState[cellIndex],
+  );
+
   const didBoardStateChange =
+    hasReferenceDifferences &&
     JSON.stringify(nextBoardState) !== JSON.stringify(currentBoardState);
 
   if (!didBoardStateChange) return;
@@ -356,7 +362,7 @@ const doAllSelectedCellsHaveTheMarkupColor = (
     .filter((currentCellState) => currentCellState.isSelected)
     .every((currentCellState) =>
       currentCellState.markupColors
-        .filter((currentMarkupColor) => currentMarkupColor !== "")
+        .filter(isNonEmptyMarkupColor)
         .includes(markupColor),
     );
 
@@ -413,7 +419,7 @@ const getMarkupColorsCellState = (
   if (!currentCellState.isSelected) return currentCellState;
 
   const currentMarkupColors = currentCellState.markupColors.filter(
-    (currentMarkupColor) => currentMarkupColor !== "",
+    isNonEmptyMarkupColor,
   );
 
   return shouldMarkupColorBeRemoved

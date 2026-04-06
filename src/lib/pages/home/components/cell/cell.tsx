@@ -18,6 +18,7 @@ import {
   isGivenDigitInCellContent,
   isGivenOrEnteredDigitInCellContent,
   isMarkupDigitsInCellContent,
+  isNonEmptyMarkupColor,
 } from "@/lib/pages/home/utils/guards";
 import {
   getCurrentBoardStateFromPuzzleState,
@@ -119,9 +120,7 @@ type Rectangle = {
 const getMarkupColorsBackground = (
   cellMarkupColors: Array<MarkupColor> | [""],
 ): ButtonProps["background"] => {
-  const appliedMarkupColors = cellMarkupColors.filter(
-    (markupColor) => markupColor !== "",
-  );
+  const appliedMarkupColors = cellMarkupColors.filter(isNonEmptyMarkupColor);
 
   if (appliedMarkupColors.length === 0) return "transparent";
 

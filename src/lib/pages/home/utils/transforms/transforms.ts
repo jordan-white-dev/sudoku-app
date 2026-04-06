@@ -184,6 +184,34 @@ export const getCurrentBoardStateFromPuzzleState = (
   return currentBoardState;
 };
 
+export const updatePuzzleStateWithCurrentBoardState = (
+  currentPuzzleState: PuzzleState,
+  nextBoardState: BoardState,
+): PuzzleState => {
+  const currentBoardState =
+    getCurrentBoardStateFromPuzzleState(currentPuzzleState);
+
+  const didBoardStateChange = currentBoardState.some(
+    (cellState, cellIndex) => cellState !== nextBoardState[cellIndex],
+  );
+
+  if (!didBoardStateChange) return currentPuzzleState;
+
+  const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
+    (boardState, historyIndex) =>
+      historyIndex === currentPuzzleState.historyIndex
+        ? nextBoardState
+        : boardState,
+  );
+
+  const nextPuzzleState: PuzzleState = {
+    historyIndex: currentPuzzleState.historyIndex,
+    puzzleHistory: nextPuzzleHistory,
+  };
+
+  return nextPuzzleState;
+};
+
 export const getBoardStateWithNoCellsSelected = (
   boardState: BoardState,
 ): BoardState => {
