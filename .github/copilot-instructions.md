@@ -2,12 +2,15 @@
 
 ## Code Style
 
-- Use TypeScript with strict typing, minimal type assertions, and the existing `@/*` path alias from `tsconfig.json`.
-- Follow Biome rules in `biome.json`: no barrel files, inline `type` imports, generic array syntax, and no default exports except where the existing override allows them such as page `index.tsx` files.
-- Use descriptive names, keep functions small and focused, and colocate `*.test.tsx` files beside their corresponding implementation files.
-- Prefer debuggable longform code over concise inline code. For non-trivial logic, avoid compressed one-liners, nested ternaries, and inline object reconstruction inside callbacks. Instead, introduce well-named intermediate variables and use explicit `return` statements.
-- Prefer deterministic, functional-style code. Favor `const`, pure functions, derived values, and immutable updates over `let` bindings and variable mutation unless mutation is clearly justified.
-- Preserve the existing import grouping order: package imports, blank line, alias imports, blank line, relative imports.
+- Use TypeScript with strict typing. Prefer minimal type assertions. Use the existing `@/*` path alias from `tsconfig.json`.
+- Follow Biome rules in `biome.json`. Avoid barrel files, use inline `type` imports, use generic array syntax, and avoid default exports except where explicitly allowed (e.g., page `index.tsx` files).
+- Use descriptive function and variable names that indicate purpose well enough for explanatory comments to rarely be needed. When comments are necessary, prefer doc comments that can be surfaced in hover tooltips.
+- Collocate `*.test.tsx` files beside their corresponding implementation. Write "describe" blocks in sentence case and "it" blocks in lowercase. Ensure test descriptions reflect business behavior rather than implementation details. Structure tests using Arrange, Act, and Assert.
+- Prefer tests that cover one behavior or scenario at a time. Write tests to cover all behaviors and reasonable edge and corner cases. Favor minimal mocking and test helpers; ensure tests reflect real usage. Do not use data-testid; instead, query elements by role, label text, or visible content.
+- Prefer debuggable longform code over concise inline expressions. Avoid nested ternaries, compressed one-liners, and inline object reconstruction in non-trivial logic. Use well-named intermediate variables and explicit `return` statements.
+- Prefer deterministic, functional-style code with small, focused functions. Favor `const`, pure functions, derived values, and immutable updates. Avoid `let` bindings and mutation unless clearly justified.
+- Use array methods like `map`, `filter`, and `reduce` for data transformations. Avoid manual loops, mutation, and side effects in these operations.
+- Preserve import grouping order: package imports, blank line, alias imports, blank line, relative imports.
 
 ## Architecture
 
@@ -29,7 +32,7 @@
   - `pnpm build`
   - `pnpm knip`
   - `pnpm check`
-- Tests run with Vitest in browser mode through Playwright. Prefer updating or adding colocated tests when changing behavior, especially in `src/lib/pages/home`.
+- Tests run with Vitest in browser mode through Playwright. Prefer updating or adding collocated tests when changing behavior, especially in `src/lib/pages/home`.
 
 ## Conventions
 
