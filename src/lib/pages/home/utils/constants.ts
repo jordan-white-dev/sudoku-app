@@ -1,13 +1,13 @@
 // #region Markup Colors
-export const MARKUP_COLOR_GRAY = "#c2bcbc";
+export const MARKUP_COLOR_GRAY = "#cfcfc4";
 export const MARKUP_COLOR_WHITE = "#ffffff";
-export const MARKUP_COLOR_PINK = "#f79cf7";
-export const MARKUP_COLOR_RED = "#f98987";
-export const MARKUP_COLOR_ORANGE = "#f5ae51";
-export const MARKUP_COLOR_YELLOW = "#fef28c";
-export const MARKUP_COLOR_GREEN = "#94cb9c";
-export const MARKUP_COLOR_BLUE = "#8cc2fa";
-export const MARKUP_COLOR_PURPLE = "#bf5fca";
+export const MARKUP_COLOR_PINK = "#ffc5d3";
+export const MARKUP_COLOR_RED = "#f9a5a4";
+export const MARKUP_COLOR_ORANGE = "#fac898";
+export const MARKUP_COLOR_YELLOW = "#ffee8c";
+export const MARKUP_COLOR_GREEN = "#bee5b0";
+export const MARKUP_COLOR_BLUE = "#b3ebf2";
+export const MARKUP_COLOR_PURPLE = "#c3b5c5";
 
 export const markupColors = [
   MARKUP_COLOR_GRAY,
