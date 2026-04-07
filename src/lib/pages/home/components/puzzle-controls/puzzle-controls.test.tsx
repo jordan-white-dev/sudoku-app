@@ -349,6 +349,33 @@ describe("Keyboard shortcuts", () => {
     expect(mockHandleClearCell).toHaveBeenCalledTimes(3);
   });
 
+  it("does not dispatch clear action for Escape when focus is inside a menu", async () => {
+    // Arrange
+    await renderPuzzleControls();
+    const menuElement = document.createElement("div");
+    menuElement.setAttribute("role", "menu");
+    const menuItemElement = document.createElement("div");
+    menuItemElement.setAttribute("role", "menuitem");
+    menuElement.appendChild(menuItemElement);
+    document.body.appendChild(menuElement);
+
+    // Act
+    menuItemElement.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: "Escape",
+      }),
+    );
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    expect(mockHandleClearCell).not.toHaveBeenCalled();
+
+    // Cleanup
+    document.body.removeChild(menuElement);
+  });
+
   it("toggles multiselect mode with M", async () => {
     // Arrange
     const renderedPuzzleControls = await renderPuzzleControls({

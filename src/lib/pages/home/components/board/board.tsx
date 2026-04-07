@@ -1,6 +1,7 @@
 import { Box, SimpleGrid } from "@chakra-ui/react";
 import {
   type Dispatch,
+  type FocusEvent,
   type PointerEvent,
   type RefObject,
   type SetStateAction,
@@ -884,6 +885,30 @@ export const Board = ({
     [isMultiselectMode, setPuzzleState],
   );
 
+  const handleBoardFocus = useCallback(
+    (event: FocusEvent<HTMLDivElement>) => {
+      if (boardRef.current?.contains(event.relatedTarget as Node)) return;
+      if (isPointerDraggingAcrossBoardRef.current) return;
+
+      setPuzzleState((currentPuzzleState) => {
+        const currentBoardState =
+          getCurrentBoardStateFromPuzzleState(currentPuzzleState);
+
+        if (currentBoardState.some((c) => c.isSelected))
+          return currentPuzzleState;
+
+        return updatePuzzleStateWithCurrentBoardState(
+          currentPuzzleState,
+          getBoardStateWithOnlyTargetCellSelected(
+            currentBoardState,
+            currentBoardState[0].id,
+          ),
+        );
+      });
+    },
+    [setPuzzleState],
+  );
+
   useEffect(() => {
     const handleAddToOrMoveCellSelection = (
       arrowKeyDirection: ArrowKeyDirection,
@@ -1003,6 +1028,7 @@ export const Board = ({
             setPuzzleState,
           )
         }
+        onFocus={handleBoardFocus}
         onPointerUp={() =>
           handleBoardPointerUpOrCancel(
             currentBoardPositionDuringDragRef,

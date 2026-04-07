@@ -3881,3 +3881,37 @@ describe("Selecting cells by clicking and dragging", () => {
     await expectNoCellsToBeSelected(renderedBoard);
   });
 });
+
+describe("Selecting cells by focusing the board", () => {
+  it("selects cell 1 when the board receives focus and no cells are selected", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard();
+
+    // Act
+    (await getCellElement(renderedBoard, getBrandedCellId(1))).focus();
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellId(1),
+    ]);
+  });
+
+  it("does not change selection when the board receives focus and a cell is already selected", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard({
+      startingBoardState: getBoardStateWithTargetCellsSelected([
+        getBrandedCellId(5),
+      ]),
+    });
+
+    // Act
+    (await getCellElement(renderedBoard, getBrandedCellId(5))).focus();
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellId(5),
+    ]);
+  });
+});

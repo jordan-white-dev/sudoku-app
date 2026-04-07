@@ -383,6 +383,13 @@ export const PuzzleControls = ({
       )
         return false;
 
+      if (
+        event.key === "Escape" &&
+        event.target instanceof Element &&
+        event.target.closest('[role="menu"]') !== null
+      )
+        return false;
+
       event.preventDefault();
       handleClearCell(puzzleStateRef.current, setPuzzleState);
       return true;
