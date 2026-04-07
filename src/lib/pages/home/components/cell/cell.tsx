@@ -52,6 +52,8 @@ const SEEN_CELL_COLOR = "#ffd700";
 const SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS = 8;
 const SELECTED_CELL_COLOR = "#4ca4ff";
 
+const MARKUP_COLORS_GRADIENT_START_ANGLE_DEGREES = 22.5;
+
 // Cell Size
 const CELL_SIZE: SquareProps["minWidth"] = {
   base: "33px",
@@ -134,7 +136,7 @@ const getMarkupColorsBackground = (
       `${color} ${index * degreesPerSlice}deg ${(index + 1) * degreesPerSlice}deg`,
   );
 
-  const markupColorsBackground = `conic-gradient(${gradientSegments.join(", ")})`;
+  const markupColorsBackground = `conic-gradient(from ${MARKUP_COLORS_GRADIENT_START_ANGLE_DEGREES}deg, ${gradientSegments.join(", ")})`;
 
   return markupColorsBackground;
 };
