@@ -32,6 +32,21 @@ export const flippedColors = [
   MARKUP_COLOR_WHITE,
   MARKUP_COLOR_PINK,
 ] as const;
+
+// #region Markup Color Names
+export const markupColorNames = {
+  [MARKUP_COLOR_GRAY]: "Gray",
+  [MARKUP_COLOR_WHITE]: "White",
+  [MARKUP_COLOR_PINK]: "Pink",
+  [MARKUP_COLOR_RED]: "Red",
+  [MARKUP_COLOR_ORANGE]: "Orange",
+  [MARKUP_COLOR_YELLOW]: "Yellow",
+  [MARKUP_COLOR_GREEN]: "Green",
+  [MARKUP_COLOR_BLUE]: "Blue",
+  [MARKUP_COLOR_PURPLE]: "Purple",
+} as const;
+// #endregion
+
 // #endregion
 
 // #region Sudoku Digits

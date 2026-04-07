@@ -21,6 +21,7 @@ import {
   isNonEmptyMarkupColor,
 } from "@/lib/pages/home/utils/guards";
 import {
+  getCellAriaLabel,
   getCurrentBoardStateFromPuzzleState,
   getGivenOrEnteredDigitInCellIfPresent,
 } from "@/lib/pages/home/utils/transforms/transforms";
@@ -1245,6 +1246,7 @@ type CellProps = {
   isSeenInRow: boolean;
   selectedColumnNumber: ColumnNumber | undefined;
   selectedRowNumber: RowNumber | undefined;
+  tabIndex: number;
   handleCellPointerDown: (cellId: CellId) => void;
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
@@ -1259,6 +1261,7 @@ export const Cell = memo(
     isSeenInRow,
     selectedColumnNumber,
     selectedRowNumber,
+    tabIndex,
     handleCellPointerDown,
     setPuzzleState,
   }: CellProps) => {
@@ -1287,7 +1290,16 @@ export const Cell = memo(
 
     return (
       <Button
-        aria-label={`Cell ${cellId} located in row ${rowNumber}, column ${columnNumber}`}
+        aria-colindex={columnNumber}
+        aria-invalid={hasDigitConflict}
+        aria-label={getCellAriaLabel(
+          rowNumber,
+          columnNumber,
+          cellContent,
+          cellMarkupColors,
+        )}
+        aria-readonly={isGivenDigitInCellContent(cellContent)}
+        aria-selected={isSelected}
         background={getCellBackground({
           cellMarkupColors,
           columnNumber,
@@ -1311,6 +1323,8 @@ export const Cell = memo(
         height={CELL_SIZE}
         minWidth={CELL_SIZE}
         padding="0"
+        role="gridcell"
+        tabIndex={tabIndex}
         textShadow={getTextShadow(cellContent)}
         transition="none"
         width={CELL_SIZE}

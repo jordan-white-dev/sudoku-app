@@ -106,9 +106,12 @@ const getMenuTriggerButtons = async (
   const allHeaderButtons = await getAllHeaderButtons(renderedHeader);
 
   return allHeaderButtons.filter((headerButton) => {
-    const ariaLabel = headerButton.element().getAttribute("aria-label");
+    const ariaLabel = headerButton.element().getAttribute("aria-label") ?? "";
 
-    return ariaLabel !== "Pause stopwatch" && ariaLabel !== "Resume stopwatch";
+    return !(
+      ariaLabel.startsWith("Pause stopwatch") ||
+      ariaLabel.startsWith("Resume stopwatch")
+    );
   });
 };
 

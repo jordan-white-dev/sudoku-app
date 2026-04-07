@@ -1,4 +1,5 @@
 import {
+  Button,
   ColorSwatch,
   GridItem,
   Icon,
@@ -36,6 +37,7 @@ import {
   MARKUP_COLOR_RED,
   MARKUP_COLOR_WHITE,
   MARKUP_COLOR_YELLOW,
+  markupColorNames,
   markupColors,
   sudokuDigits,
 } from "@/lib/pages/home/utils/constants";
@@ -96,15 +98,24 @@ const ColorButton = ({
 }: ColorButtonProps) => (
   <GridItem colSpan={2} height={COLOR_SWATCH_SIZE} width={COLOR_SWATCH_SIZE}>
     <Tooltip content={tooltipText}>
-      <ColorSwatch
+      <Button
+        aria-label={markupColorNames[markupColor]}
         height={COLOR_SWATCH_SIZE}
-        rounded="md"
-        value={markupColor}
+        padding="0"
+        unstyled
         width={COLOR_SWATCH_SIZE}
         onClick={() =>
           handleColorPadInput(puzzleState, markupColor, setPuzzleState)
         }
-      />
+      >
+        <ColorSwatch
+          aria-hidden="true"
+          height={COLOR_SWATCH_SIZE}
+          rounded="md"
+          value={markupColor}
+          width={COLOR_SWATCH_SIZE}
+        />
+      </Button>
     </Tooltip>
   </GridItem>
 );
@@ -154,6 +165,7 @@ const ColorPad = ({ puzzleState, setPuzzleState }: ColorPadProps) => {
 // #region Number Button
 type NumberButtonProps = {
   alignItems?: IconButtonProps["alignItems"];
+  ariaLabel: IconButtonProps["aria-label"];
   justifyContent?: IconButtonProps["justifyContent"];
   padding?: IconButtonProps["padding"];
   sudokuDigit: SudokuDigit;
@@ -163,6 +175,7 @@ type NumberButtonProps = {
 
 const NumberButton = ({
   alignItems,
+  ariaLabel,
   sudokuDigit,
   justifyContent,
   padding,
@@ -173,6 +186,7 @@ const NumberButton = ({
     <Tooltip content={sudokuDigit}>
       <Square aspectRatio="square">
         <IconButton
+          aria-label={ariaLabel}
           aspectRatio="square"
           color="white"
           colorPalette="blue"
@@ -232,6 +246,7 @@ const NumberPad = ({
         if (keypadMode === "Digit")
           return (
             <NumberButton
+              ariaLabel={`Enter digit ${sudokuDigit}`}
               sudokuDigit={sudokuDigit}
               key={sudokuDigit}
               textStyle={ICON_BUTTON_TEXT_STYLE_DIGIT}
@@ -243,6 +258,7 @@ const NumberPad = ({
         else if (keypadMode === "Center")
           return (
             <NumberButton
+              ariaLabel={`Enter center markup ${sudokuDigit}`}
               sudokuDigit={sudokuDigit}
               key={sudokuDigit}
               textStyle={ICON_BUTTON_TEXT_STYLE_NONDIGIT}
@@ -259,6 +275,7 @@ const NumberPad = ({
           return (
             <NumberButton
               alignItems={getAlignItemsForCornerNumberButton(sudokuDigit)}
+              ariaLabel={`Enter corner markup ${sudokuDigit}`}
               sudokuDigit={sudokuDigit}
               justifyContent={getJustifyContentForCornerNumberButton(
                 sudokuDigit,
@@ -305,6 +322,7 @@ const MultiselectSwitch = ({
     <Tooltip content="Multiple cells can be selected while this is toggled">
       <Stack alignItems="center" direction="column" gap="1">
         <Switch.Root
+          aria-label="Multiselect mode"
           checked={isMultiselectMode}
           colorPalette="blue"
           size="lg"
@@ -345,6 +363,7 @@ const ClearButton = ({ puzzleState, setPuzzleState }: ClearButtonProps) => (
       positioning={{ placement: "bottom" }}
     >
       <IconButton
+        aria-label="Clear selected cells"
         color="white"
         colorPalette="blue"
         rounded="md"

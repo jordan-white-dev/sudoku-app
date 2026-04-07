@@ -51,7 +51,7 @@ const getBoardElement = async (
 
   while (currentAncestorElement) {
     const cellsInBoardCount = currentAncestorElement.querySelectorAll(
-      'button[aria-label^="Cell "]',
+      "button[data-cell-number]",
     ).length;
 
     if (cellsInBoardCount === 81) return currentAncestorElement;

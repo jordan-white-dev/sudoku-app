@@ -227,6 +227,7 @@ const renderCell = async ({
           selectedColumnNumber={selectedColumnNumber}
           selectedRowNumber={selectedRowNumber}
           setPuzzleState={setPuzzleState}
+          tabIndex={0}
         />
       </UserSettingsProvider>
     </Provider>,
@@ -249,7 +250,7 @@ beforeEach(() => {
 });
 
 describe("Accessible name", () => {
-  it("includes the cell id, row number, and column number in the accessible name", async () => {
+  it("includes the row number and column number in the accessible name for an empty cell", async () => {
     // Arrange
     const targetCellId = getBrandedCellId(23);
     const cellState = getTargetCellStateFromBoardState(targetCellId);
@@ -260,7 +261,7 @@ describe("Accessible name", () => {
     // Assert
     await expect
       .element(
-        renderedCell.getByRole("button", {
+        renderedCell.getByRole("gridcell", {
           name: getCellAccessibleName(targetCellId),
         }),
       )

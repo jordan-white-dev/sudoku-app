@@ -33,7 +33,13 @@ const HomeInner = () => {
       onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
     >
       <Header />
-      <Box width="full" as="main" justifyItems="center" marginY={22}>
+      <Box
+        id="main-content"
+        width="full"
+        as="main"
+        justifyItems="center"
+        marginY={22}
+      >
         <Puzzle
           key={encodedPuzzleString}
           encodedPuzzleString={encodedPuzzleString}

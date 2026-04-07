@@ -391,7 +391,7 @@ const ShortcutMenuItem = ({
 const ShortcutsMenu = () => (
   <Menu.Root>
     <Menu.Trigger asChild alignSelf="center" color="white" cursor="pointer">
-      <Button unstyled>
+      <Button aria-label="Keyboard shortcuts" unstyled>
         <ImKeyboard />
       </Button>
     </Menu.Trigger>
@@ -468,7 +468,13 @@ const SettingsMenu = () => {
   return (
     <Menu.Root>
       <Menu.Trigger asChild>
-        <IconButton alignSelf="center" color="white" cursor="pointer" unstyled>
+        <IconButton
+          alignSelf="center"
+          aria-label="Settings"
+          color="white"
+          cursor="pointer"
+          unstyled
+        >
           <MdOutlineSettings />
         </IconButton>
       </Menu.Trigger>

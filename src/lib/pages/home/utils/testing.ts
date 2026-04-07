@@ -230,31 +230,33 @@ export const getCellAccessibleName = (cellId: CellId) => {
   const rowNumber = Math.floor((cellId - 1) / 9) + 1;
   const columnNumber = ((cellId - 1) % 9) + 1;
 
-  return `Cell ${cellId} located in row ${rowNumber}, column ${columnNumber}`;
+  return `Row ${rowNumber}, Column ${columnNumber}: empty`;
 };
 
 export const getCellLocator = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellId: CellId,
-): Promise<Locator> =>
-  (await renderedBoard).getByRole("button", {
-    name: getCellAccessibleName(cellId),
+): Promise<Locator> => {
+  const rowNumber = Math.floor((cellId - 1) / 9) + 1;
+  const columnNumber = ((cellId - 1) % 9) + 1;
+  return (await renderedBoard).getByRole("gridcell", {
+    name: new RegExp(`^Row ${rowNumber}, Column ${columnNumber}:`),
   });
+};
 
 export const getCellElement = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellId: CellId,
 ): Promise<HTMLButtonElement> => {
   const resolvedRenderedBoard = await renderedBoard;
-  const cellAccessibleName = getCellAccessibleName(cellId);
 
   const candidateCellElement =
     resolvedRenderedBoard.container.querySelector<HTMLButtonElement>(
-      `button[aria-label="${cellAccessibleName}"]`,
+      `button[data-cell-number="${cellId}"]`,
     );
 
   if (!candidateCellElement)
-    throw Error(`Could not find button for ${cellAccessibleName}.`);
+    throw Error(`Could not find button for cell ${cellId}.`);
 
   return candidateCellElement;
 };

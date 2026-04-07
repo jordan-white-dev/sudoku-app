@@ -1,12 +1,4 @@
-import {
-  Button,
-  Dialog,
-  Flex,
-  HStack,
-  IconButton,
-  Portal,
-  Text,
-} from "@chakra-ui/react";
+import { Button, Dialog, Flex, HStack, Portal, Text } from "@chakra-ui/react";
 import { ImStopwatch } from "react-icons/im";
 import { MdOutlinePauseCircle, MdOutlinePlayCircle } from "react-icons/md";
 
@@ -18,35 +10,32 @@ const StopwatchDialogTrigger = () => {
   const { formattedStopwatchTime, isStopwatchRunning, pauseStopwatch } =
     useSudokuStopwatch();
 
+  const ariaLabel = isStopwatchRunning
+    ? `Pause stopwatch, current time: ${formattedStopwatchTime}`
+    : `Resume stopwatch, current time: ${formattedStopwatchTime}`;
+
   return (
     <Dialog.Trigger asChild>
-      <HStack cursor="pointer">
-        <Text
-          color="white"
-          fontFamily="sans-serif"
-          fontWeight="medium"
-          textStyle="lg"
-          onClick={pauseStopwatch}
-        >
-          {formattedStopwatchTime}
-        </Text>
-        <IconButton
-          alignSelf="center"
-          aria-label={
-            isStopwatchRunning ? "Pause stopwatch" : "Resume stopwatch"
-          }
-          color="white"
-          cursor="pointer"
-          onClick={pauseStopwatch}
-          unstyled
-        >
+      <Button
+        aria-label={ariaLabel}
+        color="white"
+        cursor="pointer"
+        width={formattedStopwatchTime.length === 5 ? "5.25rem" : "6rem"}
+        onClick={pauseStopwatch}
+        textStyle="2xl"
+        unstyled
+      >
+        <HStack aria-hidden="true" justifyContent="space-between">
+          <Text fontFamily="sans-serif" fontWeight="medium" textStyle="xl">
+            {formattedStopwatchTime}
+          </Text>
           {isStopwatchRunning ? (
             <MdOutlinePauseCircle />
           ) : (
             <MdOutlinePlayCircle />
           )}
-        </IconButton>
-      </HStack>
+        </HStack>
+      </Button>
     </Dialog.Trigger>
   );
 };

@@ -1,4 +1,4 @@
-import { SimpleGrid } from "@chakra-ui/react";
+import { Box, SimpleGrid } from "@chakra-ui/react";
 import {
   type Dispatch,
   type PointerEvent,
@@ -7,12 +7,14 @@ import {
   useCallback,
   useEffect,
   useRef,
+  useState,
 } from "react";
 
 import { Cell } from "@/lib/pages/home/components/cell/cell";
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   getBoardStateWithNoCellsSelected,
+  getCellAriaLabel,
   getCurrentBoardStateFromPuzzleState,
   getGivenOrEnteredDigitInCellIfPresent,
   updatePuzzleStateWithCurrentBoardState,
@@ -721,6 +723,76 @@ const handleCellPointerDown = (
 };
 // #endregion
 
+// #region Announcement Helpers
+const tryAnnounceKeyboardNavCell = (
+  boardState: BoardState,
+  boardRef: RefObject<HTMLDivElement | null>,
+  shouldHandleKeyboardNavRef: RefObject<boolean>,
+  setAnnouncementText: (text: string) => void,
+): boolean => {
+  if (!shouldHandleKeyboardNavRef.current) return false;
+
+  shouldHandleKeyboardNavRef.current = false;
+  const navSelectedCells = boardState.filter((c) => c.isSelected);
+  if (navSelectedCells.length !== 1) return false;
+
+  const navCell = navSelectedCells[0];
+  boardRef.current
+    ?.querySelector<HTMLElement>(`[data-cell-number="${navCell.id}"]`)
+    ?.focus({ preventScroll: true });
+  setAnnouncementText(
+    getCellAriaLabel(
+      navCell.houses.rowNumber,
+      navCell.houses.columnNumber,
+      navCell.content,
+      navCell.markupColors,
+    ),
+  );
+  return true;
+};
+
+const tryAnnounceContentChange = (
+  boardState: BoardState,
+  prevBoardStateRef: RefObject<BoardState>,
+  isPointerDraggingAcrossBoardRef: RefObject<boolean>,
+  setAnnouncementText: (text: string) => void,
+): boolean => {
+  if (isPointerDraggingAcrossBoardRef.current) return false;
+
+  const selectedCells = boardState.filter((c) => c.isSelected);
+  if (selectedCells.length !== 1) return false;
+
+  const cell = selectedCells[0];
+  const prevCell = prevBoardStateRef.current[cell.id - 1];
+  const didContentChange =
+    prevCell !== undefined &&
+    (prevCell.content !== cell.content ||
+      prevCell.markupColors !== cell.markupColors);
+  if (!didContentChange) return false;
+
+  setAnnouncementText(
+    getCellAriaLabel(
+      cell.houses.rowNumber,
+      cell.houses.columnNumber,
+      cell.content,
+      cell.markupColors,
+    ),
+  );
+  return true;
+};
+
+const announceConflictCountChange = (
+  prevConflictCount: number,
+  currConflictCount: number,
+  setAnnouncementText: (text: string) => void,
+) => {
+  if (prevConflictCount === 0 && currConflictCount > 0)
+    setAnnouncementText("Digit conflict detected");
+  else if (prevConflictCount > 0 && currConflictCount === 0)
+    setAnnouncementText("No conflicts");
+};
+// #endregion
+
 // #region Board Component
 type BoardProps = {
   isMultiselectMode: boolean;
@@ -761,6 +833,41 @@ export const Board = ({
     undefined,
   );
   const lastSelectedCellIdRef = useRef<CellId | undefined>(undefined);
+  const shouldHandleKeyboardNavRef = useRef(false);
+  const prevBoardStateRef = useRef<BoardState>(currentBoardState);
+  const prevConflictCountRef = useRef(conflictedCellIds.size);
+
+  const [announcementText, setAnnouncementText] = useState("");
+
+  useEffect(() => {
+    const currConflictCount = userSettings.isConflictCheckerEnabled
+      ? getConflictedCellIds(currentBoardState).size
+      : 0;
+
+    const wasAnnouncementHandled =
+      tryAnnounceKeyboardNavCell(
+        currentBoardState,
+        boardRef,
+        shouldHandleKeyboardNavRef,
+        setAnnouncementText,
+      ) ||
+      tryAnnounceContentChange(
+        currentBoardState,
+        prevBoardStateRef,
+        isPointerDraggingAcrossBoardRef,
+        setAnnouncementText,
+      );
+
+    if (!wasAnnouncementHandled)
+      announceConflictCountChange(
+        prevConflictCountRef.current,
+        currConflictCount,
+        setAnnouncementText,
+      );
+
+    prevBoardStateRef.current = currentBoardState;
+    prevConflictCountRef.current = currConflictCount;
+  }, [currentBoardState, userSettings]);
 
   const handleBoardCellPointerDown = useCallback(
     (targetCellId: CellId) => {
@@ -786,7 +893,7 @@ export const Board = ({
 
       if (event.ctrlKey || event.shiftKey) {
         event.preventDefault();
-
+        shouldHandleKeyboardNavRef.current = true;
         handleAddToCellSelectionInDirection(
           arrowKeyDirection,
           lastSelectedCellIdRef.current,
@@ -798,7 +905,7 @@ export const Board = ({
       }
 
       event.preventDefault();
-
+      shouldHandleKeyboardNavRef.current = true;
       handleMoveSingleCellSelectionInDirection(
         arrowKeyDirection,
         lastSelectedCellIdRef.current,
@@ -848,73 +955,111 @@ export const Board = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [setPuzzleState]);
 
+  const rovingTabCellId: CellId =
+    selectedCells.length > 0
+      ? selectedCells[selectedCells.length - 1].id
+      : currentBoardState[0].id;
+
+  const boardRows = Array.from({ length: 9 }, (_, rowIndex) =>
+    currentBoardState.slice(rowIndex * 9, rowIndex * 9 + 9),
+  );
+
   return (
-    <SimpleGrid
-      border="2px solid black"
-      columns={9}
-      gap="0"
-      minWidth={{
-        base: "301px",
-        sm: "463px",
-        md: "724px",
-      }}
-      ref={boardRef}
-      touchAction="none"
-      onLostPointerCapture={() =>
-        handleBoardPointerUpOrCancel(
-          currentBoardPositionDuringDragRef,
-          isPointerDraggingAcrossBoardRef,
-        )
-      }
-      onPointerCancel={() =>
-        handleBoardPointerUpOrCancel(
-          currentBoardPositionDuringDragRef,
-          isPointerDraggingAcrossBoardRef,
-        )
-      }
-      onPointerMove={(event) =>
-        handleBoardPointerMove(
-          boardRef,
-          currentBoardPositionDuringDragRef,
-          event,
-          isPointerDraggingAcrossBoardRef,
-          lastSelectedCellIdRef,
-          setPuzzleState,
-        )
-      }
-      onPointerUp={() =>
-        handleBoardPointerUpOrCancel(
-          currentBoardPositionDuringDragRef,
-          isPointerDraggingAcrossBoardRef,
-        )
-      }
-    >
-      {currentBoardState.map((cellState) => (
-        <Cell
-          boardState={currentBoardState}
-          cellState={cellState}
-          handleCellPointerDown={handleBoardCellPointerDown}
-          hasDigitConflict={conflictedCellIds.has(cellState.id)}
-          isSeenInBox={
-            shouldShowSeenCells &&
-            selectedCells[0].houses.boxNumber === cellState.houses.boxNumber
-          }
-          isSeenInColumn={
-            shouldShowSeenCells &&
-            selectedCells[0].houses.columnNumber ===
-              cellState.houses.columnNumber
-          }
-          isSeenInRow={
-            shouldShowSeenCells &&
-            selectedCells[0].houses.rowNumber === cellState.houses.rowNumber
-          }
-          key={cellState.id}
-          selectedColumnNumber={selectedColumnNumber}
-          selectedRowNumber={selectedRowNumber}
-          setPuzzleState={setPuzzleState}
-        />
-      ))}
-    </SimpleGrid>
+    <>
+      <SimpleGrid
+        aria-colcount={9}
+        aria-label="Sudoku puzzle grid"
+        aria-rowcount={9}
+        border="2px solid black"
+        columns={9}
+        gap="0"
+        minWidth={{
+          base: "301px",
+          sm: "463px",
+          md: "724px",
+        }}
+        ref={boardRef}
+        role="grid"
+        touchAction="none"
+        onLostPointerCapture={() =>
+          handleBoardPointerUpOrCancel(
+            currentBoardPositionDuringDragRef,
+            isPointerDraggingAcrossBoardRef,
+          )
+        }
+        onPointerCancel={() =>
+          handleBoardPointerUpOrCancel(
+            currentBoardPositionDuringDragRef,
+            isPointerDraggingAcrossBoardRef,
+          )
+        }
+        onPointerMove={(event) =>
+          handleBoardPointerMove(
+            boardRef,
+            currentBoardPositionDuringDragRef,
+            event,
+            isPointerDraggingAcrossBoardRef,
+            lastSelectedCellIdRef,
+            setPuzzleState,
+          )
+        }
+        onPointerUp={() =>
+          handleBoardPointerUpOrCancel(
+            currentBoardPositionDuringDragRef,
+            isPointerDraggingAcrossBoardRef,
+          )
+        }
+      >
+        {boardRows.map((rowCells, rowIndex) => (
+          <Box
+            aria-rowindex={rowIndex + 1}
+            display="contents"
+            key={rowCells[0].id}
+            role="row"
+          >
+            {rowCells.map((cellState) => (
+              <Cell
+                boardState={currentBoardState}
+                cellState={cellState}
+                handleCellPointerDown={handleBoardCellPointerDown}
+                hasDigitConflict={conflictedCellIds.has(cellState.id)}
+                isSeenInBox={
+                  shouldShowSeenCells &&
+                  selectedCells[0].houses.boxNumber ===
+                    cellState.houses.boxNumber
+                }
+                isSeenInColumn={
+                  shouldShowSeenCells &&
+                  selectedCells[0].houses.columnNumber ===
+                    cellState.houses.columnNumber
+                }
+                isSeenInRow={
+                  shouldShowSeenCells &&
+                  selectedCells[0].houses.rowNumber ===
+                    cellState.houses.rowNumber
+                }
+                key={cellState.id}
+                selectedColumnNumber={selectedColumnNumber}
+                selectedRowNumber={selectedRowNumber}
+                setPuzzleState={setPuzzleState}
+                tabIndex={cellState.id === rovingTabCellId ? 0 : -1}
+              />
+            ))}
+          </Box>
+        ))}
+      </SimpleGrid>
+      <Box
+        aria-atomic="true"
+        aria-live="polite"
+        height="1px"
+        left="-9999px"
+        overflow="hidden"
+        position="absolute"
+        width="1px"
+      >
+        {announcementText}
+      </Box>
+    </>
   );
 };
 // #endregion

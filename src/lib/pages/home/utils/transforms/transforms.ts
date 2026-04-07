@@ -1,6 +1,11 @@
 import {
+  markupColorNames,
+  markupColors,
+} from "@/lib/pages/home/utils/constants";
+import {
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
+  isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/utils/guards";
 import {
   type BoardState,
@@ -11,6 +16,7 @@ import {
   type ColumnNumber,
   type EmptyCellContent,
   type EncodedPuzzleString,
+  type MarkupColor,
   type PuzzleState,
   type RawBoardState,
   type RawGivenDigit,
@@ -238,5 +244,47 @@ export const getGivenOrEnteredDigitInCellIfPresent = (
   else if (isEnteredDigitInCellContent(cellContent))
     return cellContent.enteredDigit;
   else return "";
+};
+// #endregion
+
+// #region Cell Aria Label
+export const getCellAriaLabel = (
+  rowNumber: RowNumber,
+  columnNumber: ColumnNumber,
+  cellContent: CellContent,
+  cellMarkupColors: [""] | Array<MarkupColor>,
+): string => {
+  const location = `Row ${rowNumber}, Column ${columnNumber}`;
+
+  if (isGivenDigitInCellContent(cellContent))
+    return `${location}: given digit ${cellContent.givenDigit}`;
+
+  if (isEnteredDigitInCellContent(cellContent))
+    return `${location}: entered digit ${cellContent.enteredDigit}`;
+
+  const parts: Array<string> = [];
+
+  if (isMarkupDigitsInCellContent(cellContent)) {
+    if (cellContent.centerMarkups[0] !== "")
+      parts.push(
+        `center markup ${[...cellContent.centerMarkups].sort().join(" ")}`,
+      );
+
+    if (cellContent.cornerMarkups[0] !== "")
+      parts.push(
+        `corner markup ${[...cellContent.cornerMarkups].sort().join(" ")}`,
+      );
+  }
+
+  const appliedColorNames = markupColors
+    .filter((color) => (cellMarkupColors as Array<string>).includes(color))
+    .map((color) => markupColorNames[color]);
+
+  if (appliedColorNames.length > 0)
+    parts.push(`color markup ${appliedColorNames.join(" ")}`);
+
+  if (parts.length === 0) return `${location}: empty`;
+
+  return `${location}: ${parts.join("; ")}`;
 };
 // #endregion
