@@ -1,13 +1,17 @@
 import SuperExpressive from "super-expressive";
 
 import { branded } from "@/lib/pages/home/utils/branding";
-import { sudokuDigits } from "@/lib/pages/home/utils/constants";
+import {
+  CELLS_PER_HOUSE,
+  sudokuDigits,
+  TOTAL_CELLS_IN_BOARD,
+} from "@/lib/pages/home/utils/constants";
 
 // #region Puzzle String Validators
 
 // Equivalent to: /^\d{81}$/
 const validRawPuzzleStringRegex = SuperExpressive()
-  .startOfInput.exactly(81)
+  .startOfInput.exactly(TOTAL_CELLS_IN_BOARD)
   .digit.endOfInput.toRegex();
 
 export const [isRawPuzzleString, BrandedRawPuzzleString] = branded(
@@ -47,26 +51,27 @@ export const [isSudokuDigit, BrandedSudokuDigit] = branded(
 // #endregion
 
 // #region Board Coordinate Validators
-const isNumberOneThroughNineValidator = (input: number) =>
-  Number.isInteger(input) && input >= 1 && input <= 9;
+const isHouseNumberValidator = (input: number) =>
+  Number.isInteger(input) && input >= 1 && input <= CELLS_PER_HOUSE;
 
 export const [isBoxNumber, BrandedBoxNumber] = branded(
-  isNumberOneThroughNineValidator,
+  isHouseNumberValidator,
   "BoxNumber",
 );
 
 export const [isCellId, BrandedCellId] = branded(
-  (input: number) => Number.isInteger(input) && input >= 1 && input <= 81,
+  (input: number) =>
+    Number.isInteger(input) && input >= 1 && input <= TOTAL_CELLS_IN_BOARD,
   "CellId",
 );
 
 export const [isColumnNumber, BrandedColumnNumber] = branded(
-  isNumberOneThroughNineValidator,
+  isHouseNumberValidator,
   "ColumnNumber",
 );
 
 export const [isRowNumber, BrandedRowNumber] = branded(
-  isNumberOneThroughNineValidator,
+  isHouseNumberValidator,
   "RowNumber",
 );
 // #endregion

@@ -5,6 +5,10 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import { PuzzleActions } from "@/lib/pages/home/components/puzzle-actions/puzzle-actions";
 import {
+  CELLS_PER_HOUSE,
+  TOTAL_CELLS_IN_BOARD,
+} from "@/lib/pages/home/utils/constants";
+import {
   EMPTY_RAW_BOARD_STATE,
   getBoardStateWithEnteredDigitsInTargetCells,
   getStartingEmptyBoardState,
@@ -104,17 +108,22 @@ const getUnsolvedPuzzleState = (): PuzzleState =>
   getStartingPuzzleStateFromBoardState(getStartingEmptyBoardState());
 
 const getSolvedPuzzleState = (): PuzzleState => {
-  const digitsInAllCells = Array.from({ length: 81 }, (_, index) => {
-    const rowIndex = Math.floor(index / 9);
-    const columnIndex = index % 9;
-    const digitNumber =
-      ((rowIndex * 3 + Math.floor(rowIndex / 3) + columnIndex) % 9) + 1;
+  const digitsInAllCells = Array.from(
+    { length: TOTAL_CELLS_IN_BOARD },
+    (_, index) => {
+      const rowIndex = Math.floor(index / CELLS_PER_HOUSE);
+      const columnIndex = index % CELLS_PER_HOUSE;
+      const digitNumber =
+        ((rowIndex * 3 + Math.floor(rowIndex / 3) + columnIndex) %
+          CELLS_PER_HOUSE) +
+        1;
 
-    return {
-      cellId: getBrandedCellId(index + 1),
-      digit: getBrandedSudokuDigit(String(digitNumber)),
-    };
-  });
+      return {
+        cellId: getBrandedCellId(index + 1),
+        digit: getBrandedSudokuDigit(String(digitNumber)),
+      };
+    },
+  );
 
   const solvedBoardState =
     getBoardStateWithEnteredDigitsInTargetCells(digitsInAllCells);

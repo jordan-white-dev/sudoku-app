@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
   isBoxNumber,
   isCellId,
@@ -15,7 +16,7 @@ describe("Puzzle String Validators", () => {
   describe("isRawPuzzleString", () => {
     it("accepts a string containing exactly 81 digits", () => {
       // Arrange
-      const candidateRawPuzzleString = "0".repeat(81);
+      const candidateRawPuzzleString = "0".repeat(TOTAL_CELLS_IN_BOARD);
 
       // Act
       const isValidRawPuzzleString = isRawPuzzleString(
@@ -506,7 +507,10 @@ describe("Board Coordinate Validators", () => {
   describe("isCellId", () => {
     it("accepts every valid cell id", () => {
       // Arrange
-      const validCellIds = Array.from({ length: 81 }, (_, index) => index + 1);
+      const validCellIds = Array.from(
+        { length: TOTAL_CELLS_IN_BOARD },
+        (_, index) => index + 1,
+      );
 
       // Act / Assert
       for (const candidateCellId of validCellIds)

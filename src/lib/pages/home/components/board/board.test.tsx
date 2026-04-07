@@ -10,6 +10,10 @@ import {
   UserSettingsProvider,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
+  CELLS_PER_HOUSE,
+  TOTAL_CELLS_IN_BOARD,
+} from "@/lib/pages/home/utils/constants";
+import {
   expectSeenCellHighlightOrNotInTargetCell,
   expectTargetCellToHaveConflictHighlightOrNot,
   getBoardStateWithEnteredDigitInTargetCell,
@@ -54,7 +58,8 @@ const getBoardElement = async (
       "button[data-cell-number]",
     ).length;
 
-    if (cellsInBoardCount === 81) return currentAncestorElement;
+    if (cellsInBoardCount === TOTAL_CELLS_IN_BOARD)
+      return currentAncestorElement;
 
     currentAncestorElement = currentAncestorElement.parentElement;
   }
@@ -111,7 +116,7 @@ const renderBoard = async ({
 // #endregion
 
 // #region Cell Expectations
-const ALL_CELL_IDS = Array.from({ length: 81 }, (_, index) =>
+const ALL_CELL_IDS = Array.from({ length: TOTAL_CELLS_IN_BOARD }, (_, index) =>
   getBrandedCellId(index + 1),
 );
 
@@ -199,10 +204,10 @@ const expectOnlyTargetCellsToNotBeSelected = async (
 const getZeroBasedCellIndex = (cellId: CellId): number => Number(cellId) - 1;
 
 const getColumnIndex = (cellId: CellId): number =>
-  getZeroBasedCellIndex(cellId) % 9;
+  getZeroBasedCellIndex(cellId) % CELLS_PER_HOUSE;
 
 const getRowIndex = (cellId: CellId): number =>
-  Math.floor(getZeroBasedCellIndex(cellId) / 9);
+  Math.floor(getZeroBasedCellIndex(cellId) / CELLS_PER_HOUSE);
 
 const getBoxIndex = (cellId: CellId): number =>
   Math.floor(getRowIndex(cellId) / 3) * 3 +
@@ -342,8 +347,8 @@ const setBoardBoundsForPointerDrag = async (
 
 const getPointerCoordinatesForCenterOfCell = (cellId: CellId) => {
   const zeroBasedCellId = cellId - 1;
-  const rowIndex = Math.floor(zeroBasedCellId / 9);
-  const columnIndex = zeroBasedCellId % 9;
+  const rowIndex = Math.floor(zeroBasedCellId / CELLS_PER_HOUSE);
+  const columnIndex = zeroBasedCellId % CELLS_PER_HOUSE;
 
   const pointerCoordinates = {
     clientX: columnIndex * 50 + 25,

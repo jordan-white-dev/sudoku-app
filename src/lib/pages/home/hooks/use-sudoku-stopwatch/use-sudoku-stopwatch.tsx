@@ -11,12 +11,14 @@ import { useStopwatch } from "react-timer-hook";
 import useSessionStorageState from "use-session-storage-state";
 
 // #region Formatting and Offset Utilities
+const ONE_HUNDRED_MINUTES_IN_SECONDS = 6000;
+
 const getFormattedStopwatchMinutes = (
   hours: number,
   minutes: number,
   totalSeconds: number,
 ) => {
-  if (totalSeconds >= 6000) {
+  if (totalSeconds >= ONE_HUNDRED_MINUTES_IN_SECONDS) {
     const hoursConvertedToMinutes = hours * 60;
     const totalMinutes = minutes + hoursConvertedToMinutes;
 

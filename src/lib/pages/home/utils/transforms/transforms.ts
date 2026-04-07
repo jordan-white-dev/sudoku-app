@@ -1,6 +1,8 @@
 import {
+  CELLS_PER_HOUSE,
   markupColorNames,
   markupColors,
+  TOTAL_CELLS_IN_BOARD,
 } from "@/lib/pages/home/utils/constants";
 import {
   isEnteredDigitInCellContent,
@@ -35,10 +37,13 @@ import {
 } from "@/lib/pages/home/utils/validators/validators";
 
 // #region Puzzle String Transforms
+const BASE_36 = 36;
+
 export const getEncodedPuzzleStringFromRawPuzzleString = (
   rawPuzzleString: RawPuzzleString,
 ): EncodedPuzzleString => {
-  const candidateEncodedPuzzleString = BigInt(rawPuzzleString).toString(36);
+  const candidateEncodedPuzzleString =
+    BigInt(rawPuzzleString).toString(BASE_36);
 
   if (!isEncodedPuzzleString(candidateEncodedPuzzleString))
     throw Error(
@@ -142,10 +147,11 @@ const getGivenDigitCellContentFromRawGivenDigit = (
 export const getBoardStateFromRawBoardState = (
   rawBoardState: RawBoardState,
 ): BoardState =>
-  Array.from({ length: 81 }, (_, index) => {
+  Array.from({ length: TOTAL_CELLS_IN_BOARD }, (_, index) => {
     const candidateCellId = index + 1;
-    const candidateColumnNumber = ((candidateCellId - 1) % 9) + 1;
-    const candidateRowNumber = Math.floor((candidateCellId - 1) / 9) + 1;
+    const candidateColumnNumber = ((candidateCellId - 1) % CELLS_PER_HOUSE) + 1;
+    const candidateRowNumber =
+      Math.floor((candidateCellId - 1) / CELLS_PER_HOUSE) + 1;
     const candidateBoxNumber =
       Math.floor((candidateRowNumber - 1) / 3) * 3 +
       Math.floor((candidateColumnNumber - 1) / 3) +

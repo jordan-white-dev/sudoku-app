@@ -13,6 +13,7 @@ import {
 
 import { Cell } from "@/lib/pages/home/components/cell/cell";
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import { CELLS_PER_HOUSE } from "@/lib/pages/home/utils/constants";
 import {
   getBoardStateWithNoCellsSelected,
   getCellAriaLabel,
@@ -56,7 +57,7 @@ const isArrowKeyDirection = (
 // #region Conflict Cell Checking
 const getEmptyDigitOccurrencesByHouse = (): Array<
   Map<SudokuDigit, Array<CellId>>
-> => Array.from({ length: 9 }, () => new Map());
+> => Array.from({ length: CELLS_PER_HOUSE }, () => new Map());
 
 const addSudokuDigitOccurrenceToHouse = (
   cellId: CellId,
@@ -178,15 +179,20 @@ const getWrappedCellIdInDirection = (
   startingCellId: CellId,
 ): CellId => {
   const zeroBasedStartingCellId = startingCellId - 1;
-  const startingColumnNumber = zeroBasedStartingCellId % 9;
-  const startingRowNumber = Math.floor(zeroBasedStartingCellId / 9);
+  const startingColumnNumber = zeroBasedStartingCellId % CELLS_PER_HOUSE;
+  const startingRowNumber = Math.floor(
+    zeroBasedStartingCellId / CELLS_PER_HOUSE,
+  );
 
   const { columnOffset, rowOffset } =
     arrowKeyDirectionOffsets[arrowKeyDirection];
 
-  const wrappedColumnNumber = (startingColumnNumber + columnOffset + 9) % 9;
-  const wrappedRowNumber = (startingRowNumber + rowOffset + 9) % 9;
-  const candidateCellId = wrappedRowNumber * 9 + wrappedColumnNumber + 1;
+  const wrappedColumnNumber =
+    (startingColumnNumber + columnOffset + CELLS_PER_HOUSE) % CELLS_PER_HOUSE;
+  const wrappedRowNumber =
+    (startingRowNumber + rowOffset + CELLS_PER_HOUSE) % CELLS_PER_HOUSE;
+  const candidateCellId =
+    wrappedRowNumber * CELLS_PER_HOUSE + wrappedColumnNumber + 1;
 
   if (!isCellId(candidateCellId))
     throw Error(
@@ -395,19 +401,20 @@ const getBoardPositionFromPointerCoordinates = (
   if (isPointerOutsideBoardHorizontally || isPointerOutsideBoardVertically)
     return undefined;
 
-  const cellHeight = boardBounds.height / 9;
-  const cellWidth = boardBounds.width / 9;
+  const cellHeight = boardBounds.height / CELLS_PER_HOUSE;
+  const cellWidth = boardBounds.width / CELLS_PER_HOUSE;
 
   const zeroBasedColumnNumber = Math.min(
-    8,
+    CELLS_PER_HOUSE - 1,
     Math.max(0, Math.floor((pointerClientX - boardBounds.left) / cellWidth)),
   );
   const zeroBasedRowNumber = Math.min(
-    8,
+    CELLS_PER_HOUSE - 1,
     Math.max(0, Math.floor((pointerClientY - boardBounds.top) / cellHeight)),
   );
 
-  const cellId = zeroBasedRowNumber * 9 + zeroBasedColumnNumber + 1;
+  const cellId =
+    zeroBasedRowNumber * CELLS_PER_HOUSE + zeroBasedColumnNumber + 1;
   const columnNumber = zeroBasedColumnNumber + 1;
   const rowNumber = zeroBasedRowNumber + 1;
 
@@ -472,7 +479,7 @@ const getCellIdFromRowAndColumn = (
   rowNumber: RowNumber,
   columnNumber: ColumnNumber,
 ): CellId => {
-  const candidateCellId = (rowNumber - 1) * 9 + columnNumber;
+  const candidateCellId = (rowNumber - 1) * CELLS_PER_HOUSE + columnNumber;
 
   if (!isCellId(candidateCellId))
     throw Error(
@@ -593,7 +600,7 @@ const handleBoardPointerMove = (
 const getColumnNumberFromCellId = (cellId: CellId): ColumnNumber => {
   const zeroBasedCellId = cellId - 1;
 
-  const candidateColumnNumber = (zeroBasedCellId % 9) + 1;
+  const candidateColumnNumber = (zeroBasedCellId % CELLS_PER_HOUSE) + 1;
 
   if (!isColumnNumber(candidateColumnNumber))
     throw Error(`Failed to get a ColumnNumber from CellId "${cellId}".`);
@@ -604,7 +611,7 @@ const getColumnNumberFromCellId = (cellId: CellId): ColumnNumber => {
 const getRowNumberFromCellId = (cellId: CellId): RowNumber => {
   const zeroBasedCellId = cellId - 1;
 
-  const candidateRowNumber = Math.floor(zeroBasedCellId / 9) + 1;
+  const candidateRowNumber = Math.floor(zeroBasedCellId / CELLS_PER_HOUSE) + 1;
 
   if (!isRowNumber(candidateRowNumber))
     throw Error(`Failed to get a RowNumber from CellId "${cellId}".`);
@@ -985,18 +992,21 @@ export const Board = ({
       ? selectedCells[selectedCells.length - 1].id
       : currentBoardState[0].id;
 
-  const boardRows = Array.from({ length: 9 }, (_, rowIndex) =>
-    currentBoardState.slice(rowIndex * 9, rowIndex * 9 + 9),
+  const boardRows = Array.from({ length: CELLS_PER_HOUSE }, (_, rowIndex) =>
+    currentBoardState.slice(
+      rowIndex * CELLS_PER_HOUSE,
+      rowIndex * CELLS_PER_HOUSE + CELLS_PER_HOUSE,
+    ),
   );
 
   return (
     <>
       <SimpleGrid
-        aria-colcount={9}
+        aria-colcount={CELLS_PER_HOUSE}
         aria-label="Sudoku puzzle grid"
-        aria-rowcount={9}
+        aria-rowcount={CELLS_PER_HOUSE}
         border="2px solid black"
-        columns={9}
+        columns={CELLS_PER_HOUSE}
         gap="0"
         minWidth={{
           base: "301px",

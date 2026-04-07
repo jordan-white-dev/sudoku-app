@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
   EMPTY_RAW_BOARD_STATE,
   expectTargetCellToContainEmptyCellContent,
@@ -166,7 +167,7 @@ describe("Puzzle String Transforms", () => {
         getRawPuzzleStringFromRawBoardState(rawBoardState);
 
       // Assert
-      expect(rawPuzzleString).toBe("0".repeat(81));
+      expect(rawPuzzleString).toBe("0".repeat(TOTAL_CELLS_IN_BOARD));
     });
   });
 });
@@ -202,7 +203,7 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expect(boardState).toHaveLength(81);
+      expect(boardState).toHaveLength(TOTAL_CELLS_IN_BOARD);
     });
 
     it("treats blank cells as editable cells with no entered digit", () => {

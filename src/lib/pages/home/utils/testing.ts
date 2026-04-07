@@ -3,6 +3,10 @@ import { type Locator } from "vitest/browser";
 import { type render } from "vitest-browser-react";
 
 import {
+  CELLS_PER_HOUSE,
+  TOTAL_CELLS_IN_BOARD,
+} from "@/lib/pages/home/utils/constants";
+import {
   isEmptyCellContent,
   isGivenDigitInCellContent,
 } from "@/lib/pages/home/utils/guards";
@@ -29,7 +33,7 @@ export const waitForReactToFinishUpdating = async () => {
 
 // #region Board State Factories
 export const getEmptyRawBoardState = (): RawBoardState =>
-  Array.from({ length: 81 }, () => null);
+  Array.from({ length: TOTAL_CELLS_IN_BOARD }, () => null);
 
 export const EMPTY_RAW_BOARD_STATE: RawBoardState = Object.freeze(
   getEmptyRawBoardState(),
@@ -227,8 +231,8 @@ export const CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN = "179%2c%2058%2c%2058";
 export type RenderedBoard = Awaited<ReturnType<typeof render>>;
 
 export const getCellAccessibleName = (cellId: CellId) => {
-  const rowNumber = Math.floor((cellId - 1) / 9) + 1;
-  const columnNumber = ((cellId - 1) % 9) + 1;
+  const rowNumber = Math.floor((cellId - 1) / CELLS_PER_HOUSE) + 1;
+  const columnNumber = ((cellId - 1) % CELLS_PER_HOUSE) + 1;
 
   return `Row ${rowNumber}, Column ${columnNumber}: empty`;
 };
@@ -237,8 +241,8 @@ export const getCellLocator = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellId: CellId,
 ): Promise<Locator> => {
-  const rowNumber = Math.floor((cellId - 1) / 9) + 1;
-  const columnNumber = ((cellId - 1) % 9) + 1;
+  const rowNumber = Math.floor((cellId - 1) / CELLS_PER_HOUSE) + 1;
+  const columnNumber = ((cellId - 1) % CELLS_PER_HOUSE) + 1;
   return (await renderedBoard).getByRole("gridcell", {
     name: new RegExp(`^Row ${rowNumber}, Column ${columnNumber}:`),
   });

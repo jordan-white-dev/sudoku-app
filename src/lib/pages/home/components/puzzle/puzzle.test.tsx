@@ -9,6 +9,7 @@ import {
   UserSettingsProvider,
   useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
   EMPTY_RAW_BOARD_STATE,
   getBoardStateWithGivenDigitsInTargetCells,
@@ -119,7 +120,7 @@ describe("Puzzle rendering", () => {
     const renderedPuzzle = await renderPuzzle();
 
     // Assert
-    for (let cellId = 1; cellId <= 81; cellId += 1)
+    for (let cellId = 1; cellId <= TOTAL_CELLS_IN_BOARD; cellId += 1)
       await expect
         .element(await getCellLocator(renderedPuzzle, getBrandedCellId(cellId)))
         .toBeInTheDocument();

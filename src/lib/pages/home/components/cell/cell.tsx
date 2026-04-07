@@ -12,7 +12,10 @@ import {
 } from "react";
 
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
-import { markupColors } from "@/lib/pages/home/utils/constants";
+import {
+  CELLS_PER_HOUSE,
+  markupColors,
+} from "@/lib/pages/home/utils/constants";
 import {
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
@@ -184,11 +187,11 @@ const getBoxAndPuzzleEdges = (
   rowNumber: RowNumber,
 ): BoxAndPuzzleEdges => ({
   isOnBottomBoxEdge: rowNumber % 3 === 0,
-  isOnBottomPuzzleEdge: rowNumber === 9,
+  isOnBottomPuzzleEdge: rowNumber === CELLS_PER_HOUSE,
   isOnLeftBoxEdge: columnNumber % 3 === 1,
   isOnLeftPuzzleEdge: columnNumber === 1,
   isOnRightBoxEdge: columnNumber % 3 === 0,
-  isOnRightPuzzleEdge: columnNumber === 9,
+  isOnRightPuzzleEdge: columnNumber === CELLS_PER_HOUSE,
   isOnTopBoxEdge: rowNumber % 3 === 1,
   isOnTopPuzzleEdge: rowNumber === 1,
 });
@@ -398,10 +401,15 @@ const getCellStateAtRowAndColumn = (
   rowNumber: number,
   columnNumber: number,
 ): CellState | undefined => {
-  if (rowNumber < 1 || rowNumber > 9 || columnNumber < 1 || columnNumber > 9)
+  if (
+    rowNumber < 1 ||
+    rowNumber > CELLS_PER_HOUSE ||
+    columnNumber < 1 ||
+    columnNumber > CELLS_PER_HOUSE
+  )
     return undefined;
 
-  return boardState[(rowNumber - 1) * 9 + (columnNumber - 1)];
+  return boardState[(rowNumber - 1) * CELLS_PER_HOUSE + (columnNumber - 1)];
 };
 
 const getSelectedAdjacentCells = (

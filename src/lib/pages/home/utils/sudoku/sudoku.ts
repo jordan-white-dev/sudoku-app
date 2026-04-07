@@ -1,12 +1,13 @@
 import sudoku from "sudoku";
 
+import {
+  CELLS_PER_HOUSE,
+  TOTAL_CELLS_IN_BOARD,
+} from "@/lib/pages/home/utils/constants";
 import { type RawBoardState } from "@/lib/pages/home/utils/types";
 import { isRawGivenDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region Configuration and Types
-const BOARD_CELL_COUNT = 81;
-const SUBGRID_SIZE = 3;
-const UNITS = 9;
 const MAX_GENERATION_ATTEMPTS = 100;
 const POSSIBLE_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const;
 
@@ -29,38 +30,38 @@ const buildInitialCellPossibilities = (
 };
 
 const getRowIndexFromCellPosition = (cellPosition: number): number =>
-  Math.floor(cellPosition / UNITS);
+  Math.floor(cellPosition / CELLS_PER_HOUSE);
 
 const getColumnIndexFromCellPosition = (cellPosition: number): number =>
-  cellPosition % UNITS;
+  cellPosition % CELLS_PER_HOUSE;
 
 const getBoxIndexFromCellPosition = (cellPosition: number): number => {
   const rowIndex = getRowIndexFromCellPosition(cellPosition);
   const columnIndex = getColumnIndexFromCellPosition(cellPosition);
-  return (
-    Math.floor(rowIndex / SUBGRID_SIZE) * SUBGRID_SIZE +
-    Math.floor(columnIndex / SUBGRID_SIZE)
-  );
+  return Math.floor(rowIndex / 3) * 3 + Math.floor(columnIndex / 3);
 };
 
 const getAllCellsInRow = (rowIndex: number): Array<number> =>
-  Array.from({ length: UNITS }, (_, column) => rowIndex * UNITS + column);
+  Array.from(
+    { length: CELLS_PER_HOUSE },
+    (_, column) => rowIndex * CELLS_PER_HOUSE + column,
+  );
 
 const getAllCellsInColumn = (columnIndex: number): Array<number> =>
   Array.from(
-    { length: UNITS },
-    (_, rowIndex) => rowIndex * UNITS + columnIndex,
+    { length: CELLS_PER_HOUSE },
+    (_, rowIndex) => rowIndex * CELLS_PER_HOUSE + columnIndex,
   );
 
 const getAllCellsInBox = (boxIndex: number): Array<number> => {
-  const startRow = Math.floor(boxIndex / SUBGRID_SIZE) * SUBGRID_SIZE;
-  const startColumn = (boxIndex % SUBGRID_SIZE) * SUBGRID_SIZE;
+  const startRow = Math.floor(boxIndex / 3) * 3;
+  const startColumn = (boxIndex % 3) * 3;
 
-  return Array.from({ length: SUBGRID_SIZE }, (_, rowOffset) =>
+  return Array.from({ length: 3 }, (_, rowOffset) =>
     Array.from(
-      { length: SUBGRID_SIZE },
+      { length: 3 },
       (_, columnOffset) =>
-        (startRow + rowOffset) * UNITS + (startColumn + columnOffset),
+        (startRow + rowOffset) * CELLS_PER_HOUSE + (startColumn + columnOffset),
     ),
   ).flat();
 };
@@ -148,7 +149,7 @@ const isSingleDigitCellConstraintResolutionSuccessful = (
   cellPossibilitiesByPosition: CellPossibilityMap,
 ): boolean =>
   Array.from(
-    { length: BOARD_CELL_COUNT },
+    { length: TOTAL_CELLS_IN_BOARD },
     (_, cellPosition) => cellPosition,
   ).every((cellPosition) => {
     if (cellPossibilitiesByPosition[cellPosition].size === 0) return false;
@@ -169,7 +170,7 @@ const isSingleDigitCellConstraintResolutionSuccessful = (
 const isGroupConstraintResolutionSuccessful = (
   cellPossibilitiesByPosition: CellPossibilityMap,
 ): boolean =>
-  Array.from({ length: UNITS }, (_, groupIndex) => groupIndex).every(
+  Array.from({ length: CELLS_PER_HOUSE }, (_, groupIndex) => groupIndex).every(
     (groupIndex) =>
       isSingleDigitPlacementEnforcementInGroupSuccessful(
         getAllCellsInRow(groupIndex),
@@ -244,7 +245,7 @@ const ratePuzzleDifficulty = (rawBoardState: RawBoardState): number => {
     (cell) => cell !== null,
   ).length;
 
-  const emptyCells = BOARD_CELL_COUNT - numberOfGivenDigits;
+  const emptyCells = TOTAL_CELLS_IN_BOARD - numberOfGivenDigits;
 
   const puzzleDifficulty = Math.max(1, Math.ceil(emptyCells / 4));
 
@@ -262,7 +263,7 @@ const validateAndNormalizeBoardState = (
       `Failed to validate output from ${sourceSudokuFunctionName}. Expected an array output.`,
     );
 
-  if (unvalidatedBoardState.length !== BOARD_CELL_COUNT)
+  if (unvalidatedBoardState.length !== TOTAL_CELLS_IN_BOARD)
     throw Error(
       `Failed to validate output from ${sourceSudokuFunctionName}. Expected 81 cells but received ${unvalidatedBoardState.length}.`,
     );

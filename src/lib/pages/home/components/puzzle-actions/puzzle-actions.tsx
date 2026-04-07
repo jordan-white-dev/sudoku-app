@@ -29,6 +29,7 @@ import {
   handleRedoMove,
   handleUndoMove,
 } from "@/lib/pages/home/utils/actions/actions";
+import { CELLS_PER_HOUSE } from "@/lib/pages/home/utils/constants";
 import { makePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
 import {
   getBoardStateFromRawBoardState,
@@ -307,12 +308,18 @@ const RedoButton = ({ puzzleState, setPuzzleState }: RedoButtonProps) => {
 
 // #region Check Solution Button
 const getIsPuzzleSolved = (boardState: BoardState): boolean => {
-  const rows: Array<Set<string>> = Array.from({ length: 9 }, () => new Set());
-  const columns: Array<Set<string>> = Array.from(
-    { length: 9 },
+  const rows: Array<Set<string>> = Array.from(
+    { length: CELLS_PER_HOUSE },
     () => new Set(),
   );
-  const boxes: Array<Set<string>> = Array.from({ length: 9 }, () => new Set());
+  const columns: Array<Set<string>> = Array.from(
+    { length: CELLS_PER_HOUSE },
+    () => new Set(),
+  );
+  const boxes: Array<Set<string>> = Array.from(
+    { length: CELLS_PER_HOUSE },
+    () => new Set(),
+  );
 
   for (const cellState of boardState) {
     const givenOrEnteredDigit = getGivenOrEnteredDigitInCellIfPresent(

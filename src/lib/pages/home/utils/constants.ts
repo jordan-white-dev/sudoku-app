@@ -78,3 +78,8 @@ export const flippedDigits = [
 // #region Keypad Modes
 export const keypadModes = ["Digit", "Color", "Center", "Corner"] as const;
 // #endregion
+
+// #region Board and House Numbers
+export const TOTAL_CELLS_IN_BOARD = 81;
+export const CELLS_PER_HOUSE = 9;
+// #endregion

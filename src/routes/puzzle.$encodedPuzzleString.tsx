@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 
 import Home from "@/lib/pages/home";
+import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import { solvePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
 import { getBoardStateFromRawBoardState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -36,7 +37,7 @@ const getRawPuzzleStringFromEncodedPuzzleString = (
 
   const candidateRawPuzzleString = encodedPuzzleStringAsBigInt
     .toString()
-    .padStart(81, "0");
+    .padStart(TOTAL_CELLS_IN_BOARD, "0");
 
   if (!isRawPuzzleString(candidateRawPuzzleString))
     throw Error(
