@@ -11,6 +11,7 @@
 - Prefer deterministic, functional-style code with small, focused functions. Favor `const`, pure functions, derived values, and immutable updates. Avoid `let` bindings and mutation unless clearly justified.
 - Use array methods like `map`, `filter`, and `reduce` for data transformations. Avoid manual loops, mutation, and side effects in these operations.
 - Preserve import grouping order: package imports, blank line, alias imports, blank line, relative imports.
+- Do not use biome-ignore comments to disable lint rules. Instead, refactor to comply with the rule.
 
 ## Architecture
 
