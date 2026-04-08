@@ -118,9 +118,11 @@ const getClearButtonElement = async (
 ) => {
   const allButtons = await getAllButtons(renderedKeypad);
 
-  const clearButtonCandidate = allButtons[allButtons.length - 1];
+  const clearButtonCandidate = allButtons.at(-1);
 
-  if (!clearButtonCandidate) throw Error("Could not find the clear button.");
+  if (!clearButtonCandidate) {
+    throw new Error("Could not find the clear button.");
+  }
 
   return clearButtonCandidate;
 };
@@ -135,8 +137,9 @@ const getMultiselectSwitchInput = async (
       'input[type="checkbox"]',
     );
 
-  if (!candidateSwitchInput)
-    throw Error("Could not find the multiselect switch input.");
+  if (!candidateSwitchInput) {
+    throw new Error("Could not find the multiselect switch input.");
+  }
 
   return candidateSwitchInput;
 };
@@ -160,8 +163,9 @@ const clickColorSwatchAtIndex = async (
   const colorSwatches = await getColorSwatchElements(renderedKeypad);
   const colorSwatch = colorSwatches[index];
 
-  if (!colorSwatch)
-    throw Error(`Could not find color swatch at index ${index}.`);
+  if (!colorSwatch) {
+    throw new Error(`Could not find color swatch at index ${index}.`);
+  }
 
   colorSwatch.click();
   await waitForReactToFinishUpdating();
@@ -188,11 +192,13 @@ const getNextPuzzleStateFromSetCall = (
 ): PuzzleState => {
   const candidatePuzzleStateUpdate = setPuzzleState.mock.calls[0]?.[0];
 
-  if (!candidatePuzzleStateUpdate)
-    throw Error("Expected setPuzzleState to be called at least once.");
+  if (!candidatePuzzleStateUpdate) {
+    throw new Error("Expected setPuzzleState to be called at least once.");
+  }
 
-  if (typeof candidatePuzzleStateUpdate === "function")
+  if (typeof candidatePuzzleStateUpdate === "function") {
     return candidatePuzzleStateUpdate(startingPuzzleState);
+  }
 
   return candidatePuzzleStateUpdate;
 };
@@ -227,10 +233,11 @@ describe("Keypad rendering", () => {
     const renderedKeypad = await renderKeypad({ keypadMode: "Digit" });
 
     // Assert
-    for (const digit of sudokuDigits)
+    for (const digit of sudokuDigits) {
       await expect
         .element(await getDigitButtonLocator(renderedKeypad, digit))
         .toBeInTheDocument();
+    }
 
     expect(await getColorSwatchElements(renderedKeypad)).toHaveLength(0);
     expect(await getMultiselectSwitchInput(renderedKeypad)).toBeTruthy();
@@ -242,10 +249,11 @@ describe("Keypad rendering", () => {
     const renderedKeypad = await renderKeypad({ keypadMode: "Center" });
 
     // Assert
-    for (const digit of sudokuDigits)
+    for (const digit of sudokuDigits) {
       await expect
         .element(await getDigitButtonLocator(renderedKeypad, digit))
         .toBeInTheDocument();
+    }
 
     expect(await getColorSwatchElements(renderedKeypad)).toHaveLength(0);
   });
@@ -255,10 +263,11 @@ describe("Keypad rendering", () => {
     const renderedKeypad = await renderKeypad({ keypadMode: "Corner" });
 
     // Assert
-    for (const digit of sudokuDigits)
+    for (const digit of sudokuDigits) {
       await expect
         .element(await getDigitButtonLocator(renderedKeypad, digit))
         .toBeInTheDocument();
+    }
 
     expect(await getColorSwatchElements(renderedKeypad)).toHaveLength(0);
   });
@@ -270,10 +279,11 @@ describe("Keypad rendering", () => {
     // Assert
     expect(await getColorSwatchElements(renderedKeypad)).toHaveLength(9);
 
-    for (const digit of sudokuDigits)
+    for (const digit of sudokuDigits) {
       await expect
         .element(await getDigitButtonLocator(renderedKeypad, digit))
         .not.toBeInTheDocument();
+    }
   });
 });
 
@@ -392,8 +402,9 @@ describe("Keypad input actions", () => {
 
     expect(isEnteredDigitInCellContent(selectedCellState.content)).toBe(true);
 
-    if (isEnteredDigitInCellContent(selectedCellState.content))
+    if (isEnteredDigitInCellContent(selectedCellState.content)) {
       expect(selectedCellState.content.enteredDigit).toBe("9");
+    }
   });
 
   it("enters center markups in Center mode", async () => {
@@ -420,8 +431,9 @@ describe("Keypad input actions", () => {
 
     expect(isMarkupDigitsInCellContent(selectedCellState.content)).toBe(true);
 
-    if (isMarkupDigitsInCellContent(selectedCellState.content))
+    if (isMarkupDigitsInCellContent(selectedCellState.content)) {
       expect(selectedCellState.content.centerMarkups).toEqual(["3"]);
+    }
   });
 
   it("enters corner markups in Corner mode", async () => {
@@ -448,8 +460,9 @@ describe("Keypad input actions", () => {
 
     expect(isMarkupDigitsInCellContent(selectedCellState.content)).toBe(true);
 
-    if (isMarkupDigitsInCellContent(selectedCellState.content))
+    if (isMarkupDigitsInCellContent(selectedCellState.content)) {
       expect(selectedCellState.content.cornerMarkups).toEqual(["7"]);
+    }
   });
 
   it("applies selected colors in Color mode", async () => {

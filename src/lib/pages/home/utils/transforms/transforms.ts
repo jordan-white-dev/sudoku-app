@@ -45,10 +45,11 @@ export const getEncodedPuzzleStringFromRawPuzzleString = (
   const candidateEncodedPuzzleString =
     BigInt(rawPuzzleString).toString(BASE_36);
 
-  if (!isEncodedPuzzleString(candidateEncodedPuzzleString))
-    throw Error(
+  if (!isEncodedPuzzleString(candidateEncodedPuzzleString)) {
+    throw new Error(
       `Failed to get an EncodedPuzzleString from the RawPuzzleString "${rawPuzzleString}". The attempted final output "${candidateEncodedPuzzleString}" was invalid.`,
     );
+  }
 
   return candidateEncodedPuzzleString;
 };
@@ -62,10 +63,11 @@ export const getRawPuzzleStringFromRawBoardState = (
     )
     .join("");
 
-  if (!isRawPuzzleString(candidateRawPuzzleString))
-    throw Error(
+  if (!isRawPuzzleString(candidateRawPuzzleString)) {
+    throw new Error(
       `Failed to get a RawPuzzleString from the RawBoardState. The attempted final output "${candidateRawPuzzleString}" was invalid.`,
     );
+  }
 
   return candidateRawPuzzleString;
 };
@@ -75,10 +77,11 @@ export const getRawPuzzleStringFromRawBoardState = (
 export const getBrandedSudokuDigit = (
   candidateSudokuDigit: string,
 ): SudokuDigit => {
-  if (!isSudokuDigit(candidateSudokuDigit))
-    throw Error(
+  if (!isSudokuDigit(candidateSudokuDigit)) {
+    throw new Error(
       `Failed to get a SudokuDigit from the candidate string "${candidateSudokuDigit}".`,
     );
+  }
 
   return candidateSudokuDigit;
 };
@@ -88,19 +91,21 @@ export const getBrandedSudokuDigit = (
 
 // #region Branded Transforms
 export const getBrandedBoxNumber = (candidateBoxNumber: number): BoxNumber => {
-  if (!isBoxNumber(candidateBoxNumber))
-    throw Error(
+  if (!isBoxNumber(candidateBoxNumber)) {
+    throw new Error(
       `Encountered an invalid BoxNumber "${candidateBoxNumber}" while getting a BoardState from RawBoardState.`,
     );
+  }
 
   return candidateBoxNumber;
 };
 
 export const getBrandedCellId = (candidateCellId: number): CellId => {
-  if (!isCellId(candidateCellId))
-    throw Error(
+  if (!isCellId(candidateCellId)) {
+    throw new Error(
       `Encountered an invalid CellId "${candidateCellId}" while getting a BoardState from RawBoardState.`,
     );
+  }
 
   return candidateCellId;
 };
@@ -108,19 +113,21 @@ export const getBrandedCellId = (candidateCellId: number): CellId => {
 export const getBrandedColumnNumber = (
   candidateColumnNumber: number,
 ): ColumnNumber => {
-  if (!isColumnNumber(candidateColumnNumber))
-    throw Error(
+  if (!isColumnNumber(candidateColumnNumber)) {
+    throw new Error(
       `Encountered an invalid ColumnNumber "${candidateColumnNumber}" while getting a BoardState from RawBoardState.`,
     );
+  }
 
   return candidateColumnNumber;
 };
 
 export const getBrandedRowNumber = (candidateRowNumber: number): RowNumber => {
-  if (!isRowNumber(candidateRowNumber))
-    throw Error(
+  if (!isRowNumber(candidateRowNumber)) {
+    throw new Error(
       `Encountered an invalid RowNumber "${candidateRowNumber}" while getting a BoardState from RawBoardState.`,
     );
+  }
 
   return candidateRowNumber;
 };
@@ -139,7 +146,7 @@ const getGivenDigitCellContentFromRawGivenDigit = (
     return givenDigitCellContent;
   }
 
-  throw Error(
+  throw new Error(
     `Failed to get a given SudokuDigit from the RawGivenDigit "${rawGivenDigit}".`,
   );
 };
@@ -207,7 +214,9 @@ export const updatePuzzleStateWithCurrentBoardState = (
     (cellState, cellIndex) => cellState !== nextBoardState[cellIndex],
   );
 
-  if (!didBoardStateChange) return currentPuzzleState;
+  if (!didBoardStateChange) {
+    return currentPuzzleState;
+  }
 
   const nextPuzzleHistory = currentPuzzleState.puzzleHistory.map(
     (boardState, historyIndex) =>
@@ -246,10 +255,13 @@ export const getBoardStateWithNoCellsSelected = (
 export const getGivenOrEnteredDigitInCellIfPresent = (
   cellContent: CellContent,
 ): SudokuDigit | "" => {
-  if (isGivenDigitInCellContent(cellContent)) return cellContent.givenDigit;
-  else if (isEnteredDigitInCellContent(cellContent))
+  if (isGivenDigitInCellContent(cellContent)) {
+    return cellContent.givenDigit;
+  }
+  if (isEnteredDigitInCellContent(cellContent)) {
     return cellContent.enteredDigit;
-  else return "";
+  }
+  return "";
 };
 // #endregion
 
@@ -262,24 +274,28 @@ export const getCellAriaLabel = (
 ): string => {
   const location = `Row ${rowNumber}, Column ${columnNumber}`;
 
-  if (isGivenDigitInCellContent(cellContent))
+  if (isGivenDigitInCellContent(cellContent)) {
     return `${location}: given digit ${cellContent.givenDigit}`;
+  }
 
-  if (isEnteredDigitInCellContent(cellContent))
+  if (isEnteredDigitInCellContent(cellContent)) {
     return `${location}: entered digit ${cellContent.enteredDigit}`;
+  }
 
   const parts: Array<string> = [];
 
   if (isMarkupDigitsInCellContent(cellContent)) {
-    if (cellContent.centerMarkups[0] !== "")
+    if (cellContent.centerMarkups[0] !== "") {
       parts.push(
         `center markup ${[...cellContent.centerMarkups].sort().join(" ")}`,
       );
+    }
 
-    if (cellContent.cornerMarkups[0] !== "")
+    if (cellContent.cornerMarkups[0] !== "") {
       parts.push(
         `corner markup ${[...cellContent.cornerMarkups].sort().join(" ")}`,
       );
+    }
   }
 
   const appliedColorNames = markupColors
@@ -288,10 +304,13 @@ export const getCellAriaLabel = (
     )
     .map((color) => markupColorNames[color]);
 
-  if (appliedColorNames.length > 0)
+  if (appliedColorNames.length > 0) {
     parts.push(`color markup ${appliedColorNames.join(" ")}`);
+  }
 
-  if (parts.length === 0) return `${location}: empty`;
+  if (parts.length === 0) {
+    return `${location}: empty`;
+  }
 
   return `${location}: ${parts.join("; ")}`;
 };

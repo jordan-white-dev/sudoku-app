@@ -94,7 +94,9 @@ const getMarkupColorsBackground = (
 ): ButtonProps["background"] => {
   const appliedMarkupColors = cellMarkupColors.filter(isNonEmptyMarkupColor);
 
-  if (appliedMarkupColors.length === 0) return "transparent";
+  if (appliedMarkupColors.length === 0) {
+    return "transparent";
+  }
 
   const sortedMarkupColors = markupColors.filter((markupColor) =>
     appliedMarkupColors.includes(markupColor),
@@ -115,7 +117,9 @@ const getMarkupColorsBackground = (
 const getConflictCellBackground = (
   hasDigitConflict: boolean,
 ): string | null => {
-  if (!hasDigitConflict) return null;
+  if (!hasDigitConflict) {
+    return null;
+  }
 
   const conflictCellSvgMarkup = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">
@@ -168,8 +172,9 @@ const isCellInsideSelectedBox = (
   selectedColumnNumber: ColumnNumber | undefined,
   selectedRowNumber: RowNumber | undefined,
 ): boolean => {
-  if (selectedColumnNumber === undefined || selectedRowNumber === undefined)
+  if (selectedColumnNumber === undefined || selectedRowNumber === undefined) {
     return false;
+  }
 
   const selectedBoxColumnStart =
     Math.floor((selectedColumnNumber - 1) / 3) * 3 + 1;
@@ -253,10 +258,13 @@ const getSeenCellBackgroundRectangles = ({
   selectedColumnNumber: ColumnNumber | undefined;
   selectedRowNumber: RowNumber | undefined;
 }): Array<Rectangle> => {
-  if (!(isSeenInBox || isSeenInColumn || isSeenInRow)) return [];
+  if (!(isSeenInBox || isSeenInColumn || isSeenInRow)) {
+    return [];
+  }
 
-  if (isSeenInBox && isSeenInColumn && isSeenInRow)
+  if (isSeenInBox && isSeenInColumn && isSeenInRow) {
     return [{ height: 100, width: 100, xCoordinate: 0, yCoordinate: 0 }];
+  }
 
   const boxAndPuzzleEdges = getBoxAndPuzzleEdges(columnNumber, rowNumber);
 
@@ -279,16 +287,19 @@ const getSeenCellBackgroundRectangles = ({
 
   const backgroundRectangles: Array<Rectangle> = [];
 
-  if (isSeenInBox)
+  if (isSeenInBox) {
     backgroundRectangles.push(
       getSeenInBoxBackgroundRectangle(boxAndPuzzleEdges),
     );
+  }
 
-  if (isSeenInColumn && !shouldSuppressColumnBandAtPuzzleEdge)
+  if (isSeenInColumn && !shouldSuppressColumnBandAtPuzzleEdge) {
     backgroundRectangles.push(getSeenInColumnBackgroundRectangle());
+  }
 
-  if (isSeenInRow && !shouldSuppressRowBandAtPuzzleEdge)
+  if (isSeenInRow && !shouldSuppressRowBandAtPuzzleEdge) {
     backgroundRectangles.push(getSeenInRowBackgroundRectangle());
+  }
 
   const seenCellBackgroundRectangles =
     backgroundRectangles.filter(isRectangleVisible);
@@ -315,7 +326,9 @@ const getSeenCellBackground = ({
   selectedRowNumber: RowNumber | undefined;
   isShowSeenCellsEnabled: boolean;
 }): string | null => {
-  if (!isShowSeenCellsEnabled) return null;
+  if (!isShowSeenCellsEnabled) {
+    return null;
+  }
 
   const seenCellBackgroundRectangles = getSeenCellBackgroundRectangles({
     columnNumber,
@@ -327,7 +340,9 @@ const getSeenCellBackground = ({
     selectedRowNumber,
   });
 
-  if (seenCellBackgroundRectangles.length === 0) return null;
+  if (seenCellBackgroundRectangles.length === 0) {
+    return null;
+  }
 
   const seenCellRectanglesAsSvgMarkup = seenCellBackgroundRectangles
     .map(
@@ -372,8 +387,9 @@ const getCellStateAtRowAndColumn = (
     rowNumber > CELLS_PER_HOUSE ||
     columnNumber < 1 ||
     columnNumber > CELLS_PER_HOUSE
-  )
-    return undefined;
+  ) {
+    return;
+  }
 
   return boardState[(rowNumber - 1) * CELLS_PER_HOUSE + (columnNumber - 1)];
 };
@@ -384,46 +400,38 @@ const getSelectedAdjacentCells = (
 ): SelectedAdjacentCells => {
   const { rowNumber, columnNumber } = cellState.houses;
 
-  const isSelectedCellAbove = !!getCellStateAtRowAndColumn(
-    boardState,
-    rowNumber - 1,
-    columnNumber,
-  )?.isSelected;
-  const isSelectedCellAboveLeft = !!getCellStateAtRowAndColumn(
-    boardState,
-    rowNumber - 1,
-    columnNumber - 1,
-  )?.isSelected;
-  const isSelectedCellAboveRight = !!getCellStateAtRowAndColumn(
-    boardState,
-    rowNumber - 1,
-    columnNumber + 1,
-  )?.isSelected;
-  const isSelectedCellBelow = !!getCellStateAtRowAndColumn(
-    boardState,
-    rowNumber + 1,
-    columnNumber,
-  )?.isSelected;
-  const isSelectedCellBelowLeft = !!getCellStateAtRowAndColumn(
-    boardState,
-    rowNumber + 1,
-    columnNumber - 1,
-  )?.isSelected;
-  const isSelectedCellBelowRight = !!getCellStateAtRowAndColumn(
-    boardState,
-    rowNumber + 1,
-    columnNumber + 1,
-  )?.isSelected;
-  const isSelectedCellToLeft = !!getCellStateAtRowAndColumn(
-    boardState,
-    rowNumber,
-    columnNumber - 1,
-  )?.isSelected;
-  const isSelectedCellToRight = !!getCellStateAtRowAndColumn(
-    boardState,
-    rowNumber,
-    columnNumber + 1,
-  )?.isSelected;
+  const isSelectedCellAbove = Boolean(
+    getCellStateAtRowAndColumn(boardState, rowNumber - 1, columnNumber)
+      ?.isSelected,
+  );
+  const isSelectedCellAboveLeft = Boolean(
+    getCellStateAtRowAndColumn(boardState, rowNumber - 1, columnNumber - 1)
+      ?.isSelected,
+  );
+  const isSelectedCellAboveRight = Boolean(
+    getCellStateAtRowAndColumn(boardState, rowNumber - 1, columnNumber + 1)
+      ?.isSelected,
+  );
+  const isSelectedCellBelow = Boolean(
+    getCellStateAtRowAndColumn(boardState, rowNumber + 1, columnNumber)
+      ?.isSelected,
+  );
+  const isSelectedCellBelowLeft = Boolean(
+    getCellStateAtRowAndColumn(boardState, rowNumber + 1, columnNumber - 1)
+      ?.isSelected,
+  );
+  const isSelectedCellBelowRight = Boolean(
+    getCellStateAtRowAndColumn(boardState, rowNumber + 1, columnNumber + 1)
+      ?.isSelected,
+  );
+  const isSelectedCellToLeft = Boolean(
+    getCellStateAtRowAndColumn(boardState, rowNumber, columnNumber - 1)
+      ?.isSelected,
+  );
+  const isSelectedCellToRight = Boolean(
+    getCellStateAtRowAndColumn(boardState, rowNumber, columnNumber + 1)
+      ?.isSelected,
+  );
 
   const selectedAdjacentCells = {
     isSelectedCellAbove,
@@ -460,43 +468,45 @@ const getSelectedCellBackground = ({
   isSelectedCellToLeft: boolean;
   isSelectedCellToRight: boolean;
 }): string | null => {
-  if (!isSelected) return null;
+  if (!isSelected) {
+    return null;
+  }
 
-  const topEdgeRectangle: Rectangle | null = !isSelectedCellAbove
-    ? {
+  const topEdgeRectangle: Rectangle | null = isSelectedCellAbove
+    ? null
+    : {
         height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
         width: 100,
         xCoordinate: 0,
         yCoordinate: 0,
-      }
-    : null;
+      };
 
-  const bottomEdgeRectangle: Rectangle | null = !isSelectedCellBelow
-    ? {
+  const bottomEdgeRectangle: Rectangle | null = isSelectedCellBelow
+    ? null
+    : {
         height: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
         width: 100,
         xCoordinate: 0,
         yCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
-      }
-    : null;
+      };
 
-  const leftEdgeRectangle: Rectangle | null = !isSelectedCellToLeft
-    ? {
+  const leftEdgeRectangle: Rectangle | null = isSelectedCellToLeft
+    ? null
+    : {
         height: 100,
         width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
         xCoordinate: 0,
         yCoordinate: 0,
-      }
-    : null;
+      };
 
-  const rightEdgeRectangle: Rectangle | null = !isSelectedCellToRight
-    ? {
+  const rightEdgeRectangle: Rectangle | null = isSelectedCellToRight
+    ? null
+    : {
         height: 100,
         width: SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
         xCoordinate: 100 - SELECTED_CELL_EDGE_THICKNESS_IN_VIEWBOX_UNITS,
         yCoordinate: 0,
-      }
-    : null;
+      };
 
   const topLeftCornerRectangle: Rectangle | null =
     isSelectedCellAbove && isSelectedCellToLeft && !isSelectedCellAboveLeft
@@ -549,7 +559,9 @@ const getSelectedCellBackground = ({
     bottomRightCornerRectangle,
   ].filter((rectangle): rectangle is Rectangle => rectangle !== null);
 
-  if (selectedCellRectangles.length === 0) return null;
+  if (selectedCellRectangles.length === 0) {
+    return null;
+  }
 
   const selectedCellRectanglesAsSvgMarkup = selectedCellRectangles
     .map(
@@ -645,8 +657,10 @@ const getCellBackground = ({
 
 // #region Other Cell Styles
 const getFontSize = (cellContent: CellContent): ButtonProps["fontSize"] => {
-  if (isGivenOrEnteredDigitInCellContent(cellContent)) return DIGIT_FONT_SIZE;
-  else if (isMarkupDigitsInCellContent(cellContent)) {
+  if (isGivenOrEnteredDigitInCellContent(cellContent)) {
+    return DIGIT_FONT_SIZE;
+  }
+  if (isMarkupDigitsInCellContent(cellContent)) {
     const centerMarkupsCount = cellContent.centerMarkups.length;
 
     switch (centerMarkupsCount) {
@@ -758,8 +772,9 @@ const getCornerMarkups = (cellContent: CellContent): Array<string> => {
   if (
     isMarkupDigitsInCellContent(cellContent) &&
     cellContent.cornerMarkups[0] !== ""
-  )
+  ) {
     return [...cellContent.cornerMarkups].sort();
+  }
 
   return [""];
 };
@@ -769,7 +784,9 @@ const getCornerMarkupFloats = (
 ): Array<ReactNode> | undefined => {
   const cornerMarkups = getCornerMarkups(cellContent);
 
-  if (cornerMarkups.length === 0 || cornerMarkups[0] === "") return undefined;
+  if (cornerMarkups.length === 0 || cornerMarkups[0] === "") {
+    return;
+  }
 
   const cornerMarkupFloats = cornerMarkups.map((cornerMarkup, markupIndex) => {
     const placement = getFloatPlacement(cornerMarkups.length, markupIndex);
@@ -793,33 +810,29 @@ const getCornerMarkupFloats = (
 // #endregion
 
 // #region Row and Column Label Floats
-const getRowLabelFloat = (rowNumber: RowNumber): ReactNode => {
-  return (
-    <Float
-      color="black"
-      fontSize={CORNER_AND_LABEL_FONT_SIZE}
-      key={`row-label-${rowNumber}`}
-      offsetX={getCellSizeScaledBy(-0.2)}
-      placement="middle-start"
-    >
-      {rowNumber.toString()}
-    </Float>
-  );
-};
+const getRowLabelFloat = (rowNumber: RowNumber): ReactNode => (
+  <Float
+    color="black"
+    fontSize={CORNER_AND_LABEL_FONT_SIZE}
+    key={`row-label-${rowNumber}`}
+    offsetX={getCellSizeScaledBy(-0.2)}
+    placement="middle-start"
+  >
+    {rowNumber.toString()}
+  </Float>
+);
 
-const getColumnLabelFloat = (columnNumber: ColumnNumber): ReactNode => {
-  return (
-    <Float
-      color="black"
-      fontSize={CORNER_AND_LABEL_FONT_SIZE}
-      key={`column-label-${columnNumber}`}
-      offsetY={getCellSizeScaledBy(-0.2)}
-      placement="top-center"
-    >
-      {columnNumber.toString()}
-    </Float>
-  );
-};
+const getColumnLabelFloat = (columnNumber: ColumnNumber): ReactNode => (
+  <Float
+    color="black"
+    fontSize={CORNER_AND_LABEL_FONT_SIZE}
+    key={`column-label-${columnNumber}`}
+    offsetY={getCellSizeScaledBy(-0.2)}
+    placement="top-center"
+  >
+    {columnNumber.toString()}
+  </Float>
+);
 // #endregion
 
 // #endregion
@@ -840,23 +853,31 @@ const isArrayOfMarkupColors = (
 const isEmptyEditableCellWithoutMarkup = (cellState: CellState) => {
   const { content: cellContent } = cellState;
 
-  if (isGivenDigitInCellContent(cellContent)) return false;
+  if (isGivenDigitInCellContent(cellContent)) {
+    return false;
+  }
 
-  if (isEnteredDigitInCellContent(cellContent)) return false;
+  if (isEnteredDigitInCellContent(cellContent)) {
+    return false;
+  }
 
   if (
     isMarkupDigitsInCellContent(cellContent) &&
     cellContent.cornerMarkups[0] !== ""
-  )
+  ) {
     return false;
+  }
 
   if (
     isMarkupDigitsInCellContent(cellContent) &&
     cellContent.centerMarkups[0] !== ""
-  )
+  ) {
     return false;
+  }
 
-  if (cellState.markupColors[0] !== "") return false;
+  if (cellState.markupColors[0] !== "") {
+    return false;
+  }
 
   return true;
 };
@@ -926,10 +947,13 @@ const doMarkupColorsMatchExactly = (
   sourceMarkupColors: [""] | Array<MarkupColor>,
   candidateMarkupColors: [""] | Array<MarkupColor>,
 ): boolean => {
-  if (!isArrayOfMarkupColors(sourceMarkupColors))
+  if (!isArrayOfMarkupColors(sourceMarkupColors)) {
     return !isArrayOfMarkupColors(candidateMarkupColors);
+  }
 
-  if (!isArrayOfMarkupColors(candidateMarkupColors)) return false;
+  if (!isArrayOfMarkupColors(candidateMarkupColors)) {
+    return false;
+  }
 
   const sourceMarkupColorsSortedInDisplayOrder = markupColors.filter(
     (markupColor) => sourceMarkupColors.includes(markupColor),
@@ -943,7 +967,9 @@ const doMarkupColorsMatchExactly = (
     sourceMarkupColorsSortedInDisplayOrder.length ===
     candidateMarkupColorsSortedInDisplayOrder.length;
 
-  if (!doMarkupColorsHaveSameLength) return false;
+  if (!doMarkupColorsHaveSameLength) {
+    return false;
+  }
 
   const doAllMarkupColorsMatchByPosition =
     sourceMarkupColorsSortedInDisplayOrder.every(
@@ -959,10 +985,13 @@ const doMarkupDigitsMatchExactly = (
   sourceMarkupDigits: MarkupDigits,
   candidateMarkupDigits: MarkupDigits,
 ): boolean => {
-  if (!isArrayOfSudokuDigits(sourceMarkupDigits))
+  if (!isArrayOfSudokuDigits(sourceMarkupDigits)) {
     return !isArrayOfSudokuDigits(candidateMarkupDigits);
+  }
 
-  if (!isArrayOfSudokuDigits(candidateMarkupDigits)) return false;
+  if (!isArrayOfSudokuDigits(candidateMarkupDigits)) {
+    return false;
+  }
 
   const sourceMarkupDigitsSorted = [...sourceMarkupDigits].sort();
   const candidateMarkupDigitsSorted = [...candidateMarkupDigits].sort();
@@ -970,7 +999,9 @@ const doMarkupDigitsMatchExactly = (
   const doMarkupDigitsHaveSameLength =
     sourceMarkupDigitsSorted.length === candidateMarkupDigitsSorted.length;
 
-  if (!doMarkupDigitsHaveSameLength) return false;
+  if (!doMarkupDigitsHaveSameLength) {
+    return false;
+  }
 
   const doAllMarkupDigitsMatchByPosition = sourceMarkupDigitsSorted.every(
     (markupDigit, markupDigitIndex) =>
@@ -1054,15 +1085,18 @@ const getSelectedCellStateWithStrictMatching = (
   sourceCellState: CellState,
   candidateCellState: CellState,
 ): CellState => {
-  if (isEmptyEditableCellWithoutMarkup(candidateCellState))
+  if (isEmptyEditableCellWithoutMarkup(candidateCellState)) {
     return candidateCellState;
+  }
 
   const doCellMarkupColorsMatchExactly = doMarkupColorsMatchExactly(
     sourceCellState.markupColors,
     candidateCellState.markupColors,
   );
 
-  if (!doCellMarkupColorsMatchExactly) return candidateCellState;
+  if (!doCellMarkupColorsMatchExactly) {
+    return candidateCellState;
+  }
 
   const sourceCellContent = sourceCellState.content;
   const candidateCellContent = candidateCellState.content;
@@ -1111,8 +1145,9 @@ const getSelectedCellStateWithPartialMatching = (
   sourceCellState: CellState,
   candidateCellState: CellState,
 ): CellState => {
-  if (isEmptyEditableCellWithoutMarkup(candidateCellState))
+  if (isEmptyEditableCellWithoutMarkup(candidateCellState)) {
     return candidateCellState;
+  }
 
   const sourceCellContent = sourceCellState.content;
   const candidateCellContent = candidateCellState.content;
@@ -1120,22 +1155,24 @@ const getSelectedCellStateWithPartialMatching = (
   if (
     sourceCellState.markupColors[0] !== "" &&
     candidateCellState.markupColors[0] !== ""
-  )
+  ) {
     return getCellStateAsSelectedIfMatchingMarkupColorsExist(
       sourceCellState.markupColors,
       candidateCellState.markupColors,
       candidateCellState,
     );
+  }
 
   if (
     isMarkupDigitsInCellContent(sourceCellContent) &&
     isMarkupDigitsInCellContent(candidateCellContent)
-  )
+  ) {
     return getCellStateAsSelectedIfMatchingMarkupDigitsExist(
       sourceCellContent,
       candidateCellContent,
       candidateCellState,
     );
+  }
 
   const sourceGivenOrEnteredDigit =
     getGivenOrEnteredDigitInCellIfPresent(sourceCellContent);
@@ -1201,11 +1238,15 @@ const handleCellDoubleClick = (
 // #endregion
 
 const getNonCornerCellDigits = (cellContent: CellContent): string => {
-  if (isGivenDigitInCellContent(cellContent)) return cellContent.givenDigit;
-  else if (isEnteredDigitInCellContent(cellContent))
+  if (isGivenDigitInCellContent(cellContent)) {
+    return cellContent.givenDigit;
+  }
+  if (isEnteredDigitInCellContent(cellContent)) {
     return cellContent.enteredDigit;
-  else if (isMarkupDigitsInCellContent(cellContent))
+  }
+  if (isMarkupDigitsInCellContent(cellContent)) {
     return [...cellContent.centerMarkups].sort().join("");
+  }
 
   return "";
 };

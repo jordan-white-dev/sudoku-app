@@ -91,7 +91,7 @@ const StopwatchBridge = ({ children }: { children: ReactNode }) => {
 // #region Session Storage
 const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 const getStopwatchSessionStorageKey = () =>
-  `sudoku-stopwatch-persisted-total-seconds-test-puzzle`;
+  "sudoku-stopwatch-persisted-total-seconds-test-puzzle";
 
 const setSessionStorageForRender = ({
   persistedStopwatchTotalSeconds = 0,
@@ -175,8 +175,9 @@ const getHiddenStopwatchRootElement = async (
     ),
   ).find((element) => element.textContent?.includes(formattedTimeText));
 
-  if (!candidateHiddenRootElement)
-    throw Error("Could not find the hidden stopwatch root element.");
+  if (!candidateHiddenRootElement) {
+    throw new Error("Could not find the hidden stopwatch root element.");
+  }
 
   return candidateHiddenRootElement;
 };

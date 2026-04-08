@@ -8,12 +8,6 @@ export const Layout = ({ children }: PropsWithChildren) => (
   <Box height="100dvh" overflow="hidden">
     <Meta />
     <chakra.a
-      height="1px"
-      href="#main-content"
-      left="-9999px"
-      overflow="hidden"
-      position="absolute"
-      width="1px"
       _focusVisible={{
         background: "white",
         border: "2px solid",
@@ -31,12 +25,17 @@ export const Layout = ({ children }: PropsWithChildren) => (
         width: "auto",
         zIndex: 9999,
       }}
+      height="1px"
+      href="#main-content"
+      left="-9999px"
+      overflow="hidden"
+      position="absolute"
+      width="1px"
     >
       Skip to main content
     </chakra.a>
     <Flex direction="column" height="full">
       {children}
-
       <Footer />
     </Flex>
   </Box>

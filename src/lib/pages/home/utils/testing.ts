@@ -1,4 +1,3 @@
-import { expect } from "vitest";
 import { type Locator } from "vitest/browser";
 import { type render } from "vitest-browser-react";
 
@@ -192,34 +191,35 @@ export const getTargetCellStateFromBoardState = (
     (cellState) => cellState.id === cellId,
   );
 
-  if (!candidateCellState)
-    throw Error(`Missing cellState for cell id ${cellId}`);
+  if (!candidateCellState) {
+    throw new Error(`Missing cellState for cell id ${cellId}`);
+  }
 
   return candidateCellState;
 };
 // #endregion
 
 // #region Board State Assertions
-export const expectTargetCellToContainEmptyCellContent = (
+export const doesTargetCellContainEmptyCellContent = (
   boardState: BoardState,
   cellId: CellId,
-) => {
+): boolean => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isEmptyCellContent(cellState.content)).toBe(true);
+  return isEmptyCellContent(cellState.content);
 };
 
-export const expectTargetCellToContainGivenDigit = (
+export const getGivenDigitInTargetCell = (
   boardState: BoardState,
   cellId: CellId,
-  expectedGivenDigit: SudokuDigit,
-) => {
+): SudokuDigit | undefined => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isGivenDigitInCellContent(cellState.content)).toBe(true);
+  if (!isGivenDigitInCellContent(cellState.content)) {
+    return;
+  }
 
-  if (isGivenDigitInCellContent(cellState.content))
-    expect(cellState.content.givenDigit).toBe(expectedGivenDigit);
+  return cellState.content.givenDigit;
 };
 // #endregion
 
@@ -257,8 +257,9 @@ export const getCellElement = async (
       `button[data-cell-number="${cellId}"]`,
     );
 
-  if (!candidateCellElement)
-    throw Error(`Could not find button for cell ${cellId}.`);
+  if (!candidateCellElement) {
+    throw new Error(`Could not find button for cell ${cellId}.`);
+  }
 
   return candidateCellElement;
 };
@@ -277,38 +278,32 @@ const doesBackgroundImageContainToken = (
   token: string,
 ): boolean => backgroundImage.toLowerCase().includes(token.toLowerCase());
 
-export const expectSeenCellHighlightOrNotInTargetCell = async (
+export const hasSeenCellHighlightInTargetCell = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellId: CellId,
-  shouldHighlightBeVisible: boolean,
-) => {
+): Promise<boolean> => {
   const backgroundImage = await getComputedStyleOfRenderedCellBackgroundImage(
     renderedBoard,
     cellId,
   );
 
-  expect(
-    doesBackgroundImageContainToken(
-      backgroundImage,
-      SEEN_CELL_HIGHLIGHT_COLOR_TOKEN,
-    ),
-  ).toBe(shouldHighlightBeVisible);
+  return doesBackgroundImageContainToken(
+    backgroundImage,
+    SEEN_CELL_HIGHLIGHT_COLOR_TOKEN,
+  );
 };
 
-export const expectTargetCellToHaveConflictHighlightOrNot = async (
+export const hasConflictCellHighlightInTargetCell = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
   cellId: CellId,
-  shouldBeVisible: boolean,
-) => {
+): Promise<boolean> => {
   const backgroundImage = await getComputedStyleOfRenderedCellBackgroundImage(
     renderedBoard,
     cellId,
   );
 
-  expect(
-    doesBackgroundImageContainToken(
-      backgroundImage,
-      CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN,
-    ),
-  ).toBe(shouldBeVisible);
+  return doesBackgroundImageContainToken(
+    backgroundImage,
+    CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN,
+  );
 };

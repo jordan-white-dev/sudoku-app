@@ -167,17 +167,6 @@ The app uses **session storage** to preserve state while the browser tab remains
 
 Because progress is stored per puzzle, users can move between puzzles using browser navigation and keep their puzzle-specific progress intact within the same tab session.
 
-## Responsive Design
-
-The app is designed to work across mobile and desktop layouts, with interface changes tuned to Chakra breakpoints:
-
-- `base`: `0rem`
-- `sm`: `30rem`
-- `md`: `48rem`
-- `lg`: `62rem`
-
-![The mobile view of the app on the left and the desktop view on the right.](images/mobile-vs-desktop-comparison.png)
-
 ## Attribution
 
 This project builds on and draws inspiration from several excellent tools and resources:

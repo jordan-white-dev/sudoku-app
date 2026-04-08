@@ -122,8 +122,9 @@ const getShortcutsMenuTrigger = async (
 
   const triggerButton = menuTriggerButtons[0];
 
-  if (!triggerButton)
-    throw Error("Could not find the shortcuts menu trigger button.");
+  if (!triggerButton) {
+    throw new Error("Could not find the shortcuts menu trigger button.");
+  }
 
   return triggerButton;
 };
@@ -135,8 +136,9 @@ const getSettingsMenuTrigger = async (
 
   const triggerButton = menuTriggerButtons[1];
 
-  if (!triggerButton)
-    throw Error("Could not find the settings menu trigger button.");
+  if (!triggerButton) {
+    throw new Error("Could not find the settings menu trigger button.");
+  }
 
   return triggerButton;
 };
@@ -178,7 +180,9 @@ const getStopwatchToggleButtonLocator = async (
     })
     .query();
 
-  if (pauseButton) return pauseButton;
+  if (pauseButton) {
+    return pauseButton;
+  }
 
   const resumeButton = resolvedRenderedHeader
     .getByRole("button", {
@@ -186,24 +190,23 @@ const getStopwatchToggleButtonLocator = async (
     })
     .query();
 
-  if (resumeButton) return resumeButton;
+  if (resumeButton) {
+    return resumeButton;
+  }
 
-  throw Error("Could not find the stopwatch pause/resume button.");
+  throw new Error("Could not find the stopwatch pause/resume button.");
 };
 
-const expectSettingToBeCheckedOrNot = async (
+const getAriaCheckedAttribute = async (
   renderedHeader: RenderedHeader | Promise<RenderedHeader>,
   settingLabel: string,
-  shouldBeChecked: boolean,
-) => {
+): Promise<string | null> => {
   const settingCheckbox = await getSettingCheckboxMenuItemLocator(
     renderedHeader,
     settingLabel,
   );
 
-  const ariaChecked = settingCheckbox.element().getAttribute("aria-checked");
-
-  expect(ariaChecked).toBe(String(shouldBeChecked));
+  return settingCheckbox.element().getAttribute("aria-checked");
 };
 // #endregion
 
@@ -250,34 +253,30 @@ describe("Settings menu checked state", () => {
     await openSettingsMenu(renderedHeader);
 
     // Assert
-    await expectSettingToBeCheckedOrNot(
-      renderedHeader,
-      "Conflict Checker",
-      true,
+    expect(
+      await getAriaCheckedAttribute(renderedHeader, "Conflict Checker"),
+    ).toBe("true");
+    expect(
+      await getAriaCheckedAttribute(renderedHeader, "Show Seen Cells"),
+    ).toBe("true");
+    expect(
+      await getAriaCheckedAttribute(renderedHeader, "Strict Highlights"),
+    ).toBe("false");
+    expect(await getAriaCheckedAttribute(renderedHeader, "Flip Keypad")).toBe(
+      "false",
     );
-    await expectSettingToBeCheckedOrNot(
-      renderedHeader,
-      "Show Seen Cells",
-      true,
+    expect(await getAriaCheckedAttribute(renderedHeader, "Dashed Grid")).toBe(
+      "false",
     );
-    await expectSettingToBeCheckedOrNot(
-      renderedHeader,
-      "Strict Highlights",
-      false,
-    );
-    await expectSettingToBeCheckedOrNot(renderedHeader, "Flip Keypad", false);
-    await expectSettingToBeCheckedOrNot(renderedHeader, "Dashed Grid", false);
-    await expectSettingToBeCheckedOrNot(
-      renderedHeader,
-      "Disable Stopwatch",
-      true,
-    );
-    await expectSettingToBeCheckedOrNot(renderedHeader, "Hide Stopwatch", true);
-    await expectSettingToBeCheckedOrNot(
-      renderedHeader,
-      "Show Row + Column Labels",
-      false,
-    );
+    expect(
+      await getAriaCheckedAttribute(renderedHeader, "Disable Stopwatch"),
+    ).toBe("true");
+    expect(
+      await getAriaCheckedAttribute(renderedHeader, "Hide Stopwatch"),
+    ).toBe("true");
+    expect(
+      await getAriaCheckedAttribute(renderedHeader, "Show Row + Column Labels"),
+    ).toBe("false");
   });
 });
 
@@ -299,8 +298,9 @@ describe("Settings menu interactions", () => {
       USER_SETTINGS_SESSION_STORAGE_KEY,
     );
 
-    if (!userSettingsInSessionStorage)
-      throw Error("Could not find user settings in session storage.");
+    if (!userSettingsInSessionStorage) {
+      throw new Error("Could not find user settings in session storage.");
+    }
 
     const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
 
@@ -338,8 +338,9 @@ describe("Settings menu interactions", () => {
       USER_SETTINGS_SESSION_STORAGE_KEY,
     );
 
-    if (!userSettingsInSessionStorage)
-      throw Error("Could not find user settings in session storage.");
+    if (!userSettingsInSessionStorage) {
+      throw new Error("Could not find user settings in session storage.");
+    }
 
     const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
     expect(parsedUserSettings.isStopwatchDisabled).toBe(true);
@@ -376,8 +377,9 @@ describe("Settings menu interactions", () => {
       USER_SETTINGS_SESSION_STORAGE_KEY,
     );
 
-    if (!userSettingsInSessionStorage)
-      throw Error("Could not find user settings in session storage.");
+    if (!userSettingsInSessionStorage) {
+      throw new Error("Could not find user settings in session storage.");
+    }
 
     const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
     expect(parsedUserSettings.isStopwatchDisabled).toBe(false);

@@ -16,8 +16,6 @@ import {
 } from "@/lib/pages/home/utils/constants";
 import {
   CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN,
-  expectSeenCellHighlightOrNotInTargetCell,
-  expectTargetCellToHaveConflictHighlightOrNot,
   getBoardStateWithTargetCellsSelected,
   getCellAccessibleName,
   getCellElement,
@@ -25,6 +23,8 @@ import {
   getStartingEmptyBoardState,
   getStartingPuzzleStateFromBoardState,
   getTargetCellStateFromBoardState,
+  hasConflictCellHighlightInTargetCell,
+  hasSeenCellHighlightInTargetCell,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
@@ -105,8 +105,9 @@ const getCellFontSizeInPixels = (cellElement: HTMLButtonElement): number => {
   const computedFontSize = window.getComputedStyle(cellElement).fontSize;
   const parsedFontSize = Number.parseFloat(computedFontSize);
 
-  if (Number.isNaN(parsedFontSize))
-    throw Error(`Failed to parse font size from "${computedFontSize}".`);
+  if (Number.isNaN(parsedFontSize)) {
+    throw new Error(`Failed to parse font size from "${computedFontSize}".`);
+  }
 
   return parsedFontSize;
 };
@@ -119,7 +120,9 @@ const getBoardStateWithUpdatedTargetCell = (
   const boardState = startingBoardState ?? getStartingEmptyBoardState();
 
   return boardState.map((cellState) => {
-    if (cellState.id !== cellId) return cellState;
+    if (cellState.id !== cellId) {
+      return cellState;
+    }
 
     return {
       ...cellState,
@@ -128,12 +131,11 @@ const getBoardStateWithUpdatedTargetCell = (
   });
 };
 
-const getSelectedCellIds = (boardState: BoardState): Array<number> => {
-  return boardState
+const getSelectedCellIds = (boardState: BoardState): Array<number> =>
+  boardState
     .filter((cellState) => cellState.isSelected)
     .map((cellState) => Number(cellState.id))
     .sort((firstCellId, secondCellId) => firstCellId - secondCellId);
-};
 
 const getNextBoardStateAfterDoubleClick = async ({
   boardState,
@@ -170,8 +172,11 @@ const getNextBoardStateAfterDoubleClick = async ({
 
   const setPuzzleStateUpdater = setPuzzleState.mock.calls[0]?.[0];
 
-  if (!setPuzzleStateUpdater || typeof setPuzzleStateUpdater !== "function")
-    throw Error("Expected a puzzle state updater function after double-click.");
+  if (!setPuzzleStateUpdater || typeof setPuzzleStateUpdater !== "function") {
+    throw new Error(
+      "Expected a puzzle state updater function after double-click.",
+    );
+  }
 
   const startingPuzzleState = getStartingPuzzleStateFromBoardState(boardState);
   const nextPuzzleState = setPuzzleStateUpdater(startingPuzzleState);
@@ -241,12 +246,9 @@ const renderCell = async ({
 beforeEach(() => {
   window.sessionStorage.clear();
 
-  if (!HTMLElement.prototype.setPointerCapture)
-    HTMLElement.prototype.setPointerCapture = vi.fn(() => undefined);
-  else
-    vi.spyOn(HTMLElement.prototype, "setPointerCapture").mockImplementation(
-      () => undefined,
-    );
+  vi.spyOn(HTMLElement.prototype, "setPointerCapture").mockImplementation(
+    () => undefined,
+  );
 });
 
 describe("Accessible name", () => {
@@ -993,11 +995,9 @@ describe("Background state: digit conflicts", () => {
     });
 
     // Assert
-    await expectTargetCellToHaveConflictHighlightOrNot(
-      renderedCell,
-      targetCellId,
-      true,
-    );
+    expect(
+      await hasConflictCellHighlightInTargetCell(renderedCell, targetCellId),
+    ).toBe(true);
   });
 
   it("does not show a conflict highlight when the cell has no digit conflict", async () => {
@@ -1040,11 +1040,9 @@ describe("Background state: seen cells", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCell(
-      renderedCell,
-      targetCellId,
-      true,
-    );
+    expect(
+      await hasSeenCellHighlightInTargetCell(renderedCell, targetCellId),
+    ).toBe(true);
   });
 
   it("shows a seen-cell highlight when seen cells are enabled and the cell is in the same column as the selected cell", async () => {
@@ -1065,11 +1063,9 @@ describe("Background state: seen cells", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCell(
-      renderedCell,
-      targetCellId,
-      true,
-    );
+    expect(
+      await hasSeenCellHighlightInTargetCell(renderedCell, targetCellId),
+    ).toBe(true);
   });
 
   it("shows a seen-cell highlight when seen cells are enabled and the cell is in the same box as the selected cell", async () => {
@@ -1090,11 +1086,9 @@ describe("Background state: seen cells", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCell(
-      renderedCell,
-      targetCellId,
-      true,
-    );
+    expect(
+      await hasSeenCellHighlightInTargetCell(renderedCell, targetCellId),
+    ).toBe(true);
   });
 
   it("does not show a seen-cell highlight when seen cells are disabled, even when the cell is seen", async () => {
@@ -1115,11 +1109,9 @@ describe("Background state: seen cells", () => {
     });
 
     // Assert
-    await expectSeenCellHighlightOrNotInTargetCell(
-      renderedCell,
-      targetCellId,
-      false,
-    );
+    expect(
+      await hasSeenCellHighlightInTargetCell(renderedCell, targetCellId),
+    ).toBe(false);
   });
 
   it("uses a single full-cell seen rectangle when row, column, and box highlights all apply", async () => {
@@ -1151,8 +1143,11 @@ describe("Background state: seen cells", () => {
     // Assert
     expect(seenCellSvgLayer).toBeDefined();
 
-    if (!seenCellSvgLayer)
-      throw Error("Expected a seen-cell SVG layer for full seen highlighting.");
+    if (!seenCellSvgLayer) {
+      throw new Error(
+        "Expected a seen-cell SVG layer for full seen highlighting.",
+      );
+    }
 
     const rectTags = getRectTagsFromSvgLayer(seenCellSvgLayer);
 
@@ -1242,8 +1237,11 @@ describe("Background state: seen cells", () => {
     // Assert
     expect(seenCellSvgLayer).toBeDefined();
 
-    if (!seenCellSvgLayer)
-      throw Error("Expected a seen-cell SVG layer for seen-box highlighting.");
+    if (!seenCellSvgLayer) {
+      throw new Error(
+        "Expected a seen-cell SVG layer for seen-box highlighting.",
+      );
+    }
 
     const rectTags = getRectTagsFromSvgLayer(seenCellSvgLayer);
 
@@ -1281,8 +1279,11 @@ describe("Background state: selected outline geometry", () => {
     // Assert
     expect(selectedCellSvgLayer).toBeDefined();
 
-    if (!selectedCellSvgLayer)
-      throw Error("Expected a selected-cell SVG layer for selected outlines.");
+    if (!selectedCellSvgLayer) {
+      throw new Error(
+        "Expected a selected-cell SVG layer for selected outlines.",
+      );
+    }
 
     const rectTags = getRectTagsFromSvgLayer(selectedCellSvgLayer);
 
@@ -1327,8 +1328,11 @@ describe("Background state: selected outline geometry", () => {
     // Assert
     expect(selectedCellSvgLayer).toBeDefined();
 
-    if (!selectedCellSvgLayer)
-      throw Error("Expected a selected-cell SVG layer for selected outlines.");
+    if (!selectedCellSvgLayer) {
+      throw new Error(
+        "Expected a selected-cell SVG layer for selected outlines.",
+      );
+    }
 
     const rectTags = getRectTagsFromSvgLayer(selectedCellSvgLayer);
 
@@ -1389,8 +1393,11 @@ describe("Background state: selected outline geometry", () => {
     // Assert
     expect(selectedCellSvgLayer).toBeDefined();
 
-    if (!selectedCellSvgLayer)
-      throw Error("Expected a selected-cell SVG layer for selected outlines.");
+    if (!selectedCellSvgLayer) {
+      throw new Error(
+        "Expected a selected-cell SVG layer for selected outlines.",
+      );
+    }
 
     const rectTags = getRectTagsFromSvgLayer(selectedCellSvgLayer);
 
@@ -1429,12 +1436,13 @@ describe("Background state: selected outline geometry", () => {
       getBrandedCellId(50),
     ];
 
-    for (const surroundingCellId of surroundingSelectedCellIds)
+    for (const surroundingCellId of surroundingSelectedCellIds) {
       startingBoardState = getBoardStateWithUpdatedTargetCell(
         surroundingCellId,
         { isSelected: true },
         startingBoardState,
       );
+    }
 
     const cellState = getTargetCellStateFromBoardState(
       targetCellId,

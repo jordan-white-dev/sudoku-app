@@ -20,7 +20,9 @@ const buildInitialCellPossibilities = (
 ): CellPossibilityMap => {
   const initialCellPossibilities: CellPossibilityMap = rawBoardState.map(
     (cell) => {
-      if (cell === null) return new Set(POSSIBLE_DIGITS);
+      if (cell === null) {
+        return new Set(POSSIBLE_DIGITS);
+      }
 
       return new Set([cell]);
     },
@@ -74,15 +76,18 @@ const isDigitRemovalFromCellsInGroupSuccessful = (
   groupCellPositions: Array<number>,
   cellPossibilitiesByPosition: CellPossibilityMap,
 ): boolean => {
-  for (const cellPosition of groupCellPositions)
+  for (const cellPosition of groupCellPositions) {
     if (
       cellPosition !== excludedCellPosition &&
       cellPossibilitiesByPosition[cellPosition].has(digit)
     ) {
       cellPossibilitiesByPosition[cellPosition].delete(digit);
 
-      if (cellPossibilitiesByPosition[cellPosition].size === 0) return false;
+      if (cellPossibilitiesByPosition[cellPosition].size === 0) {
+        return false;
+      }
     }
+  }
 
   return true;
 };
@@ -126,20 +131,23 @@ const isSingleDigitPlacementEnforcementInGroupSuccessful = (
     let possibleCellCountForDigit = 0;
     let lastPossibleCellPositionForDigit = -1;
 
-    for (const cellPosition of groupCellPositions)
+    for (const cellPosition of groupCellPositions) {
       if (cellPossibilitiesByPosition[cellPosition].has(digit)) {
         possibleCellCountForDigit++;
         lastPossibleCellPositionForDigit = cellPosition;
       }
+    }
 
     if (
       possibleCellCountForDigit === 1 &&
       cellPossibilitiesByPosition[lastPossibleCellPositionForDigit].size > 1
-    )
+    ) {
       cellPossibilitiesByPosition[lastPossibleCellPositionForDigit] = new Set([
         digit,
       ]);
-    else if (possibleCellCountForDigit === 0) return false;
+    } else if (possibleCellCountForDigit === 0) {
+      return false;
+    }
   }
 
   return true;
@@ -152,7 +160,9 @@ const isSingleDigitCellConstraintResolutionSuccessful = (
     { length: TOTAL_CELLS_IN_BOARD },
     (_, cellPosition) => cellPosition,
   ).every((cellPosition) => {
-    if (cellPossibilitiesByPosition[cellPosition].size === 0) return false;
+    if (cellPossibilitiesByPosition[cellPosition].size === 0) {
+      return false;
+    }
 
     if (cellPossibilitiesByPosition[cellPosition].size === 1) {
       const [digit] = cellPossibilitiesByPosition[cellPosition];
@@ -205,17 +215,21 @@ const isConstraintPropagationSuccessful = (
       !isSingleDigitCellConstraintResolutionSuccessful(
         cellPossibilitiesByPosition,
       )
-    )
+    ) {
       return false;
+    }
 
-    if (!isGroupConstraintResolutionSuccessful(cellPossibilitiesByPosition))
+    if (!isGroupConstraintResolutionSuccessful(cellPossibilitiesByPosition)) {
       return false;
+    }
 
     const updatedUnresolvedCellCount = countCellsWithMultipleCandidateDigits(
       cellPossibilitiesByPosition,
     );
 
-    if (updatedUnresolvedCellCount === currentUnresolvedCellCount) return true;
+    if (updatedUnresolvedCellCount === currentUnresolvedCellCount) {
+      return true;
+    }
 
     currentUnresolvedCellCount = updatedUnresolvedCellCount;
   }
@@ -229,17 +243,23 @@ const isPuzzleSolvableByDeductionOnly = (
   const cellPossibilitiesByPosition =
     buildInitialCellPossibilities(rawBoardState);
 
-  if (!isConstraintPropagationSuccessful(cellPossibilitiesByPosition))
+  if (!isConstraintPropagationSuccessful(cellPossibilitiesByPosition)) {
     return false;
+  }
 
-  for (const cellPossibilities of cellPossibilitiesByPosition)
-    if (cellPossibilities.size !== 1) return false;
+  for (const cellPossibilities of cellPossibilitiesByPosition) {
+    if (cellPossibilities.size !== 1) {
+      return false;
+    }
+  }
 
   return true;
 };
 
 const ratePuzzleDifficulty = (rawBoardState: RawBoardState): number => {
-  if (isPuzzleSolvableByDeductionOnly(rawBoardState)) return 0;
+  if (isPuzzleSolvableByDeductionOnly(rawBoardState)) {
+    return 0;
+  }
 
   const numberOfGivenDigits = rawBoardState.filter(
     (cell) => cell !== null,
@@ -258,24 +278,29 @@ const validateAndNormalizeBoardState = (
   unvalidatedBoardState: unknown,
   sourceSudokuFunctionName: "makepuzzle" | "solvepuzzle",
 ): RawBoardState => {
-  if (!Array.isArray(unvalidatedBoardState))
-    throw Error(
+  if (!Array.isArray(unvalidatedBoardState)) {
+    throw new Error(
       `Failed to validate output from ${sourceSudokuFunctionName}. Expected an array output.`,
     );
+  }
 
-  if (unvalidatedBoardState.length !== TOTAL_CELLS_IN_BOARD)
-    throw Error(
+  if (unvalidatedBoardState.length !== TOTAL_CELLS_IN_BOARD) {
+    throw new Error(
       `Failed to validate output from ${sourceSudokuFunctionName}. Expected 81 cells but received ${unvalidatedBoardState.length}.`,
     );
+  }
 
   const validatedBoardState = unvalidatedBoardState.map(
     (unvalidatedCell, cellIndex) => {
-      if (unvalidatedCell === null) return null;
+      if (unvalidatedCell === null) {
+        return null;
+      }
 
-      if (!isRawGivenDigit(unvalidatedCell))
-        throw Error(
+      if (!isRawGivenDigit(unvalidatedCell)) {
+        throw new Error(
           `Failed to validate output from ${sourceSudokuFunctionName}. Encountered invalid cell value at index ${cellIndex}: ${String(unvalidatedCell)}.`,
         );
+      }
 
       return unvalidatedCell;
     },
@@ -300,7 +325,9 @@ const generateValidatedPuzzleAttempt = (): RawBoardState => {
 const selectBestPuzzleOrFallback = (
   bestPuzzleFound: RawBoardState | null,
 ): RawBoardState => {
-  if (bestPuzzleFound !== null) return bestPuzzleFound;
+  if (bestPuzzleFound !== null) {
+    return bestPuzzleFound;
+  }
 
   const unvalidatedFallbackPuzzle = sudoku.makepuzzle();
 
@@ -316,7 +343,7 @@ const selectBestPuzzleOrFallback = (
 // #region Public API
 export const makePuzzle = (): RawBoardState => {
   let bestFoundPuzzle: RawBoardState | null = null;
-  let lowestDifficultyScoreFound = Infinity;
+  let lowestDifficultyScoreFound = Number.POSITIVE_INFINITY;
 
   for (
     let attemptNumber = 1;
@@ -326,7 +353,9 @@ export const makePuzzle = (): RawBoardState => {
     const generatedPuzzle = generateValidatedPuzzleAttempt();
     const puzzleDifficultyScore = ratePuzzleDifficulty(generatedPuzzle);
 
-    if (puzzleDifficultyScore === 0) return generatedPuzzle;
+    if (puzzleDifficultyScore === 0) {
+      return generatedPuzzle;
+    }
 
     if (puzzleDifficultyScore < lowestDifficultyScoreFound) {
       lowestDifficultyScoreFound = puzzleDifficultyScore;
@@ -344,7 +373,9 @@ export const solvePuzzle = (
 ): RawBoardState | null => {
   const unvalidatedSolution = sudoku.solvepuzzle(rawBoardState);
 
-  if (unvalidatedSolution === null) return null;
+  if (unvalidatedSolution === null) {
+    return null;
+  }
 
   const validatedSolution = validateAndNormalizeBoardState(
     unvalidatedSolution,

@@ -120,10 +120,11 @@ describe("Puzzle rendering", () => {
     const renderedPuzzle = await renderPuzzle();
 
     // Assert
-    for (let cellId = 1; cellId <= TOTAL_CELLS_IN_BOARD; cellId += 1)
+    for (let cellId = 1; cellId <= TOTAL_CELLS_IN_BOARD; cellId += 1) {
       await expect
         .element(await getCellLocator(renderedPuzzle, getBrandedCellId(cellId)))
         .toBeInTheDocument();
+    }
 
     await expect
       .element(

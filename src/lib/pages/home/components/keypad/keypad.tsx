@@ -194,17 +194,25 @@ const getAlignItemsForCornerNumberButton = (
 ): IconButtonProps["alignItems"] => {
   const sudokuDigitAsNumber = Number(sudokuDigit);
 
-  if (sudokuDigitAsNumber <= 3) return "start";
-  else if (sudokuDigitAsNumber <= 6) return "center";
-  else return "end";
+  if (sudokuDigitAsNumber <= 3) {
+    return "start";
+  }
+  if (sudokuDigitAsNumber <= 6) {
+    return "center";
+  }
+  return "end";
 };
 
 const getJustifyContentForCornerNumberButton = (sudokuDigit: SudokuDigit) => {
   const sudokuDigitAsNumber = Number(sudokuDigit);
 
-  if (sudokuDigitAsNumber % 3 === 1) return "start";
-  else if (sudokuDigitAsNumber % 3 === 2) return "center";
-  else return "end";
+  if (sudokuDigitAsNumber % 3 === 1) {
+    return "start";
+  }
+  if (sudokuDigitAsNumber % 3 === 2) {
+    return "center";
+  }
+  return "end";
 };
 
 type NumberPadProps = {
@@ -226,7 +234,7 @@ const NumberPad = ({
   return (
     <>
       {sudokuDigitsInOrder.map((sudokuDigit) => {
-        if (keypadMode === "Digit")
+        if (keypadMode === "Digit") {
           return (
             <NumberButton
               ariaLabel={`Enter digit ${sudokuDigit}`}
@@ -238,7 +246,8 @@ const NumberPad = ({
               }
             />
           );
-        else if (keypadMode === "Center")
+        }
+        if (keypadMode === "Center") {
           return (
             <NumberButton
               ariaLabel={`Enter center markup ${sudokuDigit}`}
@@ -254,7 +263,8 @@ const NumberPad = ({
               }
             />
           );
-        else if (keypadMode === "Corner")
+        }
+        if (keypadMode === "Corner") {
           return (
             <NumberButton
               alignItems={getAlignItemsForCornerNumberButton(sudokuDigit)}
@@ -275,8 +285,11 @@ const NumberPad = ({
               }
             />
           );
-        else if (keypadMode === "Color") return null;
-        else return exhaustiveGuard(keypadMode);
+        }
+        if (keypadMode === "Color") {
+          return null;
+        }
+        return exhaustiveGuard(keypadMode);
       })}
     </>
   );
@@ -378,40 +391,38 @@ export const Keypad = ({
   puzzleState,
   setIsMultiselectMode,
   setPuzzleState,
-}: KeypadProps) => {
-  return (
-    <SimpleGrid
-      columns={6}
-      gap={getCellSizeScaledBy(0.06)}
-      height="fit-content"
-      width={getCellSizeScaledBy(2.52)}
-    >
-      {keypadMode === "Color" ? (
-        <ColorPad
-          key="color-pad"
-          puzzleState={puzzleState}
-          setPuzzleState={setPuzzleState}
-        />
-      ) : (
-        <NumberPad
-          key="number-pad"
-          keypadMode={keypadMode}
-          puzzleState={puzzleState}
-          setPuzzleState={setPuzzleState}
-        />
-      )}
-
-      <MultiselectSwitch
-        isMultiselectMode={isMultiselectMode}
-        key="multiselect-switch"
-        setIsMultiselectMode={setIsMultiselectMode}
-      />
-      <ClearButton
-        key="clear-button"
+}: KeypadProps) => (
+  <SimpleGrid
+    columns={6}
+    gap={getCellSizeScaledBy(0.06)}
+    height="fit-content"
+    width={getCellSizeScaledBy(2.52)}
+  >
+    {keypadMode === "Color" ? (
+      <ColorPad
+        key="color-pad"
         puzzleState={puzzleState}
         setPuzzleState={setPuzzleState}
       />
-    </SimpleGrid>
-  );
-};
+    ) : (
+      <NumberPad
+        key="number-pad"
+        keypadMode={keypadMode}
+        puzzleState={puzzleState}
+        setPuzzleState={setPuzzleState}
+      />
+    )}
+
+    <MultiselectSwitch
+      isMultiselectMode={isMultiselectMode}
+      key="multiselect-switch"
+      setIsMultiselectMode={setIsMultiselectMode}
+    />
+    <ClearButton
+      key="clear-button"
+      puzzleState={puzzleState}
+      setPuzzleState={setPuzzleState}
+    />
+  </SimpleGrid>
+);
 // #endregion

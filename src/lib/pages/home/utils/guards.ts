@@ -26,7 +26,7 @@ export const isNonEmptyMarkupColor = (
 
 // #region Exhaustive Guard
 export const exhaustiveGuard = (_value: never): never => {
-  throw Error(
+  throw new Error(
     `Reached the exhaustive guard function with an unexpected value: ${JSON.stringify(_value)}`,
   );
 };

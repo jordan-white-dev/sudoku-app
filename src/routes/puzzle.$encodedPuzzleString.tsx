@@ -25,10 +25,11 @@ const getRawPuzzleStringFromEncodedPuzzleString = (
       const digitIndexInAlphabet = base36Alphabet.indexOf(currentCharacter);
       const isCharacterAValidBase36Digit = digitIndexInAlphabet !== -1;
 
-      if (!isCharacterAValidBase36Digit)
-        throw Error(
+      if (!isCharacterAValidBase36Digit) {
+        throw new Error(
           `Failed to get a RawPuzzleString from the EncodedPuzzleString "${encodedPuzzleString}". An invalid base36 character - "${currentCharacter}" - was encountered at position ${characterIndex}.`,
         );
+      }
 
       return accumulatedDecimalValue * 36n + BigInt(digitIndexInAlphabet);
     },
@@ -39,10 +40,11 @@ const getRawPuzzleStringFromEncodedPuzzleString = (
     .toString()
     .padStart(TOTAL_CELLS_IN_BOARD, "0");
 
-  if (!isRawPuzzleString(candidateRawPuzzleString))
-    throw Error(
+  if (!isRawPuzzleString(candidateRawPuzzleString)) {
+    throw new Error(
       `Failed to get a RawPuzzleString from the EncodedPuzzleString "${encodedPuzzleString}". The attempted final output "${candidateRawPuzzleString}" was invalid.`,
     );
+  }
 
   return candidateRawPuzzleString;
 };
@@ -51,19 +53,35 @@ const getRawBoardStateFromRawPuzzleString = (
   rawPuzzleString: RawPuzzleString,
 ): RawBoardState => {
   const rawBoardState = [...rawPuzzleString].map((character) => {
-    if (character === "0") return null;
+    if (character === "0") {
+      return null;
+    }
 
     const candidateRawGivenDigit = Number(character) - 1;
 
-    if (!isRawGivenDigit(candidateRawGivenDigit))
-      throw Error(
+    if (!isRawGivenDigit(candidateRawGivenDigit)) {
+      throw new Error(
         `Failed to get a RawBoardState from the RawPuzzleString "${rawPuzzleString}". An invalid RawGivenDigit was encountered: "${candidateRawGivenDigit}".`,
       );
+    }
 
     return candidateRawGivenDigit;
   });
 
   return rawBoardState;
+};
+
+const HomeRoute = () => {
+  const { boardState, encodedPuzzleString, rawBoardState } =
+    Route.useLoaderData();
+
+  return (
+    <Home
+      boardState={boardState}
+      encodedPuzzleString={encodedPuzzleString}
+      rawBoardState={rawBoardState}
+    />
+  );
 };
 
 export const Route = createFileRoute("/puzzle/$encodedPuzzleString")({
@@ -72,8 +90,9 @@ export const Route = createFileRoute("/puzzle/$encodedPuzzleString")({
       const candidateEncodedPuzzleString =
         params.encodedPuzzleString.toLowerCase();
 
-      if (!isEncodedPuzzleString(candidateEncodedPuzzleString))
+      if (!isEncodedPuzzleString(candidateEncodedPuzzleString)) {
         throw notFound();
+      }
 
       return candidateEncodedPuzzleString;
     })();
@@ -101,17 +120,20 @@ export const Route = createFileRoute("/puzzle/$encodedPuzzleString")({
     })();
 
     const isPuzzleSolvable = solvePuzzle(rawBoardState);
-    if (!isPuzzleSolvable) throw notFound();
+    if (!isPuzzleSolvable) {
+      throw notFound();
+    }
 
     const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
     const loaderData = {
       boardState,
+      encodedPuzzleString,
       rawBoardState,
     };
 
     return loaderData;
   },
 
-  component: Home,
+  component: HomeRoute,
 });

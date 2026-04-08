@@ -5,9 +5,9 @@ import { ErrorBoundary } from "react-error-boundary";
 import { Layout } from "@/lib/layout";
 import ErrorPage from "@/lib/pages/error";
 
-const title = "Sudoku";
 const description =
   "A browser-based Sudoku app with shareable puzzle URLs, multiple markup modes, and undo/redo history.";
+const title = "Sudoku";
 const url = "https://jordan-white-dev.vercel.app/";
 
 const AppDevtools = import.meta.env.DEV

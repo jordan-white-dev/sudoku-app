@@ -220,8 +220,11 @@ const clickDialogButtonWithText = async (
     return normalizedButtonText === buttonText;
   });
 
-  if (!candidateButton)
-    throw Error(`Could not find a dialog button with text "${buttonText}".`);
+  if (!candidateButton) {
+    throw new Error(
+      `Could not find a dialog button with text "${buttonText}".`,
+    );
+  }
 
   candidateButton.click();
   await waitForReactToFinishUpdating();

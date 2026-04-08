@@ -106,20 +106,28 @@ const getSudokuDigitFromKeyboardEvent = (
 ): SudokuDigit | undefined => {
   if (isNumpadKeyboardEvent(keyboardEvent)) {
     const shiftedNumpadDigit = shiftedNumpadKeyToDigit[keyboardEvent.key];
-    if (shiftedNumpadDigit !== undefined) return shiftedNumpadDigit;
+    if (shiftedNumpadDigit !== undefined) {
+      return shiftedNumpadDigit;
+    }
 
     const candidateFromKey = keyboardEvent.key;
-    if (isSudokuDigit(candidateFromKey)) return candidateFromKey;
+    if (isSudokuDigit(candidateFromKey)) {
+      return candidateFromKey;
+    }
 
     const candidateFromCode = keyboardEvent.code.replace("Numpad", "");
-    if (isSudokuDigit(candidateFromCode)) return candidateFromCode;
+    if (isSudokuDigit(candidateFromCode)) {
+      return candidateFromCode;
+    }
 
-    return undefined;
+    return;
   }
 
   const keyboardCode = keyboardEvent.code;
 
-  if (!keyboardCode.startsWith("Digit")) return undefined;
+  if (!keyboardCode.startsWith("Digit")) {
+    return;
+  }
 
   const candidateSudokuDigit = keyboardCode.replace("Digit", "");
 
@@ -131,12 +139,17 @@ const isShiftIntendedForNumpadKeyboardEvent = (
   lastShiftKeyDownTimestamp: number | null,
   lastShiftKeyUpTimestamp: number | null,
 ): boolean => {
-  if (!isNumpadKeyboardEvent(keyboardEvent)) return false;
-
-  if (keyboardEvent.shiftKey) return true;
-
-  if (lastShiftKeyDownTimestamp === null || lastShiftKeyUpTimestamp === null)
+  if (!isNumpadKeyboardEvent(keyboardEvent)) {
     return false;
+  }
+
+  if (keyboardEvent.shiftKey) {
+    return true;
+  }
+
+  if (lastShiftKeyDownTimestamp === null || lastShiftKeyUpTimestamp === null) {
+    return false;
+  }
 
   const millisecondsBetweenShiftKeyUpAndCurrentEvent =
     keyboardEvent.timeStamp - lastShiftKeyUpTimestamp;
@@ -157,8 +170,7 @@ const getEffectiveKeypadMode = (
   baseKeypadMode: KeypadMode,
   modifierKeyDownOrder: Array<ModifierKeyboardKey>,
 ): KeypadMode => {
-  const mostRecentlyPressedModifierKeyboardKey =
-    modifierKeyDownOrder[modifierKeyDownOrder.length - 1];
+  const mostRecentlyPressedModifierKeyboardKey = modifierKeyDownOrder.at(-1);
 
   const effectiveKeypadMode =
     mostRecentlyPressedModifierKeyboardKey === undefined
@@ -170,21 +182,28 @@ const getEffectiveKeypadMode = (
   return effectiveKeypadMode;
 };
 
-const getEffectiveKeypadModeForKeyboardEvent = (
-  baseKeypadMode: KeypadMode,
-  keyboardEvent: KeyboardEvent,
-  lastShiftKeyDownTimestamp: number | null,
-  lastShiftKeyUpTimestamp: number | null,
-  modifierKeyDownOrder: Array<ModifierKeyboardKey>,
-): KeypadMode => {
+const getEffectiveKeypadModeForKeyboardEvent = ({
+  baseKeypadMode,
+  keyboardEvent,
+  lastShiftKeyDownTimestamp,
+  lastShiftKeyUpTimestamp,
+  modifierKeyDownOrder,
+}: {
+  baseKeypadMode: KeypadMode;
+  keyboardEvent: KeyboardEvent;
+  lastShiftKeyDownTimestamp: number | null;
+  lastShiftKeyUpTimestamp: number | null;
+  modifierKeyDownOrder: Array<ModifierKeyboardKey>;
+}): KeypadMode => {
   if (
     isShiftIntendedForNumpadKeyboardEvent(
       keyboardEvent,
       lastShiftKeyDownTimestamp,
       lastShiftKeyUpTimestamp,
     )
-  )
+  ) {
     return "Corner";
+  }
 
   return getEffectiveKeypadMode(baseKeypadMode, modifierKeyDownOrder);
 };
@@ -247,7 +266,9 @@ export const PuzzleControls = ({
   );
 
   const resetModifierKeyDownOrder = useCallback(() => {
-    if (modifierKeyDownOrderRef.current.length === 0) return;
+    if (modifierKeyDownOrderRef.current.length === 0) {
+      return;
+    }
     setModifierKeyDownOrder([]);
   }, [setModifierKeyDownOrder]);
 
@@ -260,10 +281,13 @@ export const PuzzleControls = ({
     ) => {
       event.preventDefault();
 
-      if (event.repeat) return;
+      if (event.repeat) {
+        return;
+      }
 
-      if (event.key === "Shift")
+      if (event.key === "Shift") {
         lastShiftKeyDownTimestampRef.current = event.timeStamp;
+      }
 
       const nextModifierKeyDownOrder = getModifierKeyDownOrderWithAddedModifier(
         modifierKeyboardKey,
@@ -275,8 +299,9 @@ export const PuzzleControls = ({
           modifierKeyDownOrderRef.current,
           nextModifierKeyDownOrder,
         )
-      )
+      ) {
         setModifierKeyDownOrder(nextModifierKeyDownOrder);
+      }
 
       return;
     };
@@ -285,13 +310,13 @@ export const PuzzleControls = ({
       sudokuDigit: SudokuDigit,
       keyboardEvent: KeyboardEvent,
     ) => {
-      const effectiveKeypadMode = getEffectiveKeypadModeForKeyboardEvent(
-        baseKeypadModeRef.current,
+      const effectiveKeypadMode = getEffectiveKeypadModeForKeyboardEvent({
+        baseKeypadMode: baseKeypadModeRef.current,
         keyboardEvent,
-        lastShiftKeyDownTimestampRef.current,
-        lastShiftKeyUpTimestampRef.current,
-        modifierKeyDownOrderRef.current,
-      );
+        lastShiftKeyDownTimestamp: lastShiftKeyDownTimestampRef.current,
+        lastShiftKeyUpTimestamp: lastShiftKeyUpTimestampRef.current,
+        modifierKeyDownOrder: modifierKeyDownOrderRef.current,
+      });
 
       switch (effectiveKeypadMode) {
         case "Digit":
@@ -326,7 +351,9 @@ export const PuzzleControls = ({
     const handleSudokuDigitKeyDown = (event: KeyboardEvent) => {
       const sudokuDigit = getSudokuDigitFromKeyboardEvent(event);
 
-      if (sudokuDigit === undefined) return false;
+      if (sudokuDigit === undefined) {
+        return false;
+      }
 
       event.preventDefault();
       handleNumberKeyDown(sudokuDigit, event);
@@ -345,9 +372,11 @@ export const PuzzleControls = ({
       if (isControlPressed && lowerCaseKey === "z") {
         event.preventDefault();
 
-        if (modifierKeyDownOrderRef.current.includes("Shift"))
+        if (modifierKeyDownOrderRef.current.includes("Shift")) {
           handleRedoMove(setPuzzleState);
-        else handleUndoMove(setPuzzleState);
+        } else {
+          handleUndoMove(setPuzzleState);
+        }
 
         return true;
       }
@@ -370,8 +399,12 @@ export const PuzzleControls = ({
       event: KeyboardEvent,
       lowerCaseKey: string,
     ) => {
-      if (hasBlockingModifierKey(event)) return false;
-      if (!isKeypadModeShortcutKey(lowerCaseKey)) return false;
+      if (hasBlockingModifierKey(event)) {
+        return false;
+      }
+      if (!isKeypadModeShortcutKey(lowerCaseKey)) {
+        return false;
+      }
 
       event.preventDefault();
       setBaseKeypadMode(keypadModeByShortcutKey[lowerCaseKey]);
@@ -383,15 +416,17 @@ export const PuzzleControls = ({
         event.key !== "Escape" &&
         event.key !== "Backspace" &&
         event.key !== "Delete"
-      )
+      ) {
         return false;
+      }
 
       if (
         event.key === "Escape" &&
         event.target instanceof Element &&
         event.target.closest('[role="menu"]') !== null
-      )
+      ) {
         return false;
+      }
 
       event.preventDefault();
       handleClearCell(puzzleStateRef.current, setPuzzleState);
@@ -402,8 +437,12 @@ export const PuzzleControls = ({
       event: KeyboardEvent,
       lowerCaseKey: string,
     ) => {
-      if (hasBlockingModifierKey(event)) return false;
-      if (lowerCaseKey !== "m") return false;
+      if (hasBlockingModifierKey(event)) {
+        return false;
+      }
+      if (lowerCaseKey !== "m") {
+        return false;
+      }
 
       event.preventDefault();
       setIsMultiselectMode(
@@ -432,12 +471,15 @@ export const PuzzleControls = ({
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      if (!isModifierKeyboardKey(event.key)) return;
+      if (!isModifierKeyboardKey(event.key)) {
+        return;
+      }
 
       event.preventDefault();
 
-      if (event.key === "Shift")
+      if (event.key === "Shift") {
         lastShiftKeyUpTimestampRef.current = event.timeStamp;
+      }
 
       const nextModifierKeyDownOrder =
         getModifierKeyDownOrderWithRemovedModifier(
@@ -450,8 +492,9 @@ export const PuzzleControls = ({
           modifierKeyDownOrderRef.current,
           nextModifierKeyDownOrder,
         )
-      )
+      ) {
         setModifierKeyDownOrder(nextModifierKeyDownOrder);
+      }
     };
 
     const handleWindowBlur = () => {

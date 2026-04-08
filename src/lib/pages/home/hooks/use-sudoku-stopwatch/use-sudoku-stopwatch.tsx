@@ -23,7 +23,8 @@ const getFormattedStopwatchMinutes = (
     const totalMinutes = minutes + hoursConvertedToMinutes;
 
     return String(totalMinutes).padStart(3, "0");
-  } else if (hours === 1) {
+  }
+  if (hours === 1) {
     const totalMinutes = minutes + 60;
 
     return String(totalMinutes).padStart(2, "0");
@@ -101,7 +102,9 @@ export const SudokuStopwatchProvider = ({
   const hasHydratedStopwatchFromSessionStorageRef = useRef(false);
 
   useEffect(() => {
-    if (hasHydratedStopwatchFromSessionStorageRef.current) return;
+    if (hasHydratedStopwatchFromSessionStorageRef.current) {
+      return;
+    }
 
     hasHydratedStopwatchFromSessionStorageRef.current = true;
 
@@ -130,7 +133,9 @@ export const SudokuStopwatchProvider = ({
         wasStopwatchRunningBeforePageWasHiddenRef.current =
           stopwatchStateRef.current.isStopwatchRunning;
 
-        if (stopwatchStateRef.current.isStopwatchRunning) pauseStopwatch();
+        if (stopwatchStateRef.current.isStopwatchRunning) {
+          pauseStopwatch();
+        }
 
         return;
       }
@@ -139,7 +144,9 @@ export const SudokuStopwatchProvider = ({
         wasStopwatchRunningBeforePageWasHiddenRef.current &&
         !stopwatchStateRef.current.isStopwatchDisabled;
 
-      if (shouldResumeStopwatch) startStopwatch();
+      if (shouldResumeStopwatch) {
+        startStopwatch();
+      }
 
       wasStopwatchRunningBeforePageWasHiddenRef.current = false;
     };
@@ -185,7 +192,9 @@ export const SudokuStopwatchProvider = ({
   }, [setIsStopwatchDisabled, startStopwatch]);
 
   const startStopwatchIfEnabled = useCallback(() => {
-    if (!isStopwatchDisabled) startStopwatch();
+    if (!isStopwatchDisabled) {
+      startStopwatch();
+    }
   }, [isStopwatchDisabled, startStopwatch]);
 
   const sudokuStopwatchValue = useMemo(
@@ -224,10 +233,11 @@ export const SudokuStopwatchProvider = ({
 export const useSudokuStopwatch = () => {
   const sudokuStopwatchContext = useContext(SudokuStopwatchContext);
 
-  if (!sudokuStopwatchContext)
-    throw Error(
+  if (!sudokuStopwatchContext) {
+    throw new Error(
       "useSudokuStopwatch must be used inside SudokuStopwatchProvider",
     );
+  }
 
   return sudokuStopwatchContext;
 };

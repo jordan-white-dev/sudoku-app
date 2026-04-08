@@ -16,13 +16,11 @@ const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 const AllSettingsDisplay = () => {
   const { userSettings, setUserSettings } = useUserSettings();
 
-  const makeToggle = (key: keyof UserSettings) => {
-    return () => {
-      setUserSettings((current) => ({
-        ...current,
-        [key]: !current[key],
-      }));
-    };
+  const makeToggle = (key: keyof UserSettings) => () => {
+    setUserSettings((current) => ({
+      ...current,
+      [key]: !current[key],
+    }));
   };
 
   return (

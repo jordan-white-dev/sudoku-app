@@ -14,8 +14,6 @@ import {
   TOTAL_CELLS_IN_BOARD,
 } from "@/lib/pages/home/utils/constants";
 import {
-  expectSeenCellHighlightOrNotInTargetCell,
-  expectTargetCellToHaveConflictHighlightOrNot,
   getBoardStateWithEnteredDigitInTargetCell,
   getBoardStateWithEnteredDigitsInTargetCells,
   getBoardStateWithGivenDigitInTargetCell,
@@ -25,6 +23,8 @@ import {
   getCellLocator,
   getStartingEmptyBoardState,
   getStartingPuzzleStateFromBoardState,
+  hasConflictCellHighlightInTargetCell,
+  hasSeenCellHighlightInTargetCell,
   type RenderedBoard,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
@@ -58,13 +58,16 @@ const getBoardElement = async (
       "button[data-cell-number]",
     ).length;
 
-    if (cellsInBoardCount === TOTAL_CELLS_IN_BOARD)
+    if (cellsInBoardCount === TOTAL_CELLS_IN_BOARD) {
       return currentAncestorElement;
+    }
 
     currentAncestorElement = currentAncestorElement.parentElement;
   }
 
-  throw Error("Could not find a valid board element containing all 81 cells.");
+  throw new Error(
+    "Could not find a valid board element containing all 81 cells.",
+  );
 };
 // #endregion
 
@@ -127,10 +130,13 @@ const expectTargetCellToBeSelectedOrNot = async (
   shouldCellBeSelected: boolean,
 ) => {
   const cellElement = await getCellElement(renderedBoard, targetCellId);
+  const dataSelectedAttribute = cellElement.getAttribute("data-selected");
 
-  expect(cellElement.getAttribute("data-selected")).toBe(
-    String(shouldCellBeSelected),
-  );
+  if (dataSelectedAttribute !== String(shouldCellBeSelected)) {
+    throw new Error(
+      `Cell ${targetCellId}: expected data-selected="${String(shouldCellBeSelected)}" but got "${dataSelectedAttribute}"`,
+    );
+  }
 };
 
 const expectTargetCellsToBeSelectedOrNot = async (
@@ -231,15 +237,21 @@ const expectTargetCellsToHaveSeenCellHighlightOrNot = async (
   targetCellIds: Array<CellId>,
   shouldHighlightBeVisible: boolean,
 ): Promise<void> => {
-  await Promise.all(
+  const results = await Promise.all(
     targetCellIds.map((cellId) =>
-      expectSeenCellHighlightOrNotInTargetCell(
-        renderedBoard,
-        cellId,
-        shouldHighlightBeVisible,
-      ),
+      hasSeenCellHighlightInTargetCell(renderedBoard, cellId),
     ),
   );
+
+  const doAllCellsMatchVisibilityCondition = results.every(
+    (hasSeenCellHighlight) => hasSeenCellHighlight === shouldHighlightBeVisible,
+  );
+
+  if (!doAllCellsMatchVisibilityCondition) {
+    throw new Error(
+      `Expected all target cells to have seen highlight = ${String(shouldHighlightBeVisible)}`,
+    );
+  }
 };
 
 const expectNoCellsToHaveSeenCellHighlight = async (
@@ -279,15 +291,22 @@ const expectTargetCellsToHaveConflictHighlightOrNot = async (
   targetCellIds: Array<CellId>,
   shouldHighlightBeVisible: boolean,
 ): Promise<void> => {
-  await Promise.all(
+  const results = await Promise.all(
     targetCellIds.map((cellId) =>
-      expectTargetCellToHaveConflictHighlightOrNot(
-        renderedBoard,
-        cellId,
-        shouldHighlightBeVisible,
-      ),
+      hasConflictCellHighlightInTargetCell(renderedBoard, cellId),
     ),
   );
+
+  const doAllCellsMatchVisibilityCondition = results.every(
+    (hasConflictCellHighlight) =>
+      hasConflictCellHighlight === shouldHighlightBeVisible,
+  );
+
+  if (!doAllCellsMatchVisibilityCondition) {
+    throw new Error(
+      `Expected all target cells to have conflict highlight = ${String(shouldHighlightBeVisible)}`,
+    );
+  }
 };
 
 const expectNoCellsToHaveConflictHighlight = async (
@@ -456,12 +475,9 @@ const getBoardStateWithCornerMarkupsInTargetCells = (
 beforeEach(() => {
   window.sessionStorage.clear();
 
-  if (!HTMLElement.prototype.setPointerCapture)
-    HTMLElement.prototype.setPointerCapture = vi.fn(() => undefined);
-  else
-    vi.spyOn(HTMLElement.prototype, "setPointerCapture").mockImplementation(
-      () => undefined,
-    );
+  vi.spyOn(HTMLElement.prototype, "setPointerCapture").mockImplementation(
+    () => undefined,
+  );
 });
 
 describe("Board rendering", () => {

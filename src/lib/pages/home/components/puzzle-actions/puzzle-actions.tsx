@@ -319,15 +319,23 @@ const getIsPuzzleSolved = (boardState: BoardState): boolean => {
     const givenOrEnteredDigit = getGivenOrEnteredDigitInCellIfPresent(
       cellState.content,
     );
-    if (givenOrEnteredDigit === "") return false;
+    if (givenOrEnteredDigit === "") {
+      return false;
+    }
 
     const boxIndex = cellState.houses.boxNumber - 1;
     const columnIndex = cellState.houses.columnNumber - 1;
     const rowIndex = cellState.houses.rowNumber - 1;
 
-    if (boxes[boxIndex].has(givenOrEnteredDigit)) return false;
-    if (columns[columnIndex].has(givenOrEnteredDigit)) return false;
-    if (rows[rowIndex].has(givenOrEnteredDigit)) return false;
+    if (boxes[boxIndex].has(givenOrEnteredDigit)) {
+      return false;
+    }
+    if (columns[columnIndex].has(givenOrEnteredDigit)) {
+      return false;
+    }
+    if (rows[rowIndex].has(givenOrEnteredDigit)) {
+      return false;
+    }
 
     boxes[boxIndex].add(givenOrEnteredDigit);
     columns[columnIndex].add(givenOrEnteredDigit);
@@ -356,7 +364,9 @@ const startStopwatchAfterSolutionCheckIfAppropriate = (
   isStopwatchDisabled: boolean,
   startStopwatch: () => void,
 ) => {
-  if (!(isPuzzleSolved || isStopwatchDisabled)) startStopwatch();
+  if (!(isPuzzleSolved || isStopwatchDisabled)) {
+    startStopwatch();
+  }
 };
 
 type CheckSolutionDialogTriggerProps = {
@@ -611,35 +621,30 @@ export const PuzzleActions = ({
   puzzleState,
   rawBoardState,
   setPuzzleState,
-}: PuzzleActionsProps) => {
-  return (
-    <SimpleGrid
-      columnGap={getCellSizeScaledBy(0.058)}
-      columns={isRowLayout ? 2 : 1}
-      maxWidth={getCellSizeScaledBy(2.55)}
-      rowGap={getCellSizeScaledBy(0.058)}
-    >
-      <NewPuzzleButton isRowLayout={isRowLayout} />
-      <UndoButton
-        isRowLayout={isRowLayout}
-        puzzleState={puzzleState}
-        setPuzzleState={setPuzzleState}
-      />
-      <RedoButton
-        isRowLayout={isRowLayout}
-        puzzleState={puzzleState}
-        setPuzzleState={setPuzzleState}
-      />
-      <CheckSolutionButton
-        isRowLayout={isRowLayout}
-        puzzleState={puzzleState}
-      />
-      <RestartPuzzleButton
-        isRowLayout={isRowLayout}
-        rawBoardState={rawBoardState}
-        setPuzzleState={setPuzzleState}
-      />
-    </SimpleGrid>
-  );
-};
+}: PuzzleActionsProps) => (
+  <SimpleGrid
+    columnGap={getCellSizeScaledBy(0.058)}
+    columns={isRowLayout ? 2 : 1}
+    maxWidth={getCellSizeScaledBy(2.55)}
+    rowGap={getCellSizeScaledBy(0.058)}
+  >
+    <NewPuzzleButton isRowLayout={isRowLayout} />
+    <UndoButton
+      isRowLayout={isRowLayout}
+      puzzleState={puzzleState}
+      setPuzzleState={setPuzzleState}
+    />
+    <RedoButton
+      isRowLayout={isRowLayout}
+      puzzleState={puzzleState}
+      setPuzzleState={setPuzzleState}
+    />
+    <CheckSolutionButton isRowLayout={isRowLayout} puzzleState={puzzleState} />
+    <RestartPuzzleButton
+      isRowLayout={isRowLayout}
+      rawBoardState={rawBoardState}
+      setPuzzleState={setPuzzleState}
+    />
+  </SimpleGrid>
+);
 // #endregion

@@ -179,8 +179,9 @@ export const KeypadModeSelector = ({
       onValueChange={(event) => {
         const candidateKeypadMode = event.value;
 
-        if (candidateKeypadMode !== null && isKeypadMode(candidateKeypadMode))
+        if (candidateKeypadMode !== null && isKeypadMode(candidateKeypadMode)) {
           setBaseKeypadMode(candidateKeypadMode);
+        }
       }}
     >
       <RadioCard.Label srOnly>Keypad mode selector</RadioCard.Label>

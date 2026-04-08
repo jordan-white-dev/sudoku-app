@@ -33,7 +33,9 @@ const commitBoardStateToPuzzleHistoryIfChanged = (
     hasReferenceDifferences &&
     JSON.stringify(currentBoardState) !== JSON.stringify(nextBoardState);
 
-  if (!didBoardStateChange) return;
+  if (!didBoardStateChange) {
+    return;
+  }
 
   setPuzzleState((currentPuzzleState) => {
     const nextHistoryIndex = currentPuzzleState.historyIndex + 1;
@@ -74,7 +76,9 @@ const getEnteredDigitCellState = (
     currentCellState.isSelected &&
     !isGivenDigitInCellContent(currentCellState.content);
 
-  if (!isValidInputCell) return currentCellState;
+  if (!isValidInputCell) {
+    return currentCellState;
+  }
 
   if (shouldEnteredDigitBeRemoved) {
     const emptyEnteredDigitCellState: CellState = {
@@ -137,11 +141,17 @@ const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
   currentBoardState.every((currentCellState) => {
     const cellContent = currentCellState.content;
 
-    if (!currentCellState.isSelected) return true;
+    if (!currentCellState.isSelected) {
+      return true;
+    }
 
-    if (isGivenDigitInCellContent(cellContent)) return true;
+    if (isGivenDigitInCellContent(cellContent)) {
+      return true;
+    }
 
-    if (isEnteredDigitInCellContent(cellContent)) return true;
+    if (isEnteredDigitInCellContent(cellContent)) {
+      return true;
+    }
 
     const doesContainSudokuDigitAsMarkup =
       isMarkupDigitsInCellContent(cellContent) &&
@@ -151,7 +161,9 @@ const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
             .filter(isSudokuDigit)
             .includes(sudokuDigit));
 
-    if (doesContainSudokuDigitAsMarkup) return true;
+    if (doesContainSudokuDigitAsMarkup) {
+      return true;
+    }
 
     return false;
   });
@@ -164,7 +176,9 @@ const getCellStateWithRemovedMarkupDigit = (
 ): CellState => {
   const currentCellContent = currentCellState.content;
 
-  if (!isMarkupDigitsInCellContent(currentCellContent)) return currentCellState;
+  if (!isMarkupDigitsInCellContent(currentCellContent)) {
+    return currentCellState;
+  }
 
   const currentMarkupsNotMatchingTheSudokuDigit = currentMarkups.filter(
     (currentMarkup) => currentMarkup !== sudokuDigit,
@@ -202,7 +216,9 @@ const getCellStateWithAddedMarkupDigit = (
 ): CellState => {
   const currentCellContent = currentCellState.content;
 
-  if (!isMarkupDigitsInCellContent(currentCellContent)) return currentCellState;
+  if (!isMarkupDigitsInCellContent(currentCellContent)) {
+    return currentCellState;
+  }
 
   const nextMarkups = currentMarkups.includes(sudokuDigit)
     ? currentMarkups
@@ -257,7 +273,9 @@ const getMarkupDigitsCellState = (
   shouldMarkupDigitBeRemoved: boolean,
   sudokuDigit: SudokuDigit,
 ): CellState => {
-  if (!currentCellState.isSelected) return currentCellState;
+  if (!currentCellState.isSelected) {
+    return currentCellState;
+  }
 
   const currentCellContent = currentCellState.content;
 
@@ -268,7 +286,9 @@ const getMarkupDigitsCellState = (
     (isEmptyCellContent(currentCellContent) ||
       isMarkupDigitsInCellContent(currentCellContent));
 
-  if (!isValidInputCell) return currentCellState;
+  if (!isValidInputCell) {
+    return currentCellState;
+  }
 
   if (isMarkupDigitsInCellContent(currentCellContent)) {
     const currentMarkups =
@@ -276,13 +296,14 @@ const getMarkupDigitsCellState = (
         ? currentCellContent.centerMarkups.filter(isSudokuDigit)
         : currentCellContent.cornerMarkups.filter(isSudokuDigit);
 
-    if (shouldMarkupDigitBeRemoved)
+    if (shouldMarkupDigitBeRemoved) {
       return getCellStateWithRemovedMarkupDigit(
         currentCellState,
         currentMarkups,
         markupType,
         sudokuDigit,
       );
+    }
 
     return getCellStateWithAddedMarkupDigit(
       currentCellState,
@@ -290,12 +311,14 @@ const getMarkupDigitsCellState = (
       markupType,
       sudokuDigit,
     );
-  } else if (isEmptyCellContent(currentCellContent))
+  }
+  if (isEmptyCellContent(currentCellContent)) {
     return getCellStateWithAnEmptyMarkupType(
       currentCellState,
       markupType,
       sudokuDigit,
     );
+  }
 
   return currentCellState;
 };
@@ -415,7 +438,9 @@ const getMarkupColorsCellState = (
   markupColor: MarkupColor,
   shouldMarkupColorBeRemoved: boolean,
 ): CellState => {
-  if (!currentCellState.isSelected) return currentCellState;
+  if (!currentCellState.isSelected) {
+    return currentCellState;
+  }
 
   const currentMarkupColors = currentCellState.markupColors.filter(
     isNonEmptyMarkupColor,
@@ -477,7 +502,9 @@ export const handleClearCell = (
 
   const nextBoardState: BoardState = currentBoardState.map(
     (currentCellState) => {
-      if (!currentCellState.isSelected) return currentCellState;
+      if (!currentCellState.isSelected) {
+        return currentCellState;
+      }
 
       if (isGivenDigitInCellContent(currentCellState.content)) {
         const nextCellState: CellState = {

@@ -1,5 +1,6 @@
 /// <reference types="vitest/config" />
 
+import process from "node:process";
 import babel from "@rolldown/plugin-babel";
 import { devtools } from "@tanstack/devtools-vite";
 import { tanstackRouter } from "@tanstack/router-plugin/vite";
@@ -29,7 +30,7 @@ const chunkSplittingOutput = {
 } as NonNullable<NonNullable<UserConfig["build"]>["rolldownOptions"]>["output"];
 
 export default defineConfig(({ mode }) => {
-  const isCheckDisabled = mode === "production" || !!process.env.VITEST;
+  const isCheckDisabled = mode === "production" || Boolean(process.env.VITEST);
 
   return {
     resolve: {
@@ -42,13 +43,13 @@ export default defineConfig(({ mode }) => {
       }),
       tanstackRouter({ autoCodeSplitting: true }),
       react(),
-      ...(!isCheckDisabled
-        ? [
+      ...(isCheckDisabled
+        ? []
+        : [
             checker({
               typescript: true,
             }),
-          ]
-        : []),
+          ]),
     ],
     build: {
       rolldownOptions: {

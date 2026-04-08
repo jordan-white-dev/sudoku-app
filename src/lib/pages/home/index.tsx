@@ -1,5 +1,5 @@
 import { Box } from "@chakra-ui/react";
-import { useCallback } from "react";
+import { useCallback, useId } from "react";
 
 import { Header } from "@/lib/pages/home/components/header/header";
 import { Puzzle } from "@/lib/pages/home/components/puzzle/puzzle";
@@ -8,11 +8,24 @@ import {
   UserSettingsProvider,
   useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
-import { Route } from "@/routes/puzzle.$encodedPuzzleString";
+import {
+  type BoardState,
+  type EncodedPuzzleString,
+  type RawBoardState,
+} from "@/lib/pages/home/utils/types";
 
-const HomeInner = () => {
-  const { boardState, rawBoardState } = Route.useLoaderData();
-  const { encodedPuzzleString } = Route.useParams();
+type HomeProps = {
+  boardState: BoardState;
+  encodedPuzzleString: EncodedPuzzleString;
+  rawBoardState: RawBoardState;
+};
+
+// #region Home Inner
+const HomeInner = ({
+  boardState,
+  encodedPuzzleString,
+  rawBoardState,
+}: HomeProps) => {
   const { userSettings, setUserSettings } = useUserSettings();
 
   const handleIsStopwatchDisabledChange = useCallback(
@@ -36,7 +49,7 @@ const HomeInner = () => {
       <Box
         as="main"
         flex="1"
-        id="main-content"
+        id={useId()}
         minHeight="0"
         overflow="hidden"
         width="full"
@@ -51,10 +64,19 @@ const HomeInner = () => {
     </SudokuStopwatchProvider>
   );
 };
+// #endregion
 
-const Home = () => (
+const Home = ({
+  boardState,
+  encodedPuzzleString,
+  rawBoardState,
+}: HomeProps) => (
   <UserSettingsProvider>
-    <HomeInner />
+    <HomeInner
+      boardState={boardState}
+      encodedPuzzleString={encodedPuzzleString}
+      rawBoardState={rawBoardState}
+    />
   </UserSettingsProvider>
 );
 

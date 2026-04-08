@@ -56,27 +56,29 @@ const getKeypadModeInput = async (
       `input[type="radio"][value="${keypadMode}"]`,
     );
 
-  if (!candidateKeypadModeInput)
-    throw Error(`Could not find radio input for keypad mode "${keypadMode}".`);
+  if (!candidateKeypadModeInput) {
+    throw new Error(
+      `Could not find radio input for keypad mode "${keypadMode}".`,
+    );
+  }
 
   return candidateKeypadModeInput;
 };
 // #endregion
 
 // #region Selection State Assertion
-const expectKeypadModeToBeSelected = async (
+const isKeypadModeSelected = async (
   renderedKeypadModeSelector:
     | RenderedKeypadModeSelector
     | Promise<RenderedKeypadModeSelector>,
   keypadMode: KeypadMode,
-  shouldBeSelected: boolean,
-) => {
+): Promise<boolean> => {
   const keypadModeInput = await getKeypadModeInput(
     renderedKeypadModeSelector,
     keypadMode,
   );
 
-  expect(keypadModeInput.checked).toBe(shouldBeSelected);
+  return keypadModeInput.checked;
 };
 // #endregion
 
@@ -107,26 +109,18 @@ describe("KeypadModeSelector rendering", () => {
     });
 
     // Assert
-    await expectKeypadModeToBeSelected(
-      renderedKeypadModeSelector,
-      "Center",
-      true,
-    );
-    await expectKeypadModeToBeSelected(
-      renderedKeypadModeSelector,
-      "Digit",
-      false,
-    );
-    await expectKeypadModeToBeSelected(
-      renderedKeypadModeSelector,
-      "Corner",
-      false,
-    );
-    await expectKeypadModeToBeSelected(
-      renderedKeypadModeSelector,
-      "Color",
-      false,
-    );
+    expect(
+      await isKeypadModeSelected(renderedKeypadModeSelector, "Center"),
+    ).toBe(true);
+    expect(
+      await isKeypadModeSelected(renderedKeypadModeSelector, "Digit"),
+    ).toBe(false);
+    expect(
+      await isKeypadModeSelected(renderedKeypadModeSelector, "Corner"),
+    ).toBe(false);
+    expect(
+      await isKeypadModeSelected(renderedKeypadModeSelector, "Color"),
+    ).toBe(false);
   });
 });
 
@@ -146,15 +140,11 @@ describe("Changing keypad modes", () => {
     await waitForReactToFinishUpdating();
 
     // Assert
-    await expectKeypadModeToBeSelected(
-      renderedKeypadModeSelector,
-      "Color",
-      true,
-    );
-    await expectKeypadModeToBeSelected(
-      renderedKeypadModeSelector,
-      "Digit",
-      false,
-    );
+    expect(
+      await isKeypadModeSelected(renderedKeypadModeSelector, "Color"),
+    ).toBe(true);
+    expect(
+      await isKeypadModeSelected(renderedKeypadModeSelector, "Digit"),
+    ).toBe(false);
   });
 });

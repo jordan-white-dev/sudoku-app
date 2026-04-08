@@ -74,9 +74,13 @@ const addConflictedCellIdsFromHouse = (
   sudokuDigitOccurrencesByHouse: Map<SudokuDigit, Array<CellId>>,
 ): void => {
   for (const matchingCellIds of sudokuDigitOccurrencesByHouse.values()) {
-    if (matchingCellIds.length <= 1) continue;
+    if (matchingCellIds.length <= 1) {
+      continue;
+    }
 
-    for (const cellId of matchingCellIds) conflictedCellIds.add(cellId);
+    for (const cellId of matchingCellIds) {
+      conflictedCellIds.add(cellId);
+    }
   }
 };
 
@@ -84,11 +88,12 @@ const addConflictedCellIdsFromHouses = (
   conflictedCellIds: Set<CellId>,
   sudokuDigitOccurrencesByHouse: Array<Map<SudokuDigit, Array<CellId>>>,
 ): void => {
-  for (const sudokuDigitOccurrenceByHouse of sudokuDigitOccurrencesByHouse)
+  for (const sudokuDigitOccurrenceByHouse of sudokuDigitOccurrencesByHouse) {
     addConflictedCellIdsFromHouse(
       conflictedCellIds,
       sudokuDigitOccurrenceByHouse,
     );
+  }
 };
 
 const getConflictedCellIds = (boardState: BoardState): Set<CellId> => {
@@ -103,7 +108,9 @@ const getConflictedCellIds = (boardState: BoardState): Set<CellId> => {
       cellState.content,
     );
 
-    if (sudokuDigit === "") continue;
+    if (sudokuDigit === "") {
+      continue;
+    }
 
     addSudokuDigitOccurrenceToHouse(
       cellState.id,
@@ -167,11 +174,12 @@ const getSelectionAnchorCellId = (
   if (
     lastSelectedCellId !== undefined &&
     isCellSelected(boardState, lastSelectedCellId)
-  )
+  ) {
     return lastSelectedCellId;
+  }
 
   const selectedCellStates = getSelectedCellStates(boardState);
-  return selectedCellStates[selectedCellStates.length - 1]?.id;
+  return selectedCellStates.at(-1)?.id;
 };
 
 const getWrappedCellIdInDirection = (
@@ -194,24 +202,31 @@ const getWrappedCellIdInDirection = (
   const candidateCellId =
     wrappedRowNumber * CELLS_PER_HOUSE + wrappedColumnNumber + 1;
 
-  if (!isCellId(candidateCellId))
-    throw Error(
+  if (!isCellId(candidateCellId)) {
+    throw new Error(
       `Failed to get a wrapped CellId from "${startingCellId}" in arrow key direction "${arrowKeyDirection}".`,
     );
+  }
 
   return candidateCellId;
 };
 
-const handleMoveOrAddToCellSelection = (
-  arrowKeyDirection: ArrowKeyDirection,
-  lastSelectedCellId: CellId | undefined,
+const handleMoveOrAddToCellSelection = ({
+  arrowKeyDirection,
+  lastSelectedCellId,
+  getBoardStateForCellSelectionAddOrMove,
+  setLastSelectedCellId,
+  setPuzzleState,
+}: {
+  arrowKeyDirection: ArrowKeyDirection;
+  lastSelectedCellId: CellId | undefined;
   getBoardStateForCellSelectionAddOrMove: (
     boardState: BoardState,
     targetCellId: CellId,
-  ) => BoardState,
-  setLastSelectedCellId: (cellId: CellId) => void,
-  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
-) =>
+  ) => BoardState;
+  setLastSelectedCellId: (cellId: CellId) => void;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
+}) =>
   setPuzzleState((currentPuzzleState) => {
     const currentBoardState =
       getCurrentBoardStateFromPuzzleState(currentPuzzleState);
@@ -221,7 +236,9 @@ const handleMoveOrAddToCellSelection = (
       lastSelectedCellId,
     );
 
-    if (selectionAnchorCellId === undefined) return currentPuzzleState;
+    if (selectionAnchorCellId === undefined) {
+      return currentPuzzleState;
+    }
 
     const nextCellId = getWrappedCellIdInDirection(
       arrowKeyDirection,
@@ -233,8 +250,9 @@ const handleMoveOrAddToCellSelection = (
       nextCellId,
     );
 
-    if (!didBoardStateChange(currentBoardState, nextBoardState))
+    if (!didBoardStateChange(currentBoardState, nextBoardState)) {
       return currentPuzzleState;
+    }
 
     setLastSelectedCellId(nextCellId);
 
@@ -263,13 +281,14 @@ const handleAddToCellSelectionInDirection = (
   setLastSelectedCellId: (cellId: CellId) => void,
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
-  handleMoveOrAddToCellSelection(
+  handleMoveOrAddToCellSelection({
     arrowKeyDirection,
     lastSelectedCellId,
-    getBoardStateWithTargetCellAddedToSelection,
+    getBoardStateForCellSelectionAddOrMove:
+      getBoardStateWithTargetCellAddedToSelection,
     setLastSelectedCellId,
     setPuzzleState,
-  );
+  });
 
 const getBoardStateWithOnlyTargetCellSelected = (
   boardState: BoardState,
@@ -295,13 +314,14 @@ const handleMoveSingleCellSelectionInDirection = (
   setLastSelectedCellId: (cellId: CellId) => void,
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
-  handleMoveOrAddToCellSelection(
+  handleMoveOrAddToCellSelection({
     arrowKeyDirection,
     lastSelectedCellId,
-    getBoardStateWithOnlyTargetCellSelected,
+    getBoardStateForCellSelectionAddOrMove:
+      getBoardStateWithOnlyTargetCellSelected,
     setLastSelectedCellId,
     setPuzzleState,
-  );
+  });
 // #endregion
 
 // #region All Cells Selection Change
@@ -315,8 +335,9 @@ const handleAllCellsSelectionChange = (
 
     const nextBoardState = getNextBoardState(currentBoardState);
 
-    if (!didBoardStateChange(currentBoardState, nextBoardState))
+    if (!didBoardStateChange(currentBoardState, nextBoardState)) {
       return currentPuzzleState;
+    }
 
     return updatePuzzleStateWithCurrentBoardState(
       currentPuzzleState,
@@ -398,8 +419,9 @@ const getBoardPositionFromPointerCoordinates = (
   const isPointerOutsideBoardVertically =
     pointerClientY < boardBounds.top || pointerClientY > boardBounds.bottom;
 
-  if (isPointerOutsideBoardHorizontally || isPointerOutsideBoardVertically)
-    return undefined;
+  if (isPointerOutsideBoardHorizontally || isPointerOutsideBoardVertically) {
+    return;
+  }
 
   const cellHeight = boardBounds.height / CELLS_PER_HOUSE;
   const cellWidth = boardBounds.width / CELLS_PER_HOUSE;
@@ -423,8 +445,8 @@ const getBoardPositionFromPointerCoordinates = (
     isColumnNumber(columnNumber) &&
     isRowNumber(rowNumber)
   ) {
-    const boardPosition = {
-      cellId: cellId,
+    const boardPosition: BoardPosition = {
+      cellId,
       columnNumber,
       rowNumber,
     };
@@ -432,7 +454,7 @@ const getBoardPositionFromPointerCoordinates = (
     return boardPosition;
   }
 
-  throw Error(
+  throw new Error(
     `Failed to get BoardPosition from pointer coordinates x: "${pointerClientX}" and y: "${pointerClientY}".`,
   );
 };
@@ -451,7 +473,9 @@ const handleMultiCellSelectionDuringPointerDrag = (
       (cellState) => {
         const shouldBeSelected = draggedCellIds.has(cellState.id);
 
-        if (!shouldBeSelected || cellState.isSelected) return cellState;
+        if (!shouldBeSelected || cellState.isSelected) {
+          return cellState;
+        }
 
         const nextCellState = {
           ...cellState,
@@ -467,7 +491,9 @@ const handleMultiCellSelectionDuringPointerDrag = (
         cellState !== boardStateAfterSelectionsCheck[cellIndex],
     );
 
-    if (!didSelectedCellsChange) return currentPuzzleState;
+    if (!didSelectedCellsChange) {
+      return currentPuzzleState;
+    }
 
     return updatePuzzleStateWithCurrentBoardState(
       currentPuzzleState,
@@ -481,10 +507,11 @@ const getCellIdFromRowAndColumn = (
 ): CellId => {
   const candidateCellId = (rowNumber - 1) * CELLS_PER_HOUSE + columnNumber;
 
-  if (!isCellId(candidateCellId))
-    throw Error(
+  if (!isCellId(candidateCellId)) {
+    throw new Error(
       `Failed to get a CellId from RowNumber "${rowNumber}" and ColumnNumber "${columnNumber}".`,
     );
+  }
 
   return candidateCellId;
 };
@@ -503,7 +530,9 @@ const getCellIdsBetweenBoardPositions = (
     Math.abs(columnDistance),
   );
 
-  if (interpolationStepCount === 0) return [startingBoardPosition.cellId];
+  if (interpolationStepCount === 0) {
+    return [startingBoardPosition.cellId];
+  }
 
   const crossedCellIds = new Set<CellId>(
     Array.from(
@@ -540,19 +569,30 @@ const getCellIdsBetweenBoardPositions = (
   return [...crossedCellIds];
 };
 
-const handleBoardPointerMove = (
-  boardRef: RefObject<HTMLDivElement | null>,
-  currentBoardPositionDuringDragRef: RefObject<BoardPosition | undefined>,
-  event: PointerEvent<HTMLDivElement>,
-  isPointerDraggingAcrossBoardRef: RefObject<boolean>,
-  lastSelectedCellIdRef: RefObject<CellId | undefined>,
-  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
-) => {
-  if (!isPointerDraggingAcrossBoardRef.current) return;
+const handleBoardPointerMove = ({
+  boardRef,
+  currentBoardPositionDuringDragRef,
+  event,
+  isPointerDraggingAcrossBoardRef,
+  lastSelectedCellIdRef,
+  setPuzzleState,
+}: {
+  boardRef: RefObject<HTMLDivElement | null>;
+  currentBoardPositionDuringDragRef: RefObject<BoardPosition | undefined>;
+  event: PointerEvent<HTMLDivElement>;
+  isPointerDraggingAcrossBoardRef: RefObject<boolean>;
+  lastSelectedCellIdRef: RefObject<CellId | undefined>;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
+}) => {
+  if (!isPointerDraggingAcrossBoardRef.current) {
+    return;
+  }
 
   const boardElement = boardRef.current;
 
-  if (boardElement === null) return;
+  if (boardElement === null) {
+    return;
+  }
 
   const candidateBoardPosition = getBoardPositionFromPointerCoordinates(
     boardElement,
@@ -560,15 +600,18 @@ const handleBoardPointerMove = (
     event.clientY,
   );
 
-  if (candidateBoardPosition === undefined) return;
+  if (candidateBoardPosition === undefined) {
+    return;
+  }
 
   const currentBoardPosition = currentBoardPositionDuringDragRef.current;
 
   if (
     currentBoardPosition !== undefined &&
     candidateBoardPosition.cellId === currentBoardPosition.cellId
-  )
+  ) {
     return;
+  }
 
   if (currentBoardPosition === undefined) {
     currentBoardPositionDuringDragRef.current = candidateBoardPosition;
@@ -602,8 +645,9 @@ const getColumnNumberFromCellId = (cellId: CellId): ColumnNumber => {
 
   const candidateColumnNumber = (zeroBasedCellId % CELLS_PER_HOUSE) + 1;
 
-  if (!isColumnNumber(candidateColumnNumber))
-    throw Error(`Failed to get a ColumnNumber from CellId "${cellId}".`);
+  if (!isColumnNumber(candidateColumnNumber)) {
+    throw new Error(`Failed to get a ColumnNumber from CellId "${cellId}".`);
+  }
 
   return candidateColumnNumber;
 };
@@ -613,19 +657,26 @@ const getRowNumberFromCellId = (cellId: CellId): RowNumber => {
 
   const candidateRowNumber = Math.floor(zeroBasedCellId / CELLS_PER_HOUSE) + 1;
 
-  if (!isRowNumber(candidateRowNumber))
-    throw Error(`Failed to get a RowNumber from CellId "${cellId}".`);
+  if (!isRowNumber(candidateRowNumber)) {
+    throw new Error(`Failed to get a RowNumber from CellId "${cellId}".`);
+  }
 
   return candidateRowNumber;
 };
 
-const getCellStateAfterSelectionCheck = (
-  currentCellState: CellState,
-  isMultiselectMode: boolean,
-  selectedCellIdWhenExactlyOneIsSelected: CellId | undefined,
-  selectedCellsCount: number,
-  targetCellId: CellId,
-): CellState => {
+const getCellStateAfterSelectionCheck = ({
+  currentCellState,
+  isMultiselectMode,
+  selectedCellIdWhenExactlyOneIsSelected,
+  selectedCellsCount,
+  targetCellId,
+}: {
+  currentCellState: CellState;
+  isMultiselectMode: boolean;
+  selectedCellIdWhenExactlyOneIsSelected: CellId | undefined;
+  selectedCellsCount: number;
+  targetCellId: CellId;
+}): CellState => {
   if (isMultiselectMode) {
     const isTargetCell = currentCellState.id === targetCellId;
 
@@ -679,13 +730,13 @@ const handleCellSelection = (
 
     const boardStateAfterSelectionCheck = currentBoardState.map(
       (currentCellState) =>
-        getCellStateAfterSelectionCheck(
+        getCellStateAfterSelectionCheck({
           currentCellState,
           isMultiselectMode,
           selectedCellIdWhenExactlyOneIsSelected,
           selectedCellsCount,
           targetCellId,
-        ),
+        }),
     );
 
     const didBoardStateChange = currentBoardState.some(
@@ -693,7 +744,9 @@ const handleCellSelection = (
         cellState !== boardStateAfterSelectionCheck[cellIndex],
     );
 
-    if (!didBoardStateChange) return currentPuzzleState;
+    if (!didBoardStateChange) {
+      return currentPuzzleState;
+    }
 
     return updatePuzzleStateWithCurrentBoardState(
       currentPuzzleState,
@@ -701,20 +754,30 @@ const handleCellSelection = (
     );
   });
 
-const handleCellPointerDown = (
-  boardRef: RefObject<HTMLDivElement | null>,
-  currentBoardPositionDuringDragRef: RefObject<BoardPosition | undefined>,
-  isMultiselectMode: boolean,
-  isPointerDraggingAcrossBoardRef: RefObject<boolean>,
-  lastSelectedCellIdRef: RefObject<CellId | undefined>,
-  targetCellId: CellId,
-  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
-) => {
+const handleCellPointerDown = ({
+  boardRef,
+  currentBoardPositionDuringDragRef,
+  isMultiselectMode,
+  isPointerDraggingAcrossBoardRef,
+  lastSelectedCellIdRef,
+  targetCellId,
+  setPuzzleState,
+}: {
+  boardRef: RefObject<HTMLDivElement | null>;
+  currentBoardPositionDuringDragRef: RefObject<BoardPosition | undefined>;
+  isMultiselectMode: boolean;
+  isPointerDraggingAcrossBoardRef: RefObject<boolean>;
+  lastSelectedCellIdRef: RefObject<CellId | undefined>;
+  targetCellId: CellId;
+  setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
+}) => {
   isPointerDraggingAcrossBoardRef.current = true;
 
   const boardElement = boardRef.current;
 
-  if (boardElement !== null) {
+  if (boardElement === null) {
+    currentBoardPositionDuringDragRef.current = undefined;
+  } else {
     const columnNumber = getColumnNumberFromCellId(targetCellId);
     const rowNumber = getRowNumberFromCellId(targetCellId);
 
@@ -723,7 +786,7 @@ const handleCellPointerDown = (
       columnNumber,
       rowNumber,
     };
-  } else currentBoardPositionDuringDragRef.current = undefined;
+  }
 
   lastSelectedCellIdRef.current = targetCellId;
 
@@ -738,11 +801,15 @@ const tryAnnounceKeyboardNavCell = (
   shouldHandleKeyboardNavRef: RefObject<boolean>,
   setAnnouncementText: (text: string) => void,
 ): boolean => {
-  if (!shouldHandleKeyboardNavRef.current) return false;
+  if (!shouldHandleKeyboardNavRef.current) {
+    return false;
+  }
 
   shouldHandleKeyboardNavRef.current = false;
   const navSelectedCells = boardState.filter((c) => c.isSelected);
-  if (navSelectedCells.length !== 1) return false;
+  if (navSelectedCells.length !== 1) {
+    return false;
+  }
 
   const navCell = navSelectedCells[0];
   boardRef.current
@@ -765,10 +832,14 @@ const tryAnnounceContentChange = (
   isPointerDraggingAcrossBoardRef: RefObject<boolean>,
   setAnnouncementText: (text: string) => void,
 ): boolean => {
-  if (isPointerDraggingAcrossBoardRef.current) return false;
+  if (isPointerDraggingAcrossBoardRef.current) {
+    return false;
+  }
 
   const selectedCells = boardState.filter((c) => c.isSelected);
-  if (selectedCells.length !== 1) return false;
+  if (selectedCells.length !== 1) {
+    return false;
+  }
 
   const cell = selectedCells[0];
   const prevCell = prevBoardStateRef.current[cell.id - 1];
@@ -776,7 +847,9 @@ const tryAnnounceContentChange = (
     prevCell !== undefined &&
     (prevCell.content !== cell.content ||
       prevCell.markupColors !== cell.markupColors);
-  if (!didContentChange) return false;
+  if (!didContentChange) {
+    return false;
+  }
 
   setAnnouncementText(
     getCellAriaLabel(
@@ -794,10 +867,11 @@ const announceConflictCountChange = (
   currConflictCount: number,
   setAnnouncementText: (text: string) => void,
 ) => {
-  if (prevConflictCount === 0 && currConflictCount > 0)
+  if (prevConflictCount === 0 && currConflictCount > 0) {
     setAnnouncementText("Digit conflict detected");
-  else if (prevConflictCount > 0 && currConflictCount === 0)
+  } else if (prevConflictCount > 0 && currConflictCount === 0) {
     setAnnouncementText("No conflicts");
+  }
 };
 // #endregion
 
@@ -866,12 +940,13 @@ export const Board = ({
         setAnnouncementText,
       );
 
-    if (!wasAnnouncementHandled)
+    if (!wasAnnouncementHandled) {
       announceConflictCountChange(
         prevConflictCountRef.current,
         currConflictCount,
         setAnnouncementText,
       );
+    }
 
     prevBoardStateRef.current = currentBoardState;
     prevConflictCountRef.current = currConflictCount;
@@ -879,7 +954,7 @@ export const Board = ({
 
   const handleBoardCellPointerDown = useCallback(
     (targetCellId: CellId) => {
-      handleCellPointerDown(
+      handleCellPointerDown({
         boardRef,
         currentBoardPositionDuringDragRef,
         isMultiselectMode,
@@ -887,7 +962,7 @@ export const Board = ({
         lastSelectedCellIdRef,
         targetCellId,
         setPuzzleState,
-      );
+      });
     },
     [isMultiselectMode, setPuzzleState],
   );
@@ -898,16 +973,20 @@ export const Board = ({
         boardRef.current?.contains(
           event.relatedTarget instanceof Node ? event.relatedTarget : null,
         )
-      )
+      ) {
         return;
-      if (isPointerDraggingAcrossBoardRef.current) return;
+      }
+      if (isPointerDraggingAcrossBoardRef.current) {
+        return;
+      }
 
       setPuzzleState((currentPuzzleState) => {
         const currentBoardState =
           getCurrentBoardStateFromPuzzleState(currentPuzzleState);
 
-        if (currentBoardState.some((c) => c.isSelected))
+        if (currentBoardState.some((c) => c.isSelected)) {
           return currentPuzzleState;
+        }
 
         return updatePuzzleStateWithCurrentBoardState(
           currentPuzzleState,
@@ -926,13 +1005,16 @@ export const Board = ({
       arrowKeyDirection: ArrowKeyDirection,
       event: KeyboardEvent,
     ) => {
-      if (event.location === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) return;
+      if (event.location === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
+        return;
+      }
 
       if (
         event.target instanceof Element &&
         event.target.closest('[role="radiogroup"]') !== null
-      )
+      ) {
         return;
+      }
 
       if (event.ctrlKey || event.shiftKey) {
         event.preventDefault();
@@ -986,10 +1068,13 @@ export const Board = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       const keyboardKey = event.key;
 
-      if (isArrowKeyDirection(keyboardKey))
+      if (isArrowKeyDirection(keyboardKey)) {
         handleAddToOrMoveCellSelection(keyboardKey, event);
+      }
 
-      if (!event.ctrlKey || event.metaKey) return;
+      if (!event.ctrlKey || event.metaKey) {
+        return;
+      }
 
       handleCellSelectionShortcut(event, keyboardKey);
     };
@@ -1000,7 +1085,7 @@ export const Board = ({
 
   const rovingTabCellId: CellId =
     selectedCells.length > 0
-      ? selectedCells[selectedCells.length - 1].id
+      ? (selectedCells.at(-1)?.id ?? currentBoardState[0].id)
       : currentBoardState[0].id;
 
   const boardRows = Array.from({ length: CELLS_PER_HOUSE }, (_, rowIndex) =>
@@ -1036,14 +1121,14 @@ export const Board = ({
           )
         }
         onPointerMove={(event) =>
-          handleBoardPointerMove(
+          handleBoardPointerMove({
             boardRef,
             currentBoardPositionDuringDragRef,
             event,
             isPointerDraggingAcrossBoardRef,
             lastSelectedCellIdRef,
             setPuzzleState,
-          )
+          })
         }
         onFocus={handleBoardFocus}
         onPointerUp={() =>

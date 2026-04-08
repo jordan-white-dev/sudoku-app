@@ -1,8 +1,8 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
   "vcs": {
-    "enabled": true,
     "clientKind": "git",
+    "enabled": true,
     "useIgnoreFile": true
   },
   "files": {
@@ -27,52 +27,122 @@
     "rules": {
       "recommended": true,
       "a11y": {
-        "useSemanticElements": "error"
+        "noNoninteractiveElementInteractions": "error"
       },
       "complexity": {
         "noExcessiveCognitiveComplexity": "error",
+        "noExcessiveNestedTestSuites": "error",
+        "noForEach": "error",
+        "noImplicitCoercions": "error",
+        "useMaxParams": "error",
+        "noUselessCatchBinding": "error",
         "noUselessStringConcat": "error",
-        "noUselessUndefinedInitialization": "error",
+        "noUselessUndefined": "error",
+        "noVoid": "error",
         "useSimplifiedLogicExpression": "error",
-        "noVoid": "warn"
+        "useWhile": "error"
       },
       "correctness": {
+        "noGlobalDirnameFilename": "error",
+        "noNestedComponentDefinitions": "error",
+        "noNextAsyncClientComponent": "error",
+        "noProcessGlobal": "error",
+        "noReactPropAssignments": "error",
+        "noUndeclaredDependencies": "error",
+        "noUndeclaredVariables": "error",
         "noUnusedImports": "error",
         "noUnusedVariables": "error",
         "noUnusedFunctionParameters": "error",
-        "useHookAtTopLevel": "error"
+        "useSingleJsDocAsterisk": "error",
+        "useHookAtTopLevel": "error",
+        "useUniqueElementIds": "error"
       },
       "performance": {
         "noBarrelFile": "error",
+        "noDelete": "error",
+        "noNamespaceImport": "error",
+        "noReExportAll": "error",
         "useTopLevelRegex": "error"
       },
       "style": {
+        "noCommonJs": "error",
         "noDefaultExport": "error",
+        "noDoneCallback": "error",
+        "noEnum": "error",
+        "noExportedImports": "error",
+        "noInferrableTypes": "error",
+        "noNamespace": "error",
+        "noNegationElse": "error",
+        "noNestedTernary": "error",
+        "noParameterAssign": "error",
+        "noShoutyConstants": "error",
+        "noSubstr": "error",
+        "noUnusedTemplateLiteral": "error",
+        "noUselessElse": "error",
+        "noYodaExpression": "error",
+        "useAsConstAssertion": "error",
+        "useAtIndex": "error",
+        "useBlockStatements": "error",
         "useCollapsedElseIf": "error",
-        "useDefaultSwitchClause": "error",
+        "useCollapsedIf": "error",
         "useConsistentArrayType": {
           "level": "error",
           "options": {
             "syntax": "generic"
           }
         },
+        "useConsistentArrowReturn": "error",
+        "useConsistentBuiltinInstantiation": "error",
+        "useConsistentCurlyBraces": "error",
+        "useConsistentObjectDefinitions": "error",
+        "useDefaultParameterLast": "error",
+        "useDefaultSwitchClause": "error",
+        "useExplicitLengthCheck": "error",
+        "useForOf": "error",
+        "useFragmentSyntax": "error",
         "useImportType": {
           "level": "error",
           "options": {
             "style": "inlineType"
           }
-        }
+        },
+        "useNumberNamespace": "error",
+        "useNumericSeparators": "error",
+        "useObjectSpread": "error",
+        "useReactFunctionComponents": "error",
+        "useSelfClosingElements": "error",
+        "useShorthandAssign": "error",
+        "useSingleVarDeclarator": "error",
+        "useSymbolDescription": "error",
+        "useThrowNewError": "error",
+        "useThrowOnlyError": "error",
+        "useTrimStartEnd": "error",
+        "useUnifiedTypeSignatures": "error"
       },
       "suspicious": {
+        "noAlert": "error",
+        "noBitwiseOperators": "error",
+        "noConsole": "error",
+        "noConstantBinaryExpressions": "error",
+        "noDeprecatedImports": "error",
         "noDuplicateElseIf": "error",
-        "noConsole": {
-          "level": "error",
-          "options": {
-            "allow": ["error", "info"]
-          }
-        },
+        "noDuplicateDependencies": "error",
         "noEmptyBlockStatements": "error",
-        "useAwait": "error"
+        "noEmptySource": "error",
+        "noEvolvingTypes": "error",
+        "noImportCycles": "error",
+        "noMisplacedAssertion": "error",
+        "noReactForwardRef": "error",
+        "noSkippedTests": "error",
+        "noUnassignedVariables": "error",
+        "noUnusedExpressions": "error",
+        "noVar": "error",
+        "useAwait": "error",
+        "useErrorMessage": "error",
+        "useGuardForIn": "error",
+        "useNumberToFixedDigitsArgument": "error",
+        "useStaticResponseMethods": "error",
+        "useStrictMode": "error"
       }
     }
   },

@@ -526,8 +526,11 @@ const SettingsMenu = () => {
                 settingLabel="Disable Stopwatch"
                 userSettings={userSettings}
                 onCheckedChange={() => {
-                  if (!userSettings.isStopwatchDisabled) pauseStopwatch();
-                  else startStopwatch();
+                  if (userSettings.isStopwatchDisabled) {
+                    startStopwatch();
+                  } else {
+                    pauseStopwatch();
+                  }
 
                   toggleUserSetting("isStopwatchDisabled")();
                 }}
@@ -540,7 +543,7 @@ const SettingsMenu = () => {
                 <Menu.CheckboxItem
                   checked={userSettings.isHideStopwatchEnabled}
                   closeOnSelect={false}
-                  value={"isHideStopwatchEnabled"}
+                  value="isHideStopwatchEnabled"
                   onCheckedChange={toggleUserSetting("isHideStopwatchEnabled")}
                 >
                   Hide Stopwatch

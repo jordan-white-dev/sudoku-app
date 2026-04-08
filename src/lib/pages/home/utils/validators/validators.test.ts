@@ -513,8 +513,9 @@ describe("Board Coordinate Validators", () => {
       );
 
       // Act / Assert
-      for (const candidateCellId of validCellIds)
+      for (const candidateCellId of validCellIds) {
         expect(isCellId(candidateCellId)).toBe(true);
+      }
     });
 
     it("rejects a cell id below the valid range", () => {

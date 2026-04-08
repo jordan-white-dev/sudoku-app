@@ -2,11 +2,11 @@ import { describe, expect, it } from "vitest";
 
 import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
+  doesTargetCellContainEmptyCellContent,
   EMPTY_RAW_BOARD_STATE,
-  expectTargetCellToContainEmptyCellContent,
-  expectTargetCellToContainGivenDigit,
   getBoardStateWithTargetCellsSelected,
   getEmptyRawBoardState,
+  getGivenDigitInTargetCell,
   getStartingEmptyBoardState,
   getTargetCellStateFromBoardState,
 } from "@/lib/pages/home/utils/testing";
@@ -26,29 +26,27 @@ import {
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
-  type BoxNumber,
   type CellContent,
   type CellId,
-  type ColumnNumber,
   type PuzzleState,
   type RawBoardState,
   type RawGivenDigit,
   type RawPuzzleString,
-  type RowNumber,
 } from "@/lib/pages/home/utils/types";
 import {
   isRawGivenDigit,
   isRawPuzzleString,
 } from "@/lib/pages/home/utils/validators/validators";
 
-// #region Branded Test Value Helpers
+// #region Branded Values
 const getBrandedRawPuzzleString = (
   candidateRawPuzzleString: string,
 ): RawPuzzleString => {
-  if (!isRawPuzzleString(candidateRawPuzzleString))
-    throw Error(
+  if (!isRawPuzzleString(candidateRawPuzzleString)) {
+    throw new Error(
       `Invalid RawPuzzleString "${candidateRawPuzzleString}" in test setup.`,
     );
+  }
 
   return candidateRawPuzzleString;
 };
@@ -56,16 +54,17 @@ const getBrandedRawPuzzleString = (
 const getBrandedRawGivenDigit = (
   candidateRawGivenDigit: number,
 ): RawGivenDigit => {
-  if (!isRawGivenDigit(candidateRawGivenDigit))
-    throw Error(
+  if (!isRawGivenDigit(candidateRawGivenDigit)) {
+    throw new Error(
       `Invalid RawGivenDigit "${candidateRawGivenDigit}" in test setup.`,
     );
+  }
 
   return candidateRawGivenDigit;
 };
 // #endregion
 
-// #region Raw Board State Builders
+// #region Raw Board State Builder
 const getRawBoardStateWithGivenDigitsInTargetCells = (
   targetCellsAndRawGivenDigits: Array<{
     cellId: CellId;
@@ -96,22 +95,18 @@ const getPuzzleStateFromPuzzleHistory = (
 };
 // #endregion
 
-// #region Board State Assertions
-const expectTargetCellToHaveCoordinates = (
-  boardState: BoardState,
-  cellId: CellId,
-  expectedCoordinates: {
-    rowNumber: RowNumber;
-    columnNumber: ColumnNumber;
-    boxNumber: BoxNumber;
-  },
-) => {
+// #region Cell Coordinates
+const getCellCoordinates = (boardState: BoardState, cellId: CellId) => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(cellState.id).toBe(cellId);
-  expect(cellState.houses.rowNumber).toBe(expectedCoordinates.rowNumber);
-  expect(cellState.houses.columnNumber).toBe(expectedCoordinates.columnNumber);
-  expect(cellState.houses.boxNumber).toBe(expectedCoordinates.boxNumber);
+  const cellCoordinates = {
+    id: cellState.id,
+    rowNumber: cellState.houses.rowNumber,
+    columnNumber: cellState.houses.columnNumber,
+    boxNumber: cellState.houses.boxNumber,
+  };
+
+  return cellCoordinates;
 };
 // #endregion
 
@@ -212,14 +207,12 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToContainEmptyCellContent(
-        boardState,
-        getBrandedCellId(1),
-      );
-      expectTargetCellToContainEmptyCellContent(
-        boardState,
-        getBrandedCellId(81),
-      );
+      expect(
+        doesTargetCellContainEmptyCellContent(boardState, getBrandedCellId(1)),
+      ).toBe(true);
+      expect(
+        doesTargetCellContainEmptyCellContent(boardState, getBrandedCellId(81)),
+      ).toBe(true);
     });
 
     it("treats provided given digits as given digits in the board state", () => {
@@ -243,19 +236,13 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToContainGivenDigit(
-        boardState,
-        getBrandedCellId(1),
+      expect(getGivenDigitInTargetCell(boardState, getBrandedCellId(1))).toBe(
         getBrandedSudokuDigit("1"),
       );
-      expectTargetCellToContainGivenDigit(
-        boardState,
-        getBrandedCellId(2),
+      expect(getGivenDigitInTargetCell(boardState, getBrandedCellId(2))).toBe(
         getBrandedSudokuDigit("5"),
       );
-      expectTargetCellToContainGivenDigit(
-        boardState,
-        getBrandedCellId(3),
+      expect(getGivenDigitInTargetCell(boardState, getBrandedCellId(3))).toBe(
         getBrandedSudokuDigit("9"),
       );
     });
@@ -266,27 +253,32 @@ describe("Board State Transform", () => {
       const boardState = getBoardStateFromRawBoardState(rawBoardState);
 
       // Assert
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(1), {
+      expect(getCellCoordinates(boardState, getBrandedCellId(1))).toEqual({
+        id: getBrandedCellId(1),
         rowNumber: getBrandedRowNumber(1),
         columnNumber: getBrandedColumnNumber(1),
         boxNumber: getBrandedBoxNumber(1),
       });
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(9), {
+      expect(getCellCoordinates(boardState, getBrandedCellId(9))).toEqual({
+        id: getBrandedCellId(9),
         rowNumber: getBrandedRowNumber(1),
         columnNumber: getBrandedColumnNumber(9),
         boxNumber: getBrandedBoxNumber(3),
       });
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(10), {
+      expect(getCellCoordinates(boardState, getBrandedCellId(10))).toEqual({
+        id: getBrandedCellId(10),
         rowNumber: getBrandedRowNumber(2),
         columnNumber: getBrandedColumnNumber(1),
         boxNumber: getBrandedBoxNumber(1),
       });
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(41), {
+      expect(getCellCoordinates(boardState, getBrandedCellId(41))).toEqual({
+        id: getBrandedCellId(41),
         rowNumber: getBrandedRowNumber(5),
         columnNumber: getBrandedColumnNumber(5),
         boxNumber: getBrandedBoxNumber(5),
       });
-      expectTargetCellToHaveCoordinates(boardState, getBrandedCellId(81), {
+      expect(getCellCoordinates(boardState, getBrandedCellId(81))).toEqual({
+        id: getBrandedCellId(81),
         rowNumber: getBrandedRowNumber(9),
         columnNumber: getBrandedColumnNumber(9),
         boxNumber: getBrandedBoxNumber(9),

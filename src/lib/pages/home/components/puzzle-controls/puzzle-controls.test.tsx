@@ -87,11 +87,12 @@ const renderPuzzleControls = async ({
   initialPuzzleState?: PuzzleState;
   startingBaseKeypadMode?: "Digit" | "Center" | "Corner" | "Color";
 } = {}): Promise<RenderedPuzzleControls> => {
-  if (startingBaseKeypadMode !== undefined)
+  if (startingBaseKeypadMode !== undefined) {
     window.sessionStorage.setItem(
       KEYPAD_MODE_SESSION_STORAGE_KEY,
       JSON.stringify(startingBaseKeypadMode),
     );
+  }
 
   const startingPuzzleState =
     initialPuzzleState ??

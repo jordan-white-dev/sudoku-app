@@ -4,7 +4,6 @@ export const Meta = () => (
   <>
     <title>Sudoku</title>
     <meta name="description" content="Sudoku" />
-
     <meta name="application-name" content={APP_NAME} />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />

@@ -26,11 +26,11 @@ import {
   isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/utils/guards";
 import {
-  expectTargetCellToContainEmptyCellContent,
-  expectTargetCellToContainGivenDigit,
+  doesTargetCellContainEmptyCellContent,
   getBoardStateWithEnteredDigitInTargetCell,
   getBoardStateWithGivenDigitInTargetCell,
   getBoardStateWithTargetCellsSelected,
+  getGivenDigitInTargetCell,
   getStartingEmptyBoardState,
   getStartingPuzzleStateFromBoardState,
   getTargetCellStateFromBoardState,
@@ -341,69 +341,70 @@ const getBoardStateWithMarkupColorsInTargetCell = (
 // #endregion
 
 // #region Cell Content Assertions
-const expectTargetCellToContainEnteredDigit = (
+const getEnteredDigitInTargetCell = (
   boardState: BoardState,
   cellId: CellId,
-  expectedEnteredDigit: SudokuDigit,
-) => {
+): SudokuDigit | undefined => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isEnteredDigitInCellContent(cellState.content)).toBe(true);
+  if (!isEnteredDigitInCellContent(cellState.content)) {
+    return;
+  }
 
-  if (isEnteredDigitInCellContent(cellState.content))
-    expect(cellState.content.enteredDigit).toBe(expectedEnteredDigit);
+  return cellState.content.enteredDigit;
 };
 
-const expectTargetCellToContainCenterMarkups = (
+const getCenterMarkupsInTargetCell = (
   boardState: BoardState,
   cellId: CellId,
-  expectedCenterMarkups: [""] | Array<SudokuDigit>,
-) => {
+): [""] | Array<SudokuDigit> | undefined => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isMarkupDigitsInCellContent(cellState.content)).toBe(true);
+  if (!isMarkupDigitsInCellContent(cellState.content)) {
+    return;
+  }
 
-  if (isMarkupDigitsInCellContent(cellState.content))
-    expect(cellState.content.centerMarkups).toEqual(expectedCenterMarkups);
+  return cellState.content.centerMarkups;
 };
 
-const expectTargetCellToContainCornerMarkups = (
+const getCornerMarkupsInTargetCell = (
   boardState: BoardState,
   cellId: CellId,
-  expectedCornerMarkups: [""] | Array<SudokuDigit>,
-) => {
+): [""] | Array<SudokuDigit> | undefined => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(isMarkupDigitsInCellContent(cellState.content)).toBe(true);
+  if (!isMarkupDigitsInCellContent(cellState.content)) {
+    return;
+  }
 
-  if (isMarkupDigitsInCellContent(cellState.content))
-    expect(cellState.content.cornerMarkups).toEqual(expectedCornerMarkups);
+  return cellState.content.cornerMarkups;
 };
 
-const expectTargetCellToContainMarkupColors = (
+const getMarkupColorsInTargetCell = (
   boardState: BoardState,
   cellId: CellId,
-  expectedMarkupColors: [""] | Array<MarkupColor>,
-) => {
+): [""] | Array<MarkupColor> => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  expect(cellState.markupColors).toEqual(expectedMarkupColors);
+  return cellState.markupColors;
 };
 // #endregion
 
 // #region Puzzle State Assertions
-const expectPuzzleStateToMatchItsStartingState = (
+const doesPuzzleStateMatchItsStartingState = (
   nextPuzzleState: PuzzleState,
   startingPuzzleState: PuzzleState,
-) => {
+): boolean => {
   const currentBoardState =
     getCurrentBoardStateFromPuzzleState(nextPuzzleState);
   const startingBoardState =
     getCurrentBoardStateFromPuzzleState(startingPuzzleState);
 
-  expect(nextPuzzleState.historyIndex).toBe(0);
-  expect(nextPuzzleState.puzzleHistory).toHaveLength(1);
-  expect(currentBoardState).toEqual(startingBoardState);
+  return (
+    nextPuzzleState.historyIndex === 0 &&
+    nextPuzzleState.puzzleHistory.length === 1 &&
+    JSON.stringify(currentBoardState) === JSON.stringify(startingBoardState)
+  );
 };
 // #endregion
 
@@ -435,11 +436,12 @@ describe("Digit entry", () => {
       getBrandedCellId(2),
       getBrandedCellId(3),
     ]) {
-      expectTargetCellToContainEnteredDigit(
-        currentBoardState,
-        getBrandedCellId(cellId),
-        getBrandedSudokuDigit("4"),
-      );
+      expect(
+        getEnteredDigitInTargetCell(
+          currentBoardState,
+          getBrandedCellId(cellId),
+        ),
+      ).toBe(getBrandedSudokuDigit("4"));
     }
   });
 
@@ -469,11 +471,9 @@ describe("Digit entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("4"),
-    );
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("4"));
   });
 
   it("replaces markup digits in selected editable cells with the entered digit", () => {
@@ -503,11 +503,9 @@ describe("Digit entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("4"),
-    );
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("4"));
   });
 
   it("preserves color markups in the selected cells when entering a digit", () => {
@@ -541,16 +539,12 @@ describe("Digit entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("4"),
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
-    );
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("4"));
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([MARKUP_COLOR_BLUE, MARKUP_COLOR_RED]);
   });
 
   it("preserves given digits in the selected cells when entering a digit", () => {
@@ -579,16 +573,12 @@ describe("Digit entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("9"),
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("4"),
-    );
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("9"));
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("4"));
   });
 
   it("removes the entered digit from all selected editable cells when they already contain it", () => {
@@ -624,7 +614,9 @@ describe("Digit entry", () => {
 
     // Assert
     for (const cellId of [getBrandedCellId(1), getBrandedCellId(2)]) {
-      expectTargetCellToContainEmptyCellContent(currentBoardState, cellId);
+      expect(
+        doesTargetCellContainEmptyCellContent(currentBoardState, cellId),
+      ).toBe(true);
     }
   });
 
@@ -660,15 +652,15 @@ describe("Digit entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("9"),
-    );
-    expectTargetCellToContainEmptyCellContent(
-      currentBoardState,
-      getBrandedCellId(2),
-    );
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("9"));
+    expect(
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(2),
+      ),
+    ).toBe(true);
   });
 
   it("sets all selected editable cells to the entered digit when one already contains it and another contains a different editable value", () => {
@@ -704,16 +696,12 @@ describe("Digit entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("5"),
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("5"),
-    );
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("5"));
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("5"));
   });
 
   it("leaves unselected cells unchanged when entering a digit", () => {
@@ -748,16 +736,12 @@ describe("Digit entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("4"),
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("3"),
-    );
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("4"));
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("3"));
   });
 
   it("doesn't add a move to the undo/redo history when entering a digit with no cells selected", () => {
@@ -772,10 +756,12 @@ describe("Digit entry", () => {
     );
 
     // Assert
-    expectPuzzleStateToMatchItsStartingState(
-      nextPuzzleState,
-      startingPuzzleState,
-    );
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
   });
 
   it("doesn't add a move to the undo/redo history when entering a digit doesn't change the board state", () => {
@@ -802,10 +788,12 @@ describe("Digit entry", () => {
     );
 
     // Assert
-    expectPuzzleStateToMatchItsStartingState(
-      nextPuzzleState,
-      startingPuzzleState,
-    );
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
   });
 
   it("discards all undone moves when a new digit is entered after undoing a move", () => {
@@ -843,11 +831,9 @@ describe("Digit entry", () => {
     expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
     expect(branchedHistory.historyIndex).toBe(2);
     expect(branchedHistory.puzzleHistory).toHaveLength(3);
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("3"),
-    );
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("3"));
   });
 });
 
@@ -877,16 +863,12 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("7")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
   });
 
   it("adds the entered center markup to a cell that doesn't contain it but contains another center markup", () => {
@@ -915,11 +897,9 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
   });
 
   it("adds a center markup only to a cell that doesn't contain it when cells that both contain it and don't contain it are selected", () => {
@@ -954,16 +934,12 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(2),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("7")]);
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
   });
 
   it("adds the entered center markup only to selected, empty editable cells while leaving selected digit cells unchanged", () => {
@@ -997,16 +973,12 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("5"),
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("7")]);
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("5"));
   });
 
   it("adds the entered center markup to selected editable cells that already contain other center markups while leaving cells that already contain the entered center markup unchanged", () => {
@@ -1041,16 +1013,12 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(2),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("7")]);
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
   });
 
   it("adds the entered center markup to selected editable cells with an empty entered digit while leaving selected non-empty entered digit cells unchanged", () => {
@@ -1084,21 +1052,15 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("4"),
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("7")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("4"));
   });
 
   it("adds the entered center markup to selected editable markup cells while preserving their existing corner markups and leaving selected starting digit cells unchanged", () => {
@@ -1134,21 +1096,15 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("5")],
-    );
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("9"),
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("3"), getBrandedSudokuDigit("7")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("5")]);
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("9"));
   });
 
   it("removes the entered center markup from all selected cells when they're editable and already contain it", () => {
@@ -1191,16 +1147,12 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(2),
-      [""],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([""]);
   });
 
   it("removes only the entered center markup from all selected cells when they contain the markup and another center markup", () => {
@@ -1229,11 +1181,9 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("2")],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("2")]);
   });
 
   it("preserves corner markups in the selected cells when entering a center markup", () => {
@@ -1263,16 +1213,12 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("4")],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("3"), getBrandedSudokuDigit("4")]);
   });
 
   it("leaves selected digit cells unchanged when entering a center markup", () => {
@@ -1307,16 +1253,12 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("4"),
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("5"),
-    );
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("4"));
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("5"));
   });
 
   it("removes the entered center markup from all selected editable cells when all selected cells are either a digit or already contain it", () => {
@@ -1357,21 +1299,15 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("4"),
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("5"),
-    );
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(3),
-      [""],
-    );
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("4"));
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("5"));
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(3)),
+    ).toEqual([""]);
   });
 
   it("leaves unselected cells unchanged when entering a center markup", () => {
@@ -1406,16 +1342,12 @@ describe("Center markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(2),
-      [getBrandedSudokuDigit("3")],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([getBrandedSudokuDigit("3")]);
   });
 
   it("doesn't add a move to the undo/redo history when entering a center markup with no cells selected", () => {
@@ -1430,10 +1362,12 @@ describe("Center markup entry", () => {
     );
 
     // Assert
-    expectPuzzleStateToMatchItsStartingState(
-      nextPuzzleState,
-      startingPuzzleState,
-    );
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
   });
 
   it("doesn't add a move to the undo/redo history when entering a center markup doesn't change the board state", () => {
@@ -1460,10 +1394,12 @@ describe("Center markup entry", () => {
     );
 
     // Assert
-    expectPuzzleStateToMatchItsStartingState(
-      nextPuzzleState,
-      startingPuzzleState,
-    );
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
   });
 
   it("discards all undone moves when a new center markup is entered after undoing a move", () => {
@@ -1501,11 +1437,9 @@ describe("Center markup entry", () => {
     expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
     expect(branchedHistory.historyIndex).toBe(2);
     expect(branchedHistory.puzzleHistory).toHaveLength(3);
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("1"), getBrandedSudokuDigit("3")],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("1"), getBrandedSudokuDigit("3")]);
   });
 });
 
@@ -1535,16 +1469,12 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("3")],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("3")]);
   });
 
   it("adds the entered corner markup to a cell that doesn't contain it but contains another corner markup", () => {
@@ -1573,11 +1503,9 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
   });
 
   it("adds a corner markup only to a cell that doesn't contain it when cells that both contain it and don't contain it are selected", () => {
@@ -1612,16 +1540,12 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(2),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("7")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
   });
 
   it("adds the entered corner markup only to selected, empty editable cells while leaving selected digit cells unchanged", () => {
@@ -1655,16 +1579,12 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("5"),
-    );
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("7")]);
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("5"));
   });
 
   it("adds the entered corner markup to selected editable cells that already contain other corner markups while leaving cells that already contain the entered corner markup unchanged", () => {
@@ -1699,16 +1619,12 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(2),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("7")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
   });
 
   it("adds the entered corner markup to selected editable cells with an empty entered digit while leaving selected non-empty entered digit cells unchanged", () => {
@@ -1742,21 +1658,15 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("4"),
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("7")]);
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("4"));
   });
 
   it("adds the entered corner markup to selected editable markup cells while preserving their existing center markups and leaving selected given digit cells unchanged", () => {
@@ -1792,21 +1702,15 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("3")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("9"),
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("3")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("5"), getBrandedSudokuDigit("7")]);
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("9"));
   });
 
   it("removes the entered corner markup from all selected cells when they're editable and already contain it", () => {
@@ -1849,11 +1753,9 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
   });
 
   it("removes only the entered corner markup from all selected cells when they contain the markup and another corner markup", () => {
@@ -1882,11 +1784,9 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("5")],
-    );
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("5")]);
   });
 
   it("preserves center markups in the selected cells when entering a corner markup", () => {
@@ -1916,16 +1816,12 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("6")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("7")],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("6")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("3"), getBrandedSudokuDigit("7")]);
   });
 
   it("leaves selected digit cells unchanged when entering a corner markup", () => {
@@ -1960,16 +1856,12 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("4"),
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("5"),
-    );
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("4"));
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("5"));
   });
 
   it("removes the entered corner markup from all selected editable cells when all selected cells are either a digit or already contain it", () => {
@@ -2010,21 +1902,15 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("4"),
-    );
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("5"),
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(3),
-      [""],
-    );
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("4"));
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("5"));
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(3)),
+    ).toEqual([""]);
   });
 
   it("leaves unselected cells unchanged when entering a corner markup", () => {
@@ -2059,16 +1945,12 @@ describe("Corner markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(2),
-      [getBrandedSudokuDigit("3")],
-    );
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([getBrandedSudokuDigit("3")]);
   });
 
   it("doesn't add a move to the undo/redo history when entering a corner markup with no cells selected", () => {
@@ -2083,10 +1965,12 @@ describe("Corner markup entry", () => {
     );
 
     // Assert
-    expectPuzzleStateToMatchItsStartingState(
-      nextPuzzleState,
-      startingPuzzleState,
-    );
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
   });
 
   it("doesn't add a move to the undo/redo history when entering a corner markup doesn't change the board state", () => {
@@ -2113,10 +1997,12 @@ describe("Corner markup entry", () => {
     );
 
     // Assert
-    expectPuzzleStateToMatchItsStartingState(
-      nextPuzzleState,
-      startingPuzzleState,
-    );
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
   });
 
   it("discards all undone moves when a new corner markup is entered after undoing a move", () => {
@@ -2154,11 +2040,9 @@ describe("Corner markup entry", () => {
     expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
     expect(branchedHistory.historyIndex).toBe(2);
     expect(branchedHistory.puzzleHistory).toHaveLength(3);
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("1"), getBrandedSudokuDigit("3")],
-    );
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("1"), getBrandedSudokuDigit("3")]);
   });
 });
 
@@ -2183,16 +2067,12 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [MARKUP_COLOR_RED],
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(2),
-      [MARKUP_COLOR_RED],
-    );
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([MARKUP_COLOR_RED]);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([MARKUP_COLOR_RED]);
   });
 
   it("adds the keyboard shortcut color to all selected cells", () => {
@@ -2251,11 +2131,9 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [expectedColor],
-    );
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([expectedColor]);
   });
 
   it("removes the entered color markup when all selected cells already contain it", () => {
@@ -2290,16 +2168,12 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(2),
-      [MARKUP_COLOR_BLUE],
-    );
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([MARKUP_COLOR_BLUE]);
   });
 
   it("adds the entered color markup to a cell that doesn't contain it but contains another color markup", () => {
@@ -2328,11 +2202,9 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE],
-    );
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([MARKUP_COLOR_RED, MARKUP_COLOR_BLUE]);
   });
 
   it("adds a color markup only to a cell that doesn't contain it when cells that both contain it and don't contain it are selected", () => {
@@ -2367,16 +2239,12 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [MARKUP_COLOR_RED],
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(2),
-      [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
-    );
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([MARKUP_COLOR_RED]);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([MARKUP_COLOR_BLUE, MARKUP_COLOR_RED]);
   });
 
   it("preserves a selected given digit when entering a color", () => {
@@ -2405,16 +2273,12 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("8"),
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [MARKUP_COLOR_RED],
-    );
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("8"));
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([MARKUP_COLOR_RED]);
   });
 
   it("preserves a selected entered digit when entering a color", () => {
@@ -2443,16 +2307,12 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("6"),
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [MARKUP_COLOR_RED],
-    );
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("6"));
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([MARKUP_COLOR_RED]);
   });
 
   it("preserves selected markup digits when entering a color", () => {
@@ -2482,21 +2342,15 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(1),
-      [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [MARKUP_COLOR_BLUE],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")]);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([MARKUP_COLOR_BLUE]);
   });
 
   it("leaves unselected cells unchanged when entering a color", () => {
@@ -2531,16 +2385,12 @@ describe("Color markup entry", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [MARKUP_COLOR_BLUE, MARKUP_COLOR_RED],
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(2),
-      [MARKUP_COLOR_RED],
-    );
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([MARKUP_COLOR_BLUE, MARKUP_COLOR_RED]);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([MARKUP_COLOR_RED]);
   });
 
   it("doesn't add a move to the undo/redo history when trying to enter a color with no cells selected", () => {
@@ -2555,10 +2405,12 @@ describe("Color markup entry", () => {
     );
 
     // Assert
-    expectPuzzleStateToMatchItsStartingState(
-      nextPuzzleState,
-      startingPuzzleState,
-    );
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
   });
 
   it("discards all undone moves when a new color markup is entered after undoing a move", () => {
@@ -2596,11 +2448,9 @@ describe("Color markup entry", () => {
     expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
     expect(branchedHistory.historyIndex).toBe(2);
     expect(branchedHistory.puzzleHistory).toHaveLength(3);
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [MARKUP_COLOR_BLUE, MARKUP_COLOR_GREEN],
-    );
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([MARKUP_COLOR_BLUE, MARKUP_COLOR_GREEN]);
   });
 });
 
@@ -2659,40 +2509,38 @@ describe("Clearing selected cells", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainEmptyCellContent(
-      currentBoardState,
-      getBrandedCellId(1),
-    );
-    expectTargetCellToContainEmptyCellContent(
-      currentBoardState,
-      getBrandedCellId(2),
-    );
-    expectTargetCellToContainEmptyCellContent(
-      currentBoardState,
-      getBrandedCellId(3),
-    );
+    expect(
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(1),
+      ),
+    ).toBe(true);
+    expect(
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(2),
+      ),
+    ).toBe(true);
+    expect(
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(3),
+      ),
+    ).toBe(true);
 
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(4),
-      getBrandedSudokuDigit("7"),
-    );
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(4)),
+    ).toBe(getBrandedSudokuDigit("7"));
 
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(2),
-      [""],
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(3),
-      [""],
-    );
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([""]);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(3)),
+    ).toEqual([""]);
   });
 
   it("clears just colors and not digits from selected given digit cells", () => {
@@ -2725,16 +2573,12 @@ describe("Clearing selected cells", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainGivenDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("8"),
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
+    expect(
+      getGivenDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("8"));
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
   });
 
   it("clears digits and colors from selected editable cells that contain both while leaving other cells unchanged", () => {
@@ -2779,26 +2623,22 @@ describe("Clearing selected cells", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainEmptyCellContent(
-      currentBoardState,
-      getBrandedCellId(1),
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
+    expect(
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(1),
+      ),
+    ).toBe(true);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
 
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(2),
-      getBrandedSudokuDigit("4"),
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(2),
-      [MARKUP_COLOR_GREEN],
-    );
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toBe(getBrandedSudokuDigit("4"));
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([MARKUP_COLOR_GREEN]);
   });
 
   it("leaves unselected cells unchanged when clearing selected cells", () => {
@@ -2844,31 +2684,25 @@ describe("Clearing selected cells", () => {
       getCurrentBoardStateFromPuzzleState(nextPuzzleState);
 
     // Assert
-    expectTargetCellToContainEmptyCellContent(
-      currentBoardState,
-      getBrandedCellId(1),
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
+    expect(
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(1),
+      ),
+    ).toBe(true);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
 
-    expectTargetCellToContainCenterMarkups(
-      currentBoardState,
-      getBrandedCellId(2),
-      [getBrandedSudokuDigit("2")],
-    );
-    expectTargetCellToContainCornerMarkups(
-      currentBoardState,
-      getBrandedCellId(2),
-      [getBrandedSudokuDigit("3")],
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(2),
-      [MARKUP_COLOR_BLUE],
-    );
+    expect(
+      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([getBrandedSudokuDigit("2")]);
+    expect(
+      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([getBrandedSudokuDigit("3")]);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(2)),
+    ).toEqual([MARKUP_COLOR_BLUE]);
   });
 
   it("doesn't add a move to the undo/redo history when clearing selected cells with no cells selected", () => {
@@ -2881,10 +2715,12 @@ describe("Clearing selected cells", () => {
       getPuzzleStateAfterClearingSelectedCells(startingPuzzleState);
 
     // Assert
-    expectPuzzleStateToMatchItsStartingState(
-      nextPuzzleState,
-      startingPuzzleState,
-    );
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
   });
 
   it("doesn't add a move to the undo/redo history when clearing cells doesn't change the board state", () => {
@@ -2908,10 +2744,12 @@ describe("Clearing selected cells", () => {
       getPuzzleStateAfterClearingSelectedCells(startingPuzzleState);
 
     // Assert
-    expectPuzzleStateToMatchItsStartingState(
-      nextPuzzleState,
-      startingPuzzleState,
-    );
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
   });
 
   it("discards all undone moves when selected cells are cleared after undoing a move", () => {
@@ -2948,15 +2786,15 @@ describe("Clearing selected cells", () => {
     expect(puzzleStateUndoneToMoveOne.puzzleHistory).toHaveLength(3);
     expect(branchedHistory.historyIndex).toBe(2);
     expect(branchedHistory.puzzleHistory).toHaveLength(3);
-    expectTargetCellToContainEmptyCellContent(
-      currentBoardState,
-      getBrandedCellId(1),
-    );
-    expectTargetCellToContainMarkupColors(
-      currentBoardState,
-      getBrandedCellId(1),
-      [""],
-    );
+    expect(
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(1),
+      ),
+    ).toBe(true);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
   });
 });
 
@@ -3169,11 +3007,9 @@ describe("Redoing moves", () => {
     expect(branchedPuzzleState.puzzleHistory).toHaveLength(3);
     expect(puzzleStateAfterRedo.historyIndex).toBe(2);
     expect(puzzleStateAfterRedo.puzzleHistory).toHaveLength(3);
-    expectTargetCellToContainEnteredDigit(
-      currentBoardState,
-      getBrandedCellId(1),
-      getBrandedSudokuDigit("3"),
-    );
+    expect(
+      getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toBe(getBrandedSudokuDigit("3"));
   });
 
   it("does nothing when there are no undone moves to redo", () => {

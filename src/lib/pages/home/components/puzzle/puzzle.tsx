@@ -91,11 +91,15 @@ export const Puzzle = memo(
 
     useEffect(() => {
       const container = containerRef.current;
-      if (container === null) return;
+      if (container === null) {
+        return;
+      }
 
       const observer = new ResizeObserver((entries) => {
         const entry = entries[0];
-        if (entry === undefined) return;
+        if (entry === undefined) {
+          return;
+        }
 
         const availableWidth = entry.contentRect.width;
         const availableHeight = entry.contentRect.height;
@@ -128,8 +132,9 @@ export const Puzzle = memo(
           !puzzleRef.current.contains(
             event.target instanceof Node ? event.target : null,
           )
-        )
+        ) {
           handleClearAllSelections(setPuzzleState);
+        }
       };
 
       document.addEventListener("pointerdown", handlePointerDownOutside);
