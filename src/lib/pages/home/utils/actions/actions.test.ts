@@ -58,12 +58,9 @@ const getPuzzleStateAfterStateUpdate = (
 ): PuzzleState => {
   let nextPuzzleState = startingPuzzleState;
 
-  const setPuzzleState: Dispatch<SetStateAction<PuzzleState>> = (value) => {
-    nextPuzzleState =
-      typeof value === "function"
-        ? (value as (current: PuzzleState) => PuzzleState)(nextPuzzleState)
-        : value;
-  };
+  const setPuzzleState: Dispatch<SetStateAction<PuzzleState>> = (value) =>
+    (nextPuzzleState =
+      typeof value === "function" ? value(nextPuzzleState) : value);
 
   invokePuzzleStateUpdate(setPuzzleState);
 

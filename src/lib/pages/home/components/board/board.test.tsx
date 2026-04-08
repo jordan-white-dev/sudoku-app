@@ -330,18 +330,7 @@ const setBoardBoundsForPointerDrag = async (
 
   Object.defineProperty(boardElement, "getBoundingClientRect", {
     configurable: true,
-    value: (): DOMRect =>
-      ({
-        bottom: 450,
-        height: 450,
-        left: 0,
-        right: 450,
-        top: 0,
-        width: 450,
-        x: 0,
-        y: 0,
-        toJSON: () => ({}),
-      }) as DOMRect,
+    value: () => new DOMRect(0, 0, 450, 450),
   });
 };
 

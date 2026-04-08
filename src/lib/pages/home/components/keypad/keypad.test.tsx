@@ -179,9 +179,7 @@ const getDigitButtonsInRenderedOrder = async (
 
   return buttonElements
     .map((buttonElement) => buttonElement.textContent?.trim() ?? "")
-    .filter((buttonText) =>
-      sudokuDigits.includes(buttonText as (typeof sudokuDigits)[number]),
-    );
+    .filter((buttonText) => sudokuDigits.some((digit) => digit === buttonText));
 };
 
 const getNextPuzzleStateFromSetCall = (
@@ -313,13 +311,13 @@ describe("Keypad ordering", () => {
       colorSwatchIndex += 1
     ) {
       const startingPuzzleState = getPuzzleStateWithSelectedCell();
-      const setPuzzleState = vi.fn();
+      const setPuzzleState = vi.fn<SetPuzzleState>();
 
       const renderedKeypad = await renderKeypad({
         isFlipKeypadEnabled: true,
         keypadMode: "Color",
         puzzleState: startingPuzzleState,
-        setPuzzleState: setPuzzleState as SetPuzzleState,
+        setPuzzleState,
       });
 
       await clickColorSwatchAtIndex(renderedKeypad, colorSwatchIndex);
@@ -344,13 +342,13 @@ describe("Keypad ordering", () => {
       colorSwatchIndex += 1
     ) {
       const startingPuzzleState = getPuzzleStateWithSelectedCell();
-      const setPuzzleState = vi.fn();
+      const setPuzzleState = vi.fn<SetPuzzleState>();
 
       const renderedKeypad = await renderKeypad({
         isFlipKeypadEnabled: false,
         keypadMode: "Color",
         puzzleState: startingPuzzleState,
-        setPuzzleState: setPuzzleState as SetPuzzleState,
+        setPuzzleState,
       });
 
       await clickColorSwatchAtIndex(renderedKeypad, colorSwatchIndex);
@@ -373,12 +371,12 @@ describe("Keypad input actions", () => {
   it("enters the selected digit in Digit mode", async () => {
     // Arrange
     const startingPuzzleState = getPuzzleStateWithSelectedCell();
-    const setPuzzleState = vi.fn();
+    const setPuzzleState = vi.fn<SetPuzzleState>();
 
     const renderedKeypad = await renderKeypad({
       keypadMode: "Digit",
       puzzleState: startingPuzzleState,
-      setPuzzleState: setPuzzleState as SetPuzzleState,
+      setPuzzleState,
     });
 
     // Act
@@ -401,12 +399,12 @@ describe("Keypad input actions", () => {
   it("enters center markups in Center mode", async () => {
     // Arrange
     const startingPuzzleState = getPuzzleStateWithSelectedCell();
-    const setPuzzleState = vi.fn();
+    const setPuzzleState = vi.fn<SetPuzzleState>();
 
     const renderedKeypad = await renderKeypad({
       keypadMode: "Center",
       puzzleState: startingPuzzleState,
-      setPuzzleState: setPuzzleState as SetPuzzleState,
+      setPuzzleState,
     });
 
     // Act
@@ -429,12 +427,12 @@ describe("Keypad input actions", () => {
   it("enters corner markups in Corner mode", async () => {
     // Arrange
     const startingPuzzleState = getPuzzleStateWithSelectedCell();
-    const setPuzzleState = vi.fn();
+    const setPuzzleState = vi.fn<SetPuzzleState>();
 
     const renderedKeypad = await renderKeypad({
       keypadMode: "Corner",
       puzzleState: startingPuzzleState,
-      setPuzzleState: setPuzzleState as SetPuzzleState,
+      setPuzzleState,
     });
 
     // Act
@@ -457,12 +455,12 @@ describe("Keypad input actions", () => {
   it("applies selected colors in Color mode", async () => {
     // Arrange
     const startingPuzzleState = getPuzzleStateWithSelectedCell();
-    const setPuzzleState = vi.fn();
+    const setPuzzleState = vi.fn<SetPuzzleState>();
 
     const renderedKeypad = await renderKeypad({
       keypadMode: "Color",
       puzzleState: startingPuzzleState,
-      setPuzzleState: setPuzzleState as SetPuzzleState,
+      setPuzzleState,
     });
 
     // Act
@@ -491,12 +489,11 @@ describe("Keypad input actions", () => {
     const startingPuzzleState = getStartingPuzzleStateFromBoardState(
       boardStateWithEnteredDigit,
     );
-    const setPuzzleState = vi.fn();
-
+    const setPuzzleState = vi.fn<SetPuzzleState>();
     const renderedKeypad = await renderKeypad({
       keypadMode: "Digit",
       puzzleState: startingPuzzleState,
-      setPuzzleState: setPuzzleState as SetPuzzleState,
+      setPuzzleState,
     });
     const clearButton = await getClearButtonElement(renderedKeypad);
 

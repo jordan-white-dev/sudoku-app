@@ -894,7 +894,12 @@ export const Board = ({
 
   const handleBoardFocus = useCallback(
     (event: FocusEvent<HTMLDivElement>) => {
-      if (boardRef.current?.contains(event.relatedTarget as Node)) return;
+      if (
+        boardRef.current?.contains(
+          event.relatedTarget instanceof Node ? event.relatedTarget : null,
+        )
+      )
+        return;
       if (isPointerDraggingAcrossBoardRef.current) return;
 
       setPuzzleState((currentPuzzleState) => {

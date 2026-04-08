@@ -35,9 +35,7 @@ export const waitForReactToFinishUpdating = async () => {
 export const getEmptyRawBoardState = (): RawBoardState =>
   Array.from({ length: TOTAL_CELLS_IN_BOARD }, () => null);
 
-export const EMPTY_RAW_BOARD_STATE: RawBoardState = Object.freeze(
-  getEmptyRawBoardState(),
-) as RawBoardState;
+export const EMPTY_RAW_BOARD_STATE: RawBoardState = getEmptyRawBoardState();
 
 export const getStartingEmptyBoardState = (): BoardState =>
   getBoardStateFromRawBoardState(EMPTY_RAW_BOARD_STATE);

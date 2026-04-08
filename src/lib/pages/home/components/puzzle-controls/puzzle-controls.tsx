@@ -39,7 +39,7 @@ const modifierKeyboardKeys = ["Control", "Shift", "Alt"] as const;
 const isModifierKeyboardKey = (
   keyboardKey: string,
 ): keyboardKey is ModifierKeyboardKey =>
-  modifierKeyboardKeys.includes(keyboardKey as ModifierKeyboardKey);
+  modifierKeyboardKeys.some((modifierKey) => modifierKey === keyboardKey);
 
 const keypadModesByModifierKeyboardKey: Record<
   ModifierKeyboardKey,

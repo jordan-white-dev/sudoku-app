@@ -125,7 +125,9 @@ export const Puzzle = memo(
       const handlePointerDownOutside = (event: PointerEvent) => {
         if (
           puzzleRef.current &&
-          !puzzleRef.current.contains(event.target as Node)
+          !puzzleRef.current.contains(
+            event.target instanceof Node ? event.target : null,
+          )
         )
           handleClearAllSelections(setPuzzleState);
       };

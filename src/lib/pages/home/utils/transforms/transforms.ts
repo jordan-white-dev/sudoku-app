@@ -283,7 +283,9 @@ export const getCellAriaLabel = (
   }
 
   const appliedColorNames = markupColors
-    .filter((color) => (cellMarkupColors as Array<string>).includes(color))
+    .filter((color) =>
+      cellMarkupColors.some((markupColor) => markupColor === color),
+    )
     .map((color) => markupColorNames[color]);
 
   if (appliedColorNames.length > 0)
