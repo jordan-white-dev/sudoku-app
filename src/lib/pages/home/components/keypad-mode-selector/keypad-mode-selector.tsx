@@ -8,7 +8,6 @@ import {
 import {
   type Dispatch,
   type PropsWithChildren,
-  type KeyboardEvent as ReactKeyboardEvent,
   type SetStateAction,
 } from "react";
 
@@ -133,6 +132,7 @@ const KeypadModeSelectorCard = ({
     {...props}
   >
     <RadioCard.ItemHiddenInput />
+    <RadioCard.ItemText srOnly>{tooltipText}</RadioCard.ItemText>
     <Tooltip content={tooltipText} positioning={{ placement: "right-start" }}>
       <RadioCard.ItemControl padding="0">
         <Icon boxSize={iconBoxSize} fill="currentColor">
@@ -176,20 +176,6 @@ export const KeypadModeSelector = ({
       defaultValue="Digit"
       value={keypadMode}
       variant="solid"
-      onKeyDownCapture={(event) => {
-        const isNumpadArrow = (
-          candidateEvent: ReactKeyboardEvent<HTMLDivElement>,
-        ) =>
-          candidateEvent.location === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD &&
-          ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(
-            candidateEvent.key,
-          );
-
-        if (isNumpadArrow(event)) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-      }}
       onValueChange={(event) => {
         const candidateKeypadMode = event.value;
 
@@ -197,6 +183,7 @@ export const KeypadModeSelector = ({
           setBaseKeypadMode(candidateKeypadMode);
       }}
     >
+      <RadioCard.Label srOnly>Keypad mode selector</RadioCard.Label>
       <SimpleGrid
         columns={isRowLayout ? 2 : 1}
         gap={getCellSizeScaledBy(0.12)}

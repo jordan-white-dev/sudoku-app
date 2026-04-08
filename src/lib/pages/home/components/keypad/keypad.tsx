@@ -310,13 +310,13 @@ const MultiselectSwitch = ({
   >
     <Tooltip content="Multiple cells can be selected while this is toggled">
       <Switch.Root
-        aria-label="Multiselect mode"
         checked={isMultiselectMode}
         colorPalette="blue"
         style={multiselectSwitchStyle}
         onCheckedChange={(event) => setIsMultiselectMode(event.checked)}
       >
         <Switch.HiddenInput />
+        <Switch.Label srOnly>Multiselect mode</Switch.Label>
         <Switch.Control>
           <Switch.Thumb />
           <Switch.Indicator

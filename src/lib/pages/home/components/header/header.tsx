@@ -582,6 +582,9 @@ export const Header = () => {
       padding="0.625rem 1rem"
       width="full"
     >
+      <Box as="h1" color="white" srOnly>
+        Sudoku
+      </Box>
       <Stopwatch />
       <Group alignSelf="center">
         <ShortcutsMenu />

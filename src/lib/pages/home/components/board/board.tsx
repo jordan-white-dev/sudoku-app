@@ -928,6 +928,12 @@ export const Board = ({
     ) => {
       if (event.location === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) return;
 
+      if (
+        event.target instanceof Element &&
+        event.target.closest('[role="radiogroup"]') !== null
+      )
+        return;
+
       if (event.ctrlKey || event.shiftKey) {
         event.preventDefault();
         shouldHandleKeyboardNavRef.current = true;

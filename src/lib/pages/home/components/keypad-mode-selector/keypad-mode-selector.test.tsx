@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
@@ -43,24 +43,6 @@ const renderKeypadModeSelector = async ({
 // #endregion
 
 // #region Keypad Mode Selector Lookup
-const getKeypadModeSelectorGroupElement = async (
-  renderedKeypadModeSelector:
-    | RenderedKeypadModeSelector
-    | Promise<RenderedKeypadModeSelector>,
-): Promise<HTMLElement> => {
-  const resolvedRenderedKeypadModeSelector = await renderedKeypadModeSelector;
-
-  const keypadModeSelectorGroup =
-    resolvedRenderedKeypadModeSelector.container.querySelector<HTMLElement>(
-      '[role="radiogroup"][aria-label="Keypad mode selector"]',
-    );
-
-  if (!keypadModeSelectorGroup)
-    throw Error("Could not find the keypad mode selector radiogroup element.");
-
-  return keypadModeSelectorGroup;
-};
-
 const getKeypadModeInput = async (
   renderedKeypadModeSelector:
     | RenderedKeypadModeSelector
@@ -174,65 +156,5 @@ describe("Changing keypad modes", () => {
       "Digit",
       false,
     );
-  });
-});
-
-describe("Numpad key handling", () => {
-  it("prevents default behavior for numpad arrow keys", async () => {
-    // Arrange
-    const renderedKeypadModeSelector = await renderKeypadModeSelector();
-    const keypadModeSelectorGroup = await getKeypadModeSelectorGroupElement(
-      renderedKeypadModeSelector,
-    );
-
-    const keyDownEvent = new KeyboardEvent("keydown", {
-      bubbles: true,
-      cancelable: true,
-      key: "ArrowUp",
-    });
-
-    Object.defineProperty(keyDownEvent, "location", {
-      configurable: true,
-      value: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
-    });
-
-    const preventDefaultSpy = vi.spyOn(keyDownEvent, "preventDefault");
-    const stopPropagationSpy = vi.spyOn(keyDownEvent, "stopPropagation");
-
-    // Act
-    keypadModeSelectorGroup.dispatchEvent(keyDownEvent);
-    await waitForReactToFinishUpdating();
-
-    // Assert
-    expect(preventDefaultSpy).toHaveBeenCalledOnce();
-    expect(stopPropagationSpy).toHaveBeenCalledOnce();
-    expect(keyDownEvent.defaultPrevented).toBe(true);
-  });
-
-  it("does not prevent default behavior for non-arrow numpad keys", async () => {
-    // Arrange
-    const renderedKeypadModeSelector = await renderKeypadModeSelector();
-    const keypadModeSelectorGroup = await getKeypadModeSelectorGroupElement(
-      renderedKeypadModeSelector,
-    );
-
-    const keyDownEvent = new KeyboardEvent("keydown", {
-      bubbles: true,
-      cancelable: true,
-      key: "ArrowUp",
-      location: KeyboardEvent.DOM_KEY_LOCATION_STANDARD,
-    });
-
-    const preventDefaultSpy = vi.spyOn(keyDownEvent, "preventDefault");
-    const stopPropagationSpy = vi.spyOn(keyDownEvent, "stopPropagation");
-
-    // Act
-    keypadModeSelectorGroup.dispatchEvent(keyDownEvent);
-    await waitForReactToFinishUpdating();
-
-    // Assert
-    expect(preventDefaultSpy).not.toHaveBeenCalled();
-    expect(stopPropagationSpy).not.toHaveBeenCalled();
-    expect(keyDownEvent.defaultPrevented).toBe(false);
   });
 });
