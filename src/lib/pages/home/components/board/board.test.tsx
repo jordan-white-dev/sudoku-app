@@ -29,10 +29,6 @@ import {
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
-  getBrandedCellId,
-  getBrandedSudokuDigit,
-} from "@/lib/pages/home/utils/transforms/transforms";
-import {
   type BoardState,
   type CellId,
   type CellState,
@@ -41,6 +37,10 @@ import {
   type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
+import {
+  getBrandedCellId,
+  getBrandedSudokuDigit,
+} from "@/lib/pages/home/utils/validators/validators";
 
 // #region Board Lookup
 const getBoardElement = async (

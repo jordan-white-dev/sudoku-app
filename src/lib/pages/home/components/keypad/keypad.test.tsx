@@ -27,13 +27,13 @@ import {
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
-  getBrandedCellId,
-  getBrandedSudokuDigit,
-} from "@/lib/pages/home/utils/transforms/transforms";
-import {
   type KeypadMode,
   type PuzzleState,
 } from "@/lib/pages/home/utils/types";
+import {
+  getBrandedCellId,
+  getBrandedSudokuDigit,
+} from "@/lib/pages/home/utils/validators/validators";
 
 const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 
@@ -279,11 +279,10 @@ describe("Keypad rendering", () => {
     // Assert
     expect(await getColorSwatchElements(renderedKeypad)).toHaveLength(9);
 
-    for (const digit of sudokuDigits) {
-      await expect
-        .element(await getDigitButtonLocator(renderedKeypad, digit))
-        .not.toBeInTheDocument();
-    }
+    const digitsInRenderedOrder =
+      await getDigitButtonsInRenderedOrder(renderedKeypad);
+
+    expect(digitsInRenderedOrder).toHaveLength(0);
   });
 });
 

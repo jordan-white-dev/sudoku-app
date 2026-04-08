@@ -3,7 +3,7 @@ import {
   type MarkupColor,
 } from "@/lib/pages/home/utils/types";
 
-// #region Cell Content Guards
+// #region Cell Guards
 export const isGivenDigitInCellContent = (cellContent: CellContent) =>
   "givenDigit" in cellContent;
 

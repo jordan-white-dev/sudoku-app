@@ -35,11 +35,7 @@ import {
   getStartingPuzzleStateFromBoardState,
   getTargetCellStateFromBoardState,
 } from "@/lib/pages/home/utils/testing";
-import {
-  getBrandedCellId,
-  getBrandedSudokuDigit,
-  getCurrentBoardStateFromPuzzleState,
-} from "@/lib/pages/home/utils/transforms/transforms";
+import { getCurrentBoardStateFromPuzzleState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellId,
@@ -48,6 +44,10 @@ import {
   type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
+import {
+  getBrandedCellId,
+  getBrandedSudokuDigit,
+} from "@/lib/pages/home/utils/validators/validators";
 
 // #region Puzzle State Update Helpers
 const getPuzzleStateAfterStateUpdate = (

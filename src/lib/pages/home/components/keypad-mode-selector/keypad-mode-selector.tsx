@@ -13,7 +13,6 @@ import {
 
 import { Tooltip } from "@/lib/pages/home/components/tooltip";
 import {
-  getCellSizeScaledBy,
   MARKUP_COLOR_BLUE,
   MARKUP_COLOR_GRAY,
   MARKUP_COLOR_GREEN,
@@ -24,6 +23,7 @@ import {
   MARKUP_COLOR_WHITE,
   MARKUP_COLOR_YELLOW,
 } from "@/lib/pages/home/utils/constants";
+import { getCellSizeScaledBy } from "@/lib/pages/home/utils/display";
 import { type KeypadMode } from "@/lib/pages/home/utils/types";
 
 // #region SVG Definitions

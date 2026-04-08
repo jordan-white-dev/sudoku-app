@@ -28,10 +28,8 @@ import {
   handleRedoMove,
   handleUndoMove,
 } from "@/lib/pages/home/utils/actions/actions";
-import {
-  CELLS_PER_HOUSE,
-  getCellSizeScaledBy,
-} from "@/lib/pages/home/utils/constants";
+import { CELLS_PER_HOUSE } from "@/lib/pages/home/utils/constants";
+import { getCellSizeScaledBy } from "@/lib/pages/home/utils/display";
 import { makePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
 import {
   getBoardStateFromRawBoardState,

@@ -51,18 +51,18 @@ export const [isSudokuDigit, BrandedSudokuDigit] = branded(
 // #endregion
 
 // #region Board Coordinate Validators
+export const [isCellId, BrandedCellId] = branded(
+  (input: number) =>
+    Number.isInteger(input) && input >= 1 && input <= TOTAL_CELLS_IN_BOARD,
+  "CellId",
+);
+
 const isHouseNumberValidator = (input: number) =>
   Number.isInteger(input) && input >= 1 && input <= CELLS_PER_HOUSE;
 
 export const [isBoxNumber, BrandedBoxNumber] = branded(
   isHouseNumberValidator,
   "BoxNumber",
-);
-
-export const [isCellId, BrandedCellId] = branded(
-  (input: number) =>
-    Number.isInteger(input) && input >= 1 && input <= TOTAL_CELLS_IN_BOARD,
-  "CellId",
 );
 
 export const [isColumnNumber, BrandedColumnNumber] = branded(
@@ -74,4 +74,69 @@ export const [isRowNumber, BrandedRowNumber] = branded(
   isHouseNumberValidator,
   "RowNumber",
 );
+// #endregion
+
+// #region Branded or Throw Validators
+export const getBrandedSudokuDigit = (
+  candidateSudokuDigit: string,
+): typeof BrandedSudokuDigit => {
+  if (!isSudokuDigit(candidateSudokuDigit)) {
+    throw new Error(
+      `Failed to get a SudokuDigit from the candidate string "${candidateSudokuDigit}".`,
+    );
+  }
+
+  return candidateSudokuDigit;
+};
+
+export const getBrandedCellId = (
+  candidateCellId: number,
+): typeof BrandedCellId => {
+  if (!isCellId(candidateCellId)) {
+    throw new Error(`Encountered an invalid CellId "${candidateCellId}".`);
+  }
+
+  return candidateCellId;
+};
+
+const getBrandedHouseNumberErrorMessage = (
+  houseType: "BoxNumber" | "ColumnNumber" | "RowNumber",
+  candidateHouseNumber: number,
+) => `Encountered an invalid ${houseType} "${candidateHouseNumber}".`;
+
+export const getBrandedBoxNumber = (
+  candidateBoxNumber: number,
+): typeof BrandedBoxNumber => {
+  if (!isBoxNumber(candidateBoxNumber)) {
+    throw new Error(
+      getBrandedHouseNumberErrorMessage("BoxNumber", candidateBoxNumber),
+    );
+  }
+
+  return candidateBoxNumber;
+};
+
+export const getBrandedColumnNumber = (
+  candidateColumnNumber: number,
+): typeof BrandedColumnNumber => {
+  if (!isColumnNumber(candidateColumnNumber)) {
+    throw new Error(
+      getBrandedHouseNumberErrorMessage("ColumnNumber", candidateColumnNumber),
+    );
+  }
+
+  return candidateColumnNumber;
+};
+
+export const getBrandedRowNumber = (
+  candidateRowNumber: number,
+): typeof BrandedRowNumber => {
+  if (!isRowNumber(candidateRowNumber)) {
+    throw new Error(
+      getBrandedHouseNumberErrorMessage("RowNumber", candidateRowNumber),
+    );
+  }
+
+  return candidateRowNumber;
+};
 // #endregion

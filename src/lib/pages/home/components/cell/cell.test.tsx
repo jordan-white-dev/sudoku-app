@@ -28,12 +28,6 @@ import {
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
-  getBrandedCellId,
-  getBrandedColumnNumber,
-  getBrandedRowNumber,
-  getBrandedSudokuDigit,
-} from "@/lib/pages/home/utils/transforms/transforms";
-import {
   type BoardState,
   type CellContent,
   type CellId,
@@ -42,6 +36,12 @@ import {
   type PuzzleState,
   type RowNumber,
 } from "@/lib/pages/home/utils/types";
+import {
+  getBrandedCellId,
+  getBrandedColumnNumber,
+  getBrandedRowNumber,
+  getBrandedSudokuDigit,
+} from "@/lib/pages/home/utils/validators/validators";
 
 const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
 const SELECTED_CELL_HIGHLIGHT_COLOR_TOKEN = "4ca4ff";

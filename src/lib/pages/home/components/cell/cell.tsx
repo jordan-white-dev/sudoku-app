@@ -9,9 +9,12 @@ import {
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   CELLS_PER_HOUSE,
-  getCellSizeScaledBy,
   markupColors,
 } from "@/lib/pages/home/utils/constants";
+import {
+  getCellAriaLabel,
+  getCellSizeScaledBy,
+} from "@/lib/pages/home/utils/display";
 import {
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
@@ -20,7 +23,6 @@ import {
   isNonEmptyMarkupColor,
 } from "@/lib/pages/home/utils/guards";
 import {
-  getCellAriaLabel,
   getCurrentBoardStateFromPuzzleState,
   getGivenOrEnteredDigitInCellIfPresent,
 } from "@/lib/pages/home/utils/transforms/transforms";

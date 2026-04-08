@@ -21,16 +21,18 @@ import {
   handleRedoMove,
   handleUndoMove,
 } from "@/lib/pages/home/utils/actions/actions";
-import { getCellSizeScaledBy } from "@/lib/pages/home/utils/constants";
+import { getCellSizeScaledBy } from "@/lib/pages/home/utils/display";
 import { exhaustiveGuard } from "@/lib/pages/home/utils/guards";
-import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type KeypadMode,
   type PuzzleState,
   type RawBoardState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
-import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
+import {
+  getBrandedSudokuDigit,
+  isSudokuDigit,
+} from "@/lib/pages/home/utils/validators/validators";
 
 // #region Modifier Key Utilities
 const modifierKeyboardKeys = ["Control", "Shift", "Alt"] as const;

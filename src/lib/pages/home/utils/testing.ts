@@ -9,10 +9,7 @@ import {
   isEmptyCellContent,
   isGivenDigitInCellContent,
 } from "@/lib/pages/home/utils/guards";
-import {
-  getBoardStateFromRawBoardState,
-  getBrandedSudokuDigit,
-} from "@/lib/pages/home/utils/transforms/transforms";
+import { getBoardStateFromRawBoardState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellId,
@@ -23,6 +20,7 @@ import {
   type RawBoardState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
+import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region Async Helper
 export const waitForReactToFinishUpdating = async () => {
@@ -182,7 +180,7 @@ export const getBoardStateWithEnteredDigitsInTargetCells = (
   );
 // #endregion
 
-// #region Board State Queries
+// #region Cell State Queries
 export const getTargetCellStateFromBoardState = (
   cellId: CellId,
   startingBoardState?: BoardState,
@@ -199,17 +197,6 @@ export const getTargetCellStateFromBoardState = (
 
   return candidateCellState;
 };
-// #endregion
-
-// #region Board State Assertions
-export const doesTargetCellContainEmptyCellContent = (
-  boardState: BoardState,
-  cellId: CellId,
-): boolean => {
-  const cellState = getTargetCellStateFromBoardState(cellId, boardState);
-
-  return isEmptyCellContent(cellState.content);
-};
 
 export const getGivenDigitInTargetCell = (
   boardState: BoardState,
@@ -223,11 +210,18 @@ export const getGivenDigitInTargetCell = (
 
   return cellState.content.givenDigit;
 };
+
+export const doesTargetCellContainEmptyCellContent = (
+  boardState: BoardState,
+  cellId: CellId,
+): boolean => {
+  const cellState = getTargetCellStateFromBoardState(cellId, boardState);
+
+  return isEmptyCellContent(cellState.content);
+};
 // #endregion
 
-const SEEN_CELL_HIGHLIGHT_COLOR_TOKEN = "ffd700";
-export const CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN = "179%2c%2058%2c%2058";
-
+// #region Rendered Cell Queries
 export type RenderedBoard = Awaited<ReturnType<typeof render>>;
 
 export const getCellAccessibleName = (cellId: CellId) => {
@@ -265,6 +259,11 @@ export const getCellElement = async (
 
   return candidateCellElement;
 };
+// #endregion
+
+// #region Cell Highlight Queries
+const SEEN_CELL_HIGHLIGHT_COLOR_TOKEN = "ffd700";
+export const CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN = "179%2c%2058%2c%2058";
 
 const getComputedStyleOfRenderedCellBackgroundImage = async (
   renderedBoard: RenderedBoard | Promise<RenderedBoard>,
@@ -309,3 +308,4 @@ export const hasConflictCellHighlightInTargetCell = async (
     CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN,
   );
 };
+// #endregion

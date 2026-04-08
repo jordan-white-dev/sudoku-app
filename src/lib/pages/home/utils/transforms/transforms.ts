@@ -1,38 +1,30 @@
 import {
   CELLS_PER_HOUSE,
-  markupColorNames,
-  markupColors,
   TOTAL_CELLS_IN_BOARD,
 } from "@/lib/pages/home/utils/constants";
 import {
   isEnteredDigitInCellContent,
   isGivenDigitInCellContent,
-  isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/utils/guards";
 import {
   type BoardState,
-  type BoxNumber,
   type CellContent,
-  type CellId,
   type CellState,
-  type ColumnNumber,
   type EmptyCellContent,
   type EncodedPuzzleString,
-  type MarkupColor,
   type PuzzleState,
   type RawBoardState,
   type RawGivenDigit,
   type RawPuzzleString,
-  type RowNumber,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 import {
-  isBoxNumber,
-  isCellId,
-  isColumnNumber,
+  getBrandedBoxNumber,
+  getBrandedCellId,
+  getBrandedColumnNumber,
+  getBrandedRowNumber,
   isEncodedPuzzleString,
   isRawPuzzleString,
-  isRowNumber,
   isSudokuDigit,
 } from "@/lib/pages/home/utils/validators/validators";
 
@@ -73,65 +65,7 @@ export const getRawPuzzleStringFromRawBoardState = (
 };
 // #endregion
 
-// #region Sudoku Digit Transform
-export const getBrandedSudokuDigit = (
-  candidateSudokuDigit: string,
-): SudokuDigit => {
-  if (!isSudokuDigit(candidateSudokuDigit)) {
-    throw new Error(
-      `Failed to get a SudokuDigit from the candidate string "${candidateSudokuDigit}".`,
-    );
-  }
-
-  return candidateSudokuDigit;
-};
-// #endregion
-
 // #region Board State Transform
-
-// #region Branded Transforms
-export const getBrandedBoxNumber = (candidateBoxNumber: number): BoxNumber => {
-  if (!isBoxNumber(candidateBoxNumber)) {
-    throw new Error(
-      `Encountered an invalid BoxNumber "${candidateBoxNumber}" while getting a BoardState from RawBoardState.`,
-    );
-  }
-
-  return candidateBoxNumber;
-};
-
-export const getBrandedCellId = (candidateCellId: number): CellId => {
-  if (!isCellId(candidateCellId)) {
-    throw new Error(
-      `Encountered an invalid CellId "${candidateCellId}" while getting a BoardState from RawBoardState.`,
-    );
-  }
-
-  return candidateCellId;
-};
-
-export const getBrandedColumnNumber = (
-  candidateColumnNumber: number,
-): ColumnNumber => {
-  if (!isColumnNumber(candidateColumnNumber)) {
-    throw new Error(
-      `Encountered an invalid ColumnNumber "${candidateColumnNumber}" while getting a BoardState from RawBoardState.`,
-    );
-  }
-
-  return candidateColumnNumber;
-};
-
-export const getBrandedRowNumber = (candidateRowNumber: number): RowNumber => {
-  if (!isRowNumber(candidateRowNumber)) {
-    throw new Error(
-      `Encountered an invalid RowNumber "${candidateRowNumber}" while getting a BoardState from RawBoardState.`,
-    );
-  }
-
-  return candidateRowNumber;
-};
-// #endregion
 
 const getGivenDigitCellContentFromRawGivenDigit = (
   rawGivenDigit: RawGivenDigit,
@@ -262,56 +196,5 @@ export const getGivenOrEnteredDigitInCellIfPresent = (
     return cellContent.enteredDigit;
   }
   return "";
-};
-// #endregion
-
-// #region Cell Aria Label
-export const getCellAriaLabel = (
-  rowNumber: RowNumber,
-  columnNumber: ColumnNumber,
-  cellContent: CellContent,
-  cellMarkupColors: [""] | Array<MarkupColor>,
-): string => {
-  const location = `Row ${rowNumber}, Column ${columnNumber}`;
-
-  if (isGivenDigitInCellContent(cellContent)) {
-    return `${location}: given digit ${cellContent.givenDigit}`;
-  }
-
-  if (isEnteredDigitInCellContent(cellContent)) {
-    return `${location}: entered digit ${cellContent.enteredDigit}`;
-  }
-
-  const parts: Array<string> = [];
-
-  if (isMarkupDigitsInCellContent(cellContent)) {
-    if (cellContent.centerMarkups[0] !== "") {
-      parts.push(
-        `center markup ${[...cellContent.centerMarkups].sort().join(" ")}`,
-      );
-    }
-
-    if (cellContent.cornerMarkups[0] !== "") {
-      parts.push(
-        `corner markup ${[...cellContent.cornerMarkups].sort().join(" ")}`,
-      );
-    }
-  }
-
-  const appliedColorNames = markupColors
-    .filter((color) =>
-      cellMarkupColors.some((markupColor) => markupColor === color),
-    )
-    .map((color) => markupColorNames[color]);
-
-  if (appliedColorNames.length > 0) {
-    parts.push(`color markup ${appliedColorNames.join(" ")}`);
-  }
-
-  if (parts.length === 0) {
-    return `${location}: empty`;
-  }
-
-  return `${location}: ${parts.join("; ")}`;
 };
 // #endregion

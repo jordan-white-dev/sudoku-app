@@ -16,13 +16,13 @@ import {
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
-  getBrandedCellId,
-  getBrandedSudokuDigit,
-} from "@/lib/pages/home/utils/transforms/transforms";
-import {
   type PuzzleState,
   type RawBoardState,
 } from "@/lib/pages/home/utils/types";
+import {
+  getBrandedCellId,
+  getBrandedSudokuDigit,
+} from "@/lib/pages/home/utils/validators/validators";
 
 // #region Module Mocks
 const mockHandleRedoMove = vi.fn();

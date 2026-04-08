@@ -25,7 +25,6 @@ import {
 import {
   flippedColors,
   flippedDigits,
-  getCellSizeScaledBy,
   MARKUP_COLOR_BLUE,
   MARKUP_COLOR_GRAY,
   MARKUP_COLOR_GREEN,
@@ -35,18 +34,18 @@ import {
   MARKUP_COLOR_RED,
   MARKUP_COLOR_WHITE,
   MARKUP_COLOR_YELLOW,
-  markupColorNames,
   markupColors,
   sudokuDigits,
 } from "@/lib/pages/home/utils/constants";
+import { getCellSizeScaledBy } from "@/lib/pages/home/utils/display";
 import { exhaustiveGuard } from "@/lib/pages/home/utils/guards";
-import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type KeypadMode,
   type MarkupColor,
   type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
+import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region CSS Properties
 const COLOR_SWATCH_SIZE = getCellSizeScaledBy(0.8);
@@ -83,7 +82,7 @@ const ColorButton = ({
   <GridItem colSpan={2} height={COLOR_SWATCH_SIZE} width={COLOR_SWATCH_SIZE}>
     <Tooltip content={tooltipText}>
       <Button
-        aria-label={markupColorNames[markupColor]}
+        aria-label={tooltipText}
         height={COLOR_SWATCH_SIZE}
         padding="0"
         unstyled

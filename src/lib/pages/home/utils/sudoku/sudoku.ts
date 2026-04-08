@@ -7,12 +7,9 @@ import {
 import { type RawBoardState } from "@/lib/pages/home/utils/types";
 import { isRawGivenDigit } from "@/lib/pages/home/utils/validators/validators";
 
-// #region Configuration and Types
-const MAX_GENERATION_ATTEMPTS = 100;
 const POSSIBLE_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const;
 
 type CellPossibilityMap = Array<Set<number>>;
-// #endregion
 
 // #region Board Geometry and Possibility Initialization
 const buildInitialCellPossibilities = (
@@ -341,6 +338,8 @@ const selectBestPuzzleOrFallback = (
 // #endregion
 
 // #region Public API
+const MAX_GENERATION_ATTEMPTS = 100;
+
 export const makePuzzle = (): RawBoardState => {
   let bestFoundPuzzle: RawBoardState | null = null;
   let lowestDifficultyScoreFound = Number.POSITIVE_INFINITY;

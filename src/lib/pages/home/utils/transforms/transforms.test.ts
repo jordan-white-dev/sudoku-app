@@ -13,11 +13,6 @@ import {
 import {
   getBoardStateFromRawBoardState,
   getBoardStateWithNoCellsSelected,
-  getBrandedBoxNumber,
-  getBrandedCellId,
-  getBrandedColumnNumber,
-  getBrandedRowNumber,
-  getBrandedSudokuDigit,
   getCurrentBoardStateFromPuzzleState,
   getEncodedPuzzleStringFromRawPuzzleString,
   getGivenOrEnteredDigitInCellIfPresent,
@@ -34,6 +29,11 @@ import {
   type RawPuzzleString,
 } from "@/lib/pages/home/utils/types";
 import {
+  getBrandedBoxNumber,
+  getBrandedCellId,
+  getBrandedColumnNumber,
+  getBrandedRowNumber,
+  getBrandedSudokuDigit,
   isRawGivenDigit,
   isRawPuzzleString,
 } from "@/lib/pages/home/utils/validators/validators";

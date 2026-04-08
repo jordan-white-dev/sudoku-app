@@ -14,9 +14,9 @@ import {
 import { Cell } from "@/lib/pages/home/components/cell/cell";
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { CELLS_PER_HOUSE } from "@/lib/pages/home/utils/constants";
+import { getCellAriaLabel } from "@/lib/pages/home/utils/display";
 import {
   getBoardStateWithNoCellsSelected,
-  getCellAriaLabel,
   getCurrentBoardStateFromPuzzleState,
   getGivenOrEnteredDigitInCellIfPresent,
   updatePuzzleStateWithCurrentBoardState,
