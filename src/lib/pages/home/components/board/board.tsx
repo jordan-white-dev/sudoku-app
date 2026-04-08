@@ -14,7 +14,7 @@ import {
 import { Cell } from "@/lib/pages/home/components/cell/cell";
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { CELLS_PER_HOUSE } from "@/lib/pages/home/utils/constants";
-import { getCellAriaLabel } from "@/lib/pages/home/utils/display";
+import { getAriaLabelForTargetCell } from "@/lib/pages/home/utils/display";
 import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleState,
@@ -815,14 +815,7 @@ const tryAnnounceKeyboardNavCell = (
   boardRef.current
     ?.querySelector<HTMLElement>(`[data-cell-number="${navCell.id}"]`)
     ?.focus({ preventScroll: true });
-  setAnnouncementText(
-    getCellAriaLabel(
-      navCell.houses.rowNumber,
-      navCell.houses.columnNumber,
-      navCell.content,
-      navCell.markupColors,
-    ),
-  );
+  setAnnouncementText(getAriaLabelForTargetCell(navCell));
   return true;
 };
 
@@ -851,14 +844,7 @@ const tryAnnounceContentChange = (
     return false;
   }
 
-  setAnnouncementText(
-    getCellAriaLabel(
-      cell.houses.rowNumber,
-      cell.houses.columnNumber,
-      cell.content,
-      cell.markupColors,
-    ),
-  );
+  setAnnouncementText(getAriaLabelForTargetCell(cell));
   return true;
 };
 

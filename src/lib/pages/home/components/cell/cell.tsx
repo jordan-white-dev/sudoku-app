@@ -12,7 +12,7 @@ import {
   markupColors,
 } from "@/lib/pages/home/utils/constants";
 import {
-  getCellAriaLabel,
+  getAriaLabelForTargetCell,
   getCellSizeScaledBy,
 } from "@/lib/pages/home/utils/display";
 import {
@@ -1309,12 +1309,7 @@ export const Cell = memo(
       <Button
         aria-colindex={columnNumber}
         aria-invalid={hasDigitConflict}
-        aria-label={getCellAriaLabel(
-          rowNumber,
-          columnNumber,
-          cellContent,
-          cellMarkupColors,
-        )}
+        aria-label={getAriaLabelForTargetCell(cellState)}
         aria-readonly={isGivenDigitInCellContent(cellContent)}
         aria-selected={isSelected}
         background={getCellBackground({

@@ -15,12 +15,7 @@ import {
   isGivenDigitInCellContent,
   isMarkupDigitsInCellContent,
 } from "@/lib/pages/home/utils/guards";
-import {
-  type CellContent,
-  type ColumnNumber,
-  type MarkupColor,
-  type RowNumber,
-} from "@/lib/pages/home/utils/types";
+import { type CellState } from "@/lib/pages/home/utils/types";
 
 // #region Cell Aria Label
 const markupColorNames = {
@@ -35,25 +30,21 @@ const markupColorNames = {
   [MARKUP_COLOR_PURPLE]: "Purple",
 } as const;
 
-export const getCellAriaLabel = (
-  rowNumber: RowNumber,
-  columnNumber: ColumnNumber,
-  cellContent: CellContent,
-  cellMarkupColors: [""] | Array<MarkupColor>,
-): string => {
+export const getAriaLabelForTargetCell = (targetCell: CellState): string => {
+  const {
+    content: cellContent,
+    houses: { columnNumber, rowNumber },
+    markupColors: cellMarkupColors,
+  } = targetCell;
+
   const location = `Row ${rowNumber}, Column ${columnNumber}`;
-
-  if (isGivenDigitInCellContent(cellContent)) {
-    return `${location}: given digit ${cellContent.givenDigit}`;
-  }
-
-  if (isEnteredDigitInCellContent(cellContent)) {
-    return `${location}: entered digit ${cellContent.enteredDigit}`;
-  }
-
   const parts: Array<string> = [];
 
-  if (isMarkupDigitsInCellContent(cellContent)) {
+  if (isGivenDigitInCellContent(cellContent)) {
+    parts.push(`given digit ${cellContent.givenDigit}`);
+  } else if (isEnteredDigitInCellContent(cellContent)) {
+    parts.push(`entered digit ${cellContent.enteredDigit}`);
+  } else if (isMarkupDigitsInCellContent(cellContent)) {
     if (cellContent.centerMarkups[0] !== "") {
       parts.push(
         `center markup ${[...cellContent.centerMarkups].sort().join(" ")}`,

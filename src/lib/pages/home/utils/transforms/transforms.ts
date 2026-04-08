@@ -65,8 +65,7 @@ export const getRawPuzzleStringFromRawBoardState = (
 };
 // #endregion
 
-// #region Board State Transform
-
+// #region Board State Transforms
 const getGivenDigitCellContentFromRawGivenDigit = (
   rawGivenDigit: RawGivenDigit,
 ): CellContent => {
@@ -129,6 +128,25 @@ export const getBoardStateFromRawBoardState = (
     return cellState;
   });
 
+export const getBoardStateWithNoCellsSelected = (
+  boardState: BoardState,
+): BoardState => {
+  const nextBoardState = boardState.map((cellState) => {
+    const nextCellState = cellState.isSelected
+      ? {
+          ...cellState,
+          isSelected: false,
+        }
+      : cellState;
+
+    return nextCellState;
+  });
+
+  return nextBoardState;
+};
+// #endregion
+
+// #region Puzzle State Transforms
 export const getCurrentBoardStateFromPuzzleState = (
   puzzleState: PuzzleState,
 ): BoardState => {
@@ -165,23 +183,6 @@ export const updatePuzzleStateWithCurrentBoardState = (
   };
 
   return nextPuzzleState;
-};
-
-export const getBoardStateWithNoCellsSelected = (
-  boardState: BoardState,
-): BoardState => {
-  const nextBoardState = boardState.map((cellState) => {
-    const nextCellState = cellState.isSelected
-      ? {
-          ...cellState,
-          isSelected: false,
-        }
-      : cellState;
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
 };
 // #endregion
 

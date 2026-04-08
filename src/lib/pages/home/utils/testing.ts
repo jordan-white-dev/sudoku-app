@@ -12,6 +12,7 @@ import {
 import { getBoardStateFromRawBoardState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
+  type CellContent,
   type CellId,
   type CellState,
   type EnteredDigitCellContent,
@@ -48,6 +49,8 @@ export const getStartingPuzzleStateFromBoardState = (
 // #endregion
 
 // #region Board State Mutators
+
+// #region Selected Cells Mutator
 export const getBoardStateWithTargetCellsSelected = (
   cellIds: Array<CellId>,
   startingBoardState?: BoardState,
@@ -67,34 +70,15 @@ export const getBoardStateWithTargetCellsSelected = (
 
   return nextBoardState;
 };
+// #endregion
 
-export const getBoardStateWithGivenDigitInTargetCell = (
+// #region Digit Mutators
+
+// #region Single Digit Mutators
+const getBoardStateWithDigitInTargetCell = (
+  digitType: keyof GivenDigitCellContent | keyof EnteredDigitCellContent,
   cellId: CellId,
-  givenDigit: SudokuDigit,
-  startingBoardState?: BoardState,
-): BoardState => {
-  const boardState = startingBoardState ?? getStartingEmptyBoardState();
-
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState =
-      cellState.id === cellId
-        ? {
-            ...cellState,
-            content: {
-              givenDigit: getBrandedSudokuDigit(givenDigit),
-            },
-          }
-        : cellState;
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
-};
-
-export const getBoardStateWithEnteredDigitInTargetCell = (
-  cellId: CellId,
-  enteredDigit: SudokuDigit,
+  digit: SudokuDigit,
   startingBoardState?: BoardState,
 ): BoardState => {
   const boardState = startingBoardState ?? getStartingEmptyBoardState();
@@ -105,8 +89,8 @@ export const getBoardStateWithEnteredDigitInTargetCell = (
         ? {
             ...cellState,
             content: {
-              enteredDigit: getBrandedSudokuDigit(enteredDigit),
-            },
+              [digitType]: getBrandedSudokuDigit(digit),
+            } as CellContent,
           }
         : cellState;
 
@@ -116,6 +100,32 @@ export const getBoardStateWithEnteredDigitInTargetCell = (
   return nextBoardState;
 };
 
+export const getBoardStateWithGivenDigitInTargetCell = (
+  cellId: CellId,
+  givenDigit: SudokuDigit,
+  startingBoardState?: BoardState,
+): BoardState =>
+  getBoardStateWithDigitInTargetCell(
+    "givenDigit",
+    cellId,
+    givenDigit,
+    startingBoardState,
+  );
+
+export const getBoardStateWithEnteredDigitInTargetCell = (
+  cellId: CellId,
+  enteredDigit: SudokuDigit,
+  startingBoardState?: BoardState,
+): BoardState =>
+  getBoardStateWithDigitInTargetCell(
+    "enteredDigit",
+    cellId,
+    enteredDigit,
+    startingBoardState,
+  );
+// #endregion
+
+// #region Multiple Digits Mutators
 const getBoardStateWithDigitsInTargetCells = (
   digitType: keyof GivenDigitCellContent | keyof EnteredDigitCellContent,
   digitsToEnterInTargetCells: Array<{
@@ -123,35 +133,12 @@ const getBoardStateWithDigitsInTargetCells = (
     digit: SudokuDigit;
   }>,
   startingBoardState?: BoardState,
-): BoardState => {
-  const boardState = startingBoardState ?? getStartingEmptyBoardState();
-
-  const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState = (() => {
-      const digitToEnterInTargetCell = digitsToEnterInTargetCells.find(
-        (digitInCellObject) => digitInCellObject.cellId === cellState.id,
-      );
-
-      if (digitToEnterInTargetCell) {
-        const cellStateWithDigit: CellState = {
-          ...cellState,
-          content: {
-            ...cellState.content,
-            [digitType]: getBrandedSudokuDigit(digitToEnterInTargetCell.digit),
-          },
-        };
-
-        return cellStateWithDigit;
-      }
-
-      return cellState;
-    })();
-
-    return nextCellState;
-  });
-
-  return nextBoardState;
-};
+): BoardState =>
+  digitsToEnterInTargetCells.reduce(
+    (boardState, { cellId, digit }) =>
+      getBoardStateWithDigitInTargetCell(digitType, cellId, digit, boardState),
+    startingBoardState ?? getStartingEmptyBoardState(),
+  );
 
 export const getBoardStateWithGivenDigitsInTargetCells = (
   digitsToEnterInTargetCells: Array<{
@@ -179,6 +166,12 @@ export const getBoardStateWithEnteredDigitsInTargetCells = (
     startingBoardState,
   );
 // #endregion
+
+// #endregion
+
+// #endregion
+
+// #region Cell Queries
 
 // #region Cell State Queries
 export const getTargetCellStateFromBoardState = (
@@ -308,4 +301,6 @@ export const hasConflictCellHighlightInTargetCell = async (
     CONFLICT_CELL_HIGHLIGHT_COLOR_TOKEN,
   );
 };
+// #endregion
+
 // #endregion

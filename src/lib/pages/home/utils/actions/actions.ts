@@ -20,7 +20,7 @@ import {
 } from "@/lib/pages/home/utils/types";
 import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
-// #region Input Actions
+// #region Puzzle History Commit
 const commitBoardStateToPuzzleHistoryIfChanged = (
   currentBoardState: BoardState,
   nextBoardState: BoardState,
@@ -53,6 +53,9 @@ const commitBoardStateToPuzzleHistoryIfChanged = (
     return nextPuzzleState;
   });
 };
+// #endregion
+
+// #region Input Actions
 
 // #region Digit Input Action
 const areAllSelectedCellsGivenOrContainSudokuDigitAsEnteredDigit = (
