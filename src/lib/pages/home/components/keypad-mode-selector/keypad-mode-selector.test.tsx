@@ -23,6 +23,7 @@ const renderKeypadModeSelector = async ({
 
     return (
       <KeypadModeSelector
+        isRowLayout={false}
         keypadMode={keypadMode}
         setBaseKeypadMode={setBaseKeypadMode}
       />

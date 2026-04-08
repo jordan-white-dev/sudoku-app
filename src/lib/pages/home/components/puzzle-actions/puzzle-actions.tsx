@@ -1,6 +1,5 @@
 import {
   Button,
-  type ButtonProps,
   Dialog,
   GridItem,
   Icon,
@@ -29,7 +28,10 @@ import {
   handleRedoMove,
   handleUndoMove,
 } from "@/lib/pages/home/utils/actions/actions";
-import { CELLS_PER_HOUSE } from "@/lib/pages/home/utils/constants";
+import {
+  CELLS_PER_HOUSE,
+  getCellSizeScaledBy,
+} from "@/lib/pages/home/utils/constants";
 import { makePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
 import {
   getBoardStateFromRawBoardState,
@@ -45,47 +47,17 @@ import {
 } from "@/lib/pages/home/utils/types";
 
 // #region CSS Properties
-const ICON_BUTTON_HEIGHT: IconButtonProps["height"] = {
-  base: "1.6757rem",
-  sm: "2.25rem",
-  md: "3.196rem",
-  lg: "3.25rem",
-};
-const ICON_BUTTON_WIDTH: IconButtonProps["width"] = {
-  base: "2rem",
-  sm: "3rem",
-  md: "4rem",
-  lg: "full",
-};
-const IM_ICON_SIZE: IconProps["width"] = {
-  base: "4",
-  sm: "4.5",
-  md: "6",
-  lg: "7",
-};
-const MD_ICON_SIZE: IconProps["width"] = {
-  base: "5",
-  sm: "7",
-  md: "8",
-  lg: "9",
-};
-const MD_ICON_SIZE_ALT: IconProps["width"] = {
-  base: "5",
-  sm: "8",
-  md: "10",
-  lg: "14",
-};
-const BUTTON_ROUNDED: ButtonProps["rounded"] = {
-  base: "sm",
-  sm: "md",
-};
+const IM_ICON_SIZE: IconProps["width"] = getCellSizeScaledBy(0.5);
+const MD_ICON_SIZE: IconProps["width"] = getCellSizeScaledBy(0.56);
+const MD_ICON_SIZE_ALT: IconProps["width"] = getCellSizeScaledBy(0.7);
 // #endregion
 
 // #region Action Button
 interface ActionButtonProps extends PropsWithChildren {
   ariaLabel: IconButtonProps["aria-label"];
   disabled?: boolean;
-  iconSize: IconProps["width"];
+  iconSize: string;
+  isRowLayout: boolean;
   onClick?: () => void;
 }
 
@@ -93,16 +65,17 @@ const ActionButton = ({
   ariaLabel,
   children,
   iconSize,
+  isRowLayout,
   onClick,
   ...props
 }: ActionButtonProps) => (
   <IconButton
     aria-label={ariaLabel}
-    aspectRatio={{ lg: 2 / 1 }}
-    height={ICON_BUTTON_HEIGHT}
+    aspectRatio={isRowLayout ? "2 / 1" : undefined}
+    height={getCellSizeScaledBy(0.64)}
     padding="0.25rem 0"
-    rounded={BUTTON_ROUNDED}
-    width={ICON_BUTTON_WIDTH}
+    rounded="md"
+    width={isRowLayout ? "full" : getCellSizeScaledBy(0.8)}
     onClick={onClick}
     {...props}
   >
@@ -180,10 +153,12 @@ const handleNewPuzzleConfirmation = (
 };
 
 type NewPuzzleDialogTriggerProps = {
+  isRowLayout: boolean;
   pauseStopwatch: () => void;
 };
 
 const NewPuzzleDialogTrigger = ({
+  isRowLayout,
   pauseStopwatch,
 }: NewPuzzleDialogTriggerProps) => {
   const tooltipText = "Start a new puzzle";
@@ -191,7 +166,11 @@ const NewPuzzleDialogTrigger = ({
   return (
     <ActionTooltip tooltipText={tooltipText}>
       <Dialog.Trigger asChild onClick={pauseStopwatch}>
-        <ActionButton ariaLabel={tooltipText} iconSize={MD_ICON_SIZE_ALT}>
+        <ActionButton
+          ariaLabel={tooltipText}
+          iconSize={MD_ICON_SIZE_ALT}
+          isRowLayout={isRowLayout}
+        >
           <MdOutlineFiberNew />
         </ActionButton>
       </Dialog.Trigger>
@@ -230,13 +209,13 @@ const NewPuzzleDialogFooter = ({
   </Dialog.Footer>
 );
 
-const NewPuzzleButton = () => {
+const NewPuzzleButton = ({ isRowLayout }: { isRowLayout: boolean }) => {
   const { pauseStopwatch, startStopwatchIfEnabled } = useSudokuStopwatch();
 
   const navigate = useNavigate();
 
   return (
-    <GridItem colSpan={{ base: 1, lg: 2 }}>
+    <GridItem colSpan={isRowLayout ? 2 : 1}>
       <ActionDialog
         dialogBodyText="Are you sure you want to start a new puzzle? All progress will be lost!"
         dialogFooter={
@@ -247,7 +226,10 @@ const NewPuzzleButton = () => {
         }
         dialogTitleText="Confirm New"
         dialogTrigger={
-          <NewPuzzleDialogTrigger pauseStopwatch={pauseStopwatch} />
+          <NewPuzzleDialogTrigger
+            isRowLayout={isRowLayout}
+            pauseStopwatch={pauseStopwatch}
+          />
         }
       />
     </GridItem>
@@ -257,11 +239,16 @@ const NewPuzzleButton = () => {
 
 // #region Undo Button
 type UndoButtonProps = {
+  isRowLayout: boolean;
   puzzleState: PuzzleState;
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
-const UndoButton = ({ puzzleState, setPuzzleState }: UndoButtonProps) => {
+const UndoButton = ({
+  isRowLayout,
+  puzzleState,
+  setPuzzleState,
+}: UndoButtonProps) => {
   const tooltipText = "Undo the last move";
   const isDisabled = puzzleState.historyIndex === 0;
 
@@ -271,6 +258,7 @@ const UndoButton = ({ puzzleState, setPuzzleState }: UndoButtonProps) => {
         ariaLabel={tooltipText}
         disabled={isDisabled}
         iconSize={IM_ICON_SIZE}
+        isRowLayout={isRowLayout}
         onClick={() => handleUndoMove(setPuzzleState)}
       >
         <ImUndo />
@@ -282,11 +270,16 @@ const UndoButton = ({ puzzleState, setPuzzleState }: UndoButtonProps) => {
 
 // #region Redo Button
 type RedoButtonProps = {
+  isRowLayout: boolean;
   puzzleState: PuzzleState;
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
-const RedoButton = ({ puzzleState, setPuzzleState }: RedoButtonProps) => {
+const RedoButton = ({
+  isRowLayout,
+  puzzleState,
+  setPuzzleState,
+}: RedoButtonProps) => {
   const tooltipText = "Redo the last undone move";
   const isDisabled =
     puzzleState.historyIndex === puzzleState.puzzleHistory.length - 1;
@@ -297,6 +290,7 @@ const RedoButton = ({ puzzleState, setPuzzleState }: RedoButtonProps) => {
         ariaLabel={tooltipText}
         disabled={isDisabled}
         iconSize={IM_ICON_SIZE}
+        isRowLayout={isRowLayout}
         onClick={() => handleRedoMove(setPuzzleState)}
       >
         <ImRedo />
@@ -366,10 +360,12 @@ const startStopwatchAfterSolutionCheckIfAppropriate = (
 };
 
 type CheckSolutionDialogTriggerProps = {
+  isRowLayout: boolean;
   pauseStopwatch: () => void;
 };
 
 const CheckSolutionDialogTrigger = ({
+  isRowLayout,
   pauseStopwatch,
 }: CheckSolutionDialogTriggerProps) => {
   const tooltipText = "Check the current solution";
@@ -377,7 +373,11 @@ const CheckSolutionDialogTrigger = ({
   return (
     <ActionTooltip tooltipText={tooltipText}>
       <Dialog.Trigger asChild onClick={pauseStopwatch}>
-        <ActionButton ariaLabel={tooltipText} iconSize={IM_ICON_SIZE}>
+        <ActionButton
+          ariaLabel={tooltipText}
+          iconSize={IM_ICON_SIZE}
+          isRowLayout={isRowLayout}
+        >
           <ImCheckmark />
         </ActionButton>
       </Dialog.Trigger>
@@ -416,10 +416,14 @@ const CheckSolutionDialogFooter = ({
 );
 
 type CheckSolutionButtonProps = {
+  isRowLayout: boolean;
   puzzleState: PuzzleState;
 };
 
-const CheckSolutionButton = ({ puzzleState }: CheckSolutionButtonProps) => {
+const CheckSolutionButton = ({
+  isRowLayout,
+  puzzleState,
+}: CheckSolutionButtonProps) => {
   const { formattedStopwatchTime, pauseStopwatch, startStopwatch } =
     useSudokuStopwatch();
   const { userSettings } = useUserSettings();
@@ -451,7 +455,10 @@ const CheckSolutionButton = ({ puzzleState }: CheckSolutionButtonProps) => {
       }
       dialogTitleText={dialogTitleText}
       dialogTrigger={
-        <CheckSolutionDialogTrigger pauseStopwatch={pauseStopwatch} />
+        <CheckSolutionDialogTrigger
+          isRowLayout={isRowLayout}
+          pauseStopwatch={pauseStopwatch}
+        />
       }
     />
   );
@@ -479,10 +486,12 @@ const handleRestartPuzzleConfirmation = (
 };
 
 type RestartPuzzleDialogTriggerProps = {
+  isRowLayout: boolean;
   pauseStopwatch: () => void;
 };
 
 const RestartPuzzleDialogTrigger = ({
+  isRowLayout,
   pauseStopwatch,
 }: RestartPuzzleDialogTriggerProps) => {
   const tooltipText = "Restart the puzzle";
@@ -490,7 +499,11 @@ const RestartPuzzleDialogTrigger = ({
   return (
     <ActionTooltip tooltipText={tooltipText}>
       <Dialog.Trigger asChild onClick={pauseStopwatch}>
-        <ActionButton ariaLabel={tooltipText} iconSize={MD_ICON_SIZE}>
+        <ActionButton
+          ariaLabel={tooltipText}
+          iconSize={MD_ICON_SIZE}
+          isRowLayout={isRowLayout}
+        >
           <MdRestartAlt />
         </ActionButton>
       </Dialog.Trigger>
@@ -552,11 +565,13 @@ const RestartPuzzleDialogFooter = ({
 };
 
 type RestartPuzzleButtonProps = {
+  isRowLayout: boolean;
   rawBoardState: RawBoardState;
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
 const RestartPuzzleButton = ({
+  isRowLayout,
   rawBoardState,
   setPuzzleState,
 }: RestartPuzzleButtonProps) => {
@@ -573,7 +588,10 @@ const RestartPuzzleButton = ({
       }
       dialogTitleText="Confirm Restart"
       dialogTrigger={
-        <RestartPuzzleDialogTrigger pauseStopwatch={pauseStopwatch} />
+        <RestartPuzzleDialogTrigger
+          isRowLayout={isRowLayout}
+          pauseStopwatch={pauseStopwatch}
+        />
       }
     />
   );
@@ -582,28 +600,42 @@ const RestartPuzzleButton = ({
 
 // #region Puzzle Actions Component
 type PuzzleActionsProps = {
+  isRowLayout: boolean;
   puzzleState: PuzzleState;
   rawBoardState: RawBoardState;
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>;
 };
 
 export const PuzzleActions = ({
+  isRowLayout,
   puzzleState,
   rawBoardState,
   setPuzzleState,
 }: PuzzleActionsProps) => {
   return (
     <SimpleGrid
-      columnGap={{ base: "0.5", lg: "3" }}
-      columns={{ base: 1, lg: 2 }}
-      maxWidth="12.75rem"
-      rowGap={{ base: "0.125rem", md: "0.2875rem" }}
+      columnGap={getCellSizeScaledBy(0.058)}
+      columns={isRowLayout ? 2 : 1}
+      maxWidth={getCellSizeScaledBy(2.55)}
+      rowGap={getCellSizeScaledBy(0.058)}
     >
-      <NewPuzzleButton />
-      <UndoButton puzzleState={puzzleState} setPuzzleState={setPuzzleState} />
-      <RedoButton puzzleState={puzzleState} setPuzzleState={setPuzzleState} />
-      <CheckSolutionButton puzzleState={puzzleState} />
+      <NewPuzzleButton isRowLayout={isRowLayout} />
+      <UndoButton
+        isRowLayout={isRowLayout}
+        puzzleState={puzzleState}
+        setPuzzleState={setPuzzleState}
+      />
+      <RedoButton
+        isRowLayout={isRowLayout}
+        puzzleState={puzzleState}
+        setPuzzleState={setPuzzleState}
+      />
+      <CheckSolutionButton
+        isRowLayout={isRowLayout}
+        puzzleState={puzzleState}
+      />
       <RestartPuzzleButton
+        isRowLayout={isRowLayout}
         rawBoardState={rawBoardState}
         setPuzzleState={setPuzzleState}
       />

@@ -21,6 +21,7 @@ import {
   handleRedoMove,
   handleUndoMove,
 } from "@/lib/pages/home/utils/actions/actions";
+import { getCellSizeScaledBy } from "@/lib/pages/home/utils/constants";
 import { exhaustiveGuard } from "@/lib/pages/home/utils/guards";
 import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -201,6 +202,7 @@ const getModifierKeyDownOrderWithRemovedModifier = (
 // #region Puzzle Controls Component
 type PuzzleControlsProps = {
   isMultiselectMode: boolean;
+  isRowLayout: boolean;
   puzzleState: PuzzleState;
   rawBoardState: RawBoardState;
   setIsMultiselectMode: Dispatch<SetStateAction<boolean>>;
@@ -209,6 +211,7 @@ type PuzzleControlsProps = {
 
 export const PuzzleControls = ({
   isMultiselectMode,
+  isRowLayout,
   puzzleState,
   rawBoardState,
   setIsMultiselectMode,
@@ -484,11 +487,12 @@ export const PuzzleControls = ({
   return (
     <Stack
       alignItems="center"
-      direction={{ base: "row", lg: "column" }}
+      direction={isRowLayout ? "column" : "row"}
       gap="4"
-      minWidth={{ lg: "52" }}
+      minWidth={isRowLayout ? getCellSizeScaledBy(2.6) : undefined}
     >
       <PuzzleActions
+        isRowLayout={isRowLayout}
         puzzleState={puzzleState}
         rawBoardState={rawBoardState}
         setPuzzleState={setPuzzleState}
@@ -501,6 +505,7 @@ export const PuzzleControls = ({
         setPuzzleState={setPuzzleState}
       />
       <KeypadModeSelector
+        isRowLayout={isRowLayout}
         keypadMode={effectiveKeypadMode}
         setBaseKeypadMode={setBaseKeypadMode}
       />

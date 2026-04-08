@@ -5,7 +5,7 @@ import { Footer } from "@/lib/layout/components/footer";
 import { Meta } from "@/lib/layout/components/meta";
 
 export const Layout = ({ children }: PropsWithChildren) => (
-  <Box margin="0 auto" transition="0.5s ease-out">
+  <Box height="100dvh" overflow="hidden">
     <Meta />
     <chakra.a
       height="1px"
@@ -34,7 +34,7 @@ export const Layout = ({ children }: PropsWithChildren) => (
     >
       Skip to main content
     </chakra.a>
-    <Flex minHeight="90vh" wrap="wrap" justifyContent="center">
+    <Flex direction="column" height="full">
       {children}
 
       <Footer />

@@ -27,22 +27,23 @@ const HomeInner = () => {
 
   return (
     <SudokuStopwatchProvider
-      key={encodedPuzzleString}
       encodedPuzzleString={encodedPuzzleString}
       isStopwatchDisabled={userSettings.isStopwatchDisabled}
+      key={encodedPuzzleString}
       onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
     >
       <Header />
       <Box
-        id="main-content"
-        width="full"
         as="main"
-        justifyItems="center"
-        marginY={22}
+        flex="1"
+        id="main-content"
+        minHeight="0"
+        overflow="hidden"
+        width="full"
       >
         <Puzzle
-          key={encodedPuzzleString}
           encodedPuzzleString={encodedPuzzleString}
+          key={encodedPuzzleString}
           rawBoardState={rawBoardState}
           startingBoardState={boardState}
         />

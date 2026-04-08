@@ -83,3 +83,8 @@ export const keypadModes = ["Digit", "Color", "Center", "Corner"] as const;
 export const TOTAL_CELLS_IN_BOARD = 81;
 export const CELLS_PER_HOUSE = 9;
 // #endregion
+
+// #region Cell Size Scaling
+export const getCellSizeScaledBy = (multiplier: number): string =>
+  `calc(var(--cell-size, 80px) * ${multiplier})`;
+// #endregion

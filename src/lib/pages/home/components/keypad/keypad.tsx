@@ -7,12 +7,9 @@ import {
   type IconButtonProps,
   type IconProps,
   SimpleGrid,
-  Square,
-  Stack,
   Switch,
-  Text,
 } from "@chakra-ui/react";
-import { type Dispatch, type SetStateAction } from "react";
+import { type CSSProperties, type Dispatch, type SetStateAction } from "react";
 import { FiDelete } from "react-icons/fi";
 import { GrCheckbox, GrMultiple } from "react-icons/gr";
 
@@ -28,6 +25,7 @@ import {
 import {
   flippedColors,
   flippedDigits,
+  getCellSizeScaledBy,
   MARKUP_COLOR_BLUE,
   MARKUP_COLOR_GRAY,
   MARKUP_COLOR_GREEN,
@@ -51,27 +49,13 @@ import {
 } from "@/lib/pages/home/utils/types";
 
 // #region CSS Properties
-const COLOR_SWATCH_SIZE: IconProps["width"] = {
-  base: "8",
-  sm: "11",
-  md: "16",
-};
-const ICON_SIZE: IconProps["width"] = { base: "6", sm: "8", md: "11" };
-const ICON_BUTTON_SIZE: IconButtonProps["size"] = {
-  base: "xs",
-  sm: "lg",
-  md: "2xl",
-};
-const ICON_BUTTON_TEXT_STYLE_DIGIT: IconButtonProps["textStyle"] = {
-  base: "lg",
-  sm: "3xl",
-  md: "5xl",
-};
-const ICON_BUTTON_TEXT_STYLE_NONDIGIT: IconButtonProps["textStyle"] = {
-  base: "xs",
-  sm: "lg",
-  md: "2xl",
-};
+const COLOR_SWATCH_SIZE = getCellSizeScaledBy(0.8);
+const ICON_SIZE: IconProps["width"] = getCellSizeScaledBy(0.55);
+const ICON_BUTTON_SIZE: IconButtonProps["width"] = getCellSizeScaledBy(0.8);
+const ICON_BUTTON_DIGIT_FONT_SIZE: IconButtonProps["textStyle"] =
+  getCellSizeScaledBy(0.6);
+const ICON_BUTTON_NONDIGIT_FONT_SIZE: IconButtonProps["textStyle"] =
+  getCellSizeScaledBy(0.33);
 // #endregion
 
 const brandedSudokuDigitsForFlippedKeypad: ReadonlyArray<SudokuDigit> =
@@ -169,7 +153,7 @@ type NumberButtonProps = {
   justifyContent?: IconButtonProps["justifyContent"];
   padding?: IconButtonProps["padding"];
   sudokuDigit: SudokuDigit;
-  textStyle: IconButtonProps["textStyle"];
+  fontSize: IconButtonProps["fontSize"];
   onClick: () => void;
 };
 
@@ -179,28 +163,27 @@ const NumberButton = ({
   sudokuDigit,
   justifyContent,
   padding,
-  textStyle,
+  fontSize,
   onClick,
 }: NumberButtonProps) => (
   <GridItem colSpan={2}>
     <Tooltip content={sudokuDigit}>
-      <Square aspectRatio="square">
-        <IconButton
-          aria-label={ariaLabel}
-          aspectRatio="square"
-          color="white"
-          colorPalette="blue"
-          rounded="md"
-          size={ICON_BUTTON_SIZE}
-          textStyle={textStyle}
-          onClick={onClick}
-          {...(alignItems && { alignItems })}
-          {...(justifyContent && { justifyContent })}
-          {...(padding && { padding })}
-        >
-          {sudokuDigit}
-        </IconButton>
-      </Square>
+      <IconButton
+        aria-label={ariaLabel}
+        color="white"
+        colorPalette="blue"
+        fontSize={fontSize}
+        height={ICON_BUTTON_SIZE}
+        minWidth={ICON_BUTTON_SIZE}
+        padding="0"
+        rounded="md"
+        onClick={onClick}
+        {...(alignItems && { alignItems })}
+        {...(justifyContent && { justifyContent })}
+        {...(padding && { padding })}
+      >
+        {sudokuDigit}
+      </IconButton>
     </Tooltip>
   </GridItem>
 );
@@ -249,7 +232,7 @@ const NumberPad = ({
               ariaLabel={`Enter digit ${sudokuDigit}`}
               sudokuDigit={sudokuDigit}
               key={sudokuDigit}
-              textStyle={ICON_BUTTON_TEXT_STYLE_DIGIT}
+              fontSize={ICON_BUTTON_DIGIT_FONT_SIZE}
               onClick={() =>
                 handleDigitInput(puzzleState, sudokuDigit, setPuzzleState)
               }
@@ -261,7 +244,7 @@ const NumberPad = ({
               ariaLabel={`Enter center markup ${sudokuDigit}`}
               sudokuDigit={sudokuDigit}
               key={sudokuDigit}
-              textStyle={ICON_BUTTON_TEXT_STYLE_NONDIGIT}
+              fontSize={ICON_BUTTON_NONDIGIT_FONT_SIZE}
               onClick={() =>
                 handleCenterMarkupInput(
                   puzzleState,
@@ -281,8 +264,8 @@ const NumberPad = ({
                 sudokuDigit,
               )}
               key={sudokuDigit}
-              padding={{ base: "1", md: "1.5" }}
-              textStyle={ICON_BUTTON_TEXT_STYLE_NONDIGIT}
+              padding={getCellSizeScaledBy(0.09)}
+              fontSize={ICON_BUTTON_NONDIGIT_FONT_SIZE}
               onClick={() =>
                 handleCornerMarkupInput(
                   puzzleState,
@@ -301,6 +284,12 @@ const NumberPad = ({
 // #endregion
 
 // #region Multiselect Switch
+const multiselectSwitchStyle: CSSProperties & Record<`--${string}`, string> = {
+  "--switch-width": getCellSizeScaledBy(1.1),
+  "--switch-height": getCellSizeScaledBy(0.5),
+  "--switch-indicator-font-size": getCellSizeScaledBy(0.2),
+};
+
 type MultiselectSwitchProps = {
   isMultiselectMode: boolean;
   setIsMultiselectMode: Dispatch<SetStateAction<boolean>>;
@@ -311,40 +300,34 @@ const MultiselectSwitch = ({
   setIsMultiselectMode,
 }: MultiselectSwitchProps) => (
   <GridItem
-    alignContent="center"
-    border={{ sm: "2px solid" }}
-    borderColor={{ sm: "blue.border" }}
+    alignItems="center"
     colSpan={3}
+    display="flex"
     height="full"
+    justifyContent="center"
     rounded="md"
     width="full"
   >
     <Tooltip content="Multiple cells can be selected while this is toggled">
-      <Stack alignItems="center" direction="column" gap="1">
-        <Switch.Root
-          aria-label="Multiselect mode"
-          checked={isMultiselectMode}
-          colorPalette="blue"
-          size="lg"
-          onCheckedChange={(event) => setIsMultiselectMode(event.checked)}
-        >
-          <Switch.HiddenInput />
-          <Switch.Control>
-            <Switch.Thumb />
-            <Switch.Indicator fallback={<Icon as={GrCheckbox} />}>
-              <Icon as={GrMultiple} />
-            </Switch.Indicator>
-          </Switch.Control>
-        </Switch.Root>
-        <Text
-          alignSelf="center"
-          fontWeight="semibold"
-          hideBelow="md"
-          justifySelf="center"
-        >
-          Multiselect
-        </Text>
-      </Stack>
+      <Switch.Root
+        aria-label="Multiselect mode"
+        checked={isMultiselectMode}
+        colorPalette="blue"
+        style={multiselectSwitchStyle}
+        onCheckedChange={(event) => setIsMultiselectMode(event.checked)}
+      >
+        <Switch.HiddenInput />
+        <Switch.Control>
+          <Switch.Thumb />
+          <Switch.Indicator
+            fallback={
+              <Icon as={GrCheckbox} fontSize={getCellSizeScaledBy(0.22)} />
+            }
+          >
+            <Icon as={GrMultiple} fontSize={getCellSizeScaledBy(0.22)} />
+          </Switch.Indicator>
+        </Switch.Control>
+      </Switch.Root>
     </Tooltip>
   </GridItem>
 );
@@ -366,9 +349,8 @@ const ClearButton = ({ puzzleState, setPuzzleState }: ClearButtonProps) => (
         aria-label="Clear selected cells"
         color="white"
         colorPalette="blue"
+        height={ICON_BUTTON_SIZE}
         rounded="md"
-        size={ICON_BUTTON_SIZE}
-        textStyle={ICON_BUTTON_TEXT_STYLE_DIGIT}
         width="full"
         onClick={() => handleClearCell(puzzleState, setPuzzleState)}
       >
@@ -400,8 +382,9 @@ export const Keypad = ({
   return (
     <SimpleGrid
       columns={6}
-      gap={{ base: "0.2916rem", sm: "1", md: "1.5" }}
+      gap={getCellSizeScaledBy(0.06)}
       height="fit-content"
+      width={getCellSizeScaledBy(2.52)}
     >
       {keypadMode === "Color" ? (
         <ColorPad

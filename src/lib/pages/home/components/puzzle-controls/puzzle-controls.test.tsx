@@ -106,6 +106,7 @@ const renderPuzzleControls = async ({
     return (
       <PuzzleControls
         isMultiselectMode={isMultiselectMode}
+        isRowLayout={false}
         puzzleState={puzzleState}
         rawBoardState={EMPTY_RAW_BOARD_STATE}
         setIsMultiselectMode={setIsMultiselectMode}

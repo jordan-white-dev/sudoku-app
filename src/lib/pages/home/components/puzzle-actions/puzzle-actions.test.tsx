@@ -166,6 +166,7 @@ const renderPuzzleActions = async ({
   const renderedPuzzleActions = await render(
     <Provider>
       <PuzzleActions
+        isRowLayout={false}
         puzzleState={puzzleState}
         rawBoardState={rawBoardState ?? EMPTY_RAW_BOARD_STATE}
         setPuzzleState={resolvedSetPuzzleStateSpy}

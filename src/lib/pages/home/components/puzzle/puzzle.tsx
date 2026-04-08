@@ -1,15 +1,21 @@
-import { Flex } from "@chakra-ui/react";
+import { Box, Flex } from "@chakra-ui/react";
 import {
+  type CSSProperties,
   type Dispatch,
   memo,
   type SetStateAction,
   useEffect,
   useRef,
+  useState,
 } from "react";
 import useSessionStorageState from "use-session-storage-state";
 
 import { Board } from "@/lib/pages/home/components/board/board";
 import { PuzzleControls } from "@/lib/pages/home/components/puzzle-controls/puzzle-controls";
+import {
+  CELLS_PER_HOUSE,
+  getCellSizeScaledBy,
+} from "@/lib/pages/home/utils/constants";
 import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleState,
@@ -19,6 +25,10 @@ import {
   type PuzzleState,
   type RawBoardState,
 } from "@/lib/pages/home/utils/types";
+
+const COLUMN_HEIGHT_DIVISOR = 14;
+const ROW_WIDTH_DIVISOR = 14.5;
+const MINIMUM_CELL_SIZE = 33;
 
 // #region Outside Click Handler
 const handleClearAllSelections = (
@@ -70,7 +80,46 @@ export const Puzzle = memo(
         },
       },
     );
+    const containerRef = useRef<HTMLDivElement | null>(null);
     const puzzleRef = useRef<HTMLDivElement | null>(null);
+    const [cellSize, setCellSize] = useState(80);
+    const [isRowLayout, setIsRowLayout] = useState(false);
+
+    const flexStyle: CSSProperties & Record<`--${string}`, string> = {
+      "--cell-size": `${cellSize}px`,
+    };
+
+    useEffect(() => {
+      const container = containerRef.current;
+      if (container === null) return;
+
+      const observer = new ResizeObserver((entries) => {
+        const entry = entries[0];
+        if (entry === undefined) return;
+
+        const availableWidth = entry.contentRect.width;
+        const availableHeight = entry.contentRect.height;
+
+        const colCellSize = Math.min(
+          availableWidth / CELLS_PER_HOUSE,
+          availableHeight / COLUMN_HEIGHT_DIVISOR,
+        );
+        const rowCellSize = Math.min(
+          availableWidth / ROW_WIDTH_DIVISOR,
+          availableHeight / CELLS_PER_HOUSE,
+        );
+
+        const nextIsRowLayout = rowCellSize > colCellSize;
+        const constrainedCellSize = nextIsRowLayout ? rowCellSize : colCellSize;
+        const nextCellSize = Math.max(MINIMUM_CELL_SIZE, constrainedCellSize);
+
+        setIsRowLayout(nextIsRowLayout);
+        setCellSize(nextCellSize);
+      });
+
+      observer.observe(container);
+      return () => observer.disconnect();
+    }, []);
 
     useEffect(() => {
       const handlePointerDownOutside = (event: PointerEvent) => {
@@ -88,27 +137,39 @@ export const Puzzle = memo(
     }, [setPuzzleState]);
 
     return (
-      <Flex
-        alignItems="center"
-        direction={{ base: "column", lg: "row" }}
-        fontFamily="sans-serif"
-        gap={{ base: "4", md: "8" }}
-        marginTop={{ sm: "2.5" }}
-        ref={puzzleRef}
+      <Box
+        display="flex"
+        height="100%"
+        overflow="auto"
+        padding="4"
+        ref={containerRef}
+        width="100%"
       >
-        <Board
-          isMultiselectMode={isMultiselectMode}
-          puzzleState={puzzleState}
-          setPuzzleState={setPuzzleState}
-        />
-        <PuzzleControls
-          isMultiselectMode={isMultiselectMode}
-          puzzleState={puzzleState}
-          rawBoardState={rawBoardState}
-          setIsMultiselectMode={setIsMultiselectMode}
-          setPuzzleState={setPuzzleState}
-        />
-      </Flex>
+        <Flex
+          alignItems="center"
+          direction={isRowLayout ? "row" : "column"}
+          fontFamily="sans-serif"
+          gap={getCellSizeScaledBy(0.4)}
+          justifyContent="center"
+          margin="auto"
+          ref={puzzleRef}
+          style={flexStyle}
+        >
+          <Board
+            isMultiselectMode={isMultiselectMode}
+            puzzleState={puzzleState}
+            setPuzzleState={setPuzzleState}
+          />
+          <PuzzleControls
+            isMultiselectMode={isMultiselectMode}
+            isRowLayout={isRowLayout}
+            puzzleState={puzzleState}
+            rawBoardState={rawBoardState}
+            setIsMultiselectMode={setIsMultiselectMode}
+            setPuzzleState={setPuzzleState}
+          />
+        </Flex>
+      </Box>
     );
   },
 );

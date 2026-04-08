@@ -1,9 +1,4 @@
-import {
-  Button,
-  type ButtonProps,
-  Float,
-  type SquareProps,
-} from "@chakra-ui/react";
+import { Button, type ButtonProps, Float } from "@chakra-ui/react";
 import {
   type Dispatch,
   memo,
@@ -14,6 +9,7 @@ import {
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   CELLS_PER_HOUSE,
+  getCellSizeScaledBy,
   markupColors,
 } from "@/lib/pages/home/utils/constants";
 import {
@@ -59,58 +55,28 @@ const SELECTED_CELL_COLOR = "#4ca4ff";
 const MARKUP_COLORS_GRADIENT_START_ANGLE_DEGREES = 22.5;
 
 // Cell Size
-const CELL_SIZE: SquareProps["minWidth"] = {
-  base: "33px",
-  sm: "3.188rem", // 51px
-  md: "5rem", // 80px
-};
+const CELL_SIZE: ButtonProps["width"] = "var(--cell-size, 80px)";
 
 // Font Size
-const DIGIT_FONT_SIZE: ButtonProps["fontSize"] = {
-  base: "2xl",
-  sm: "4xl",
-  md: "6xl",
-};
-const CORNER_AND_LABEL_FONT_SIZE: ButtonProps["fontSize"] = {
-  base: "0.5rem",
-  sm: "0.875rem",
-  md: "1.35rem",
-};
-const CENTER_FONT_SIZE_LENGTH_5_OR_LESS: ButtonProps["fontSize"] = {
-  base: "0.525rem",
-  sm: "0.8rem",
-  md: "1.35rem",
-};
-const CENTER_FONT_SIZE_LENGTH_6: ButtonProps["fontSize"] = {
-  base: "0.425rem",
-  sm: "0.675rem",
-  md: "1.1rem",
-};
-const CENTER_FONT_SIZE_LENGTH_7: ButtonProps["fontSize"] = {
-  base: "0.375rem",
-  sm: "0.575rem",
-  md: "0.95rem",
-};
-const CENTER_FONT_SIZE_LENGTH_8: ButtonProps["fontSize"] = {
-  base: "0.33rem",
-  sm: "0.5rem",
-  md: "0.825rem",
-};
-const CENTER_FONT_SIZE_LENGTH_9: ButtonProps["fontSize"] = {
-  base: "0.3rem",
-  sm: "0.455rem",
-  md: "0.725rem",
-};
+const DIGIT_FONT_SIZE: ButtonProps["fontSize"] = getCellSizeScaledBy(0.75);
+const CORNER_AND_LABEL_FONT_SIZE: ButtonProps["fontSize"] =
+  getCellSizeScaledBy(0.27);
+const CENTER_FONT_SIZE_LENGTH_5_OR_LESS: ButtonProps["fontSize"] =
+  getCellSizeScaledBy(0.27);
+const CENTER_FONT_SIZE_LENGTH_6: ButtonProps["fontSize"] =
+  getCellSizeScaledBy(0.22);
+const CENTER_FONT_SIZE_LENGTH_7: ButtonProps["fontSize"] =
+  getCellSizeScaledBy(0.19);
+const CENTER_FONT_SIZE_LENGTH_8: ButtonProps["fontSize"] =
+  getCellSizeScaledBy(0.165);
+const CENTER_FONT_SIZE_LENGTH_9: ButtonProps["fontSize"] =
+  getCellSizeScaledBy(0.145);
 
 // Text Shadow
-const DIGIT_TEXT_SHADOW: ButtonProps["textShadow"] = {
-  base: "1px 1px 0 #fff",
-  sm: "1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff",
-};
-const MARKUP_TEXT_SHADOW: ButtonProps["textShadow"] = {
-  base: "none",
-  sm: "1px 0 0 #fff",
-};
+const DIGIT_TEXT_SHADOW: ButtonProps["textShadow"] =
+  "1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff";
+const MARKUP_TEXT_SHADOW: ButtonProps["textShadow"] = "1px 0 0 #fff";
+
 // #endregion
 
 // #region Cell Styles
@@ -701,7 +667,7 @@ const getFontSize = (cellContent: CellContent): ButtonProps["fontSize"] => {
 const getTextShadow = (cellContent: CellContent): ButtonProps["textShadow"] =>
   isMarkupDigitsInCellContent(cellContent) &&
   cellContent.centerMarkups[0] !== ""
-    ? MARKUP_TEXT_SHADOW
+    ? "none"
     : DIGIT_TEXT_SHADOW;
 
 const getCellBorderStyles = (
@@ -812,8 +778,8 @@ const getCornerMarkupFloats = (
       <Float
         fontSize={CORNER_AND_LABEL_FONT_SIZE}
         key={cornerMarkup}
-        offsetX={{ base: "1.5", sm: "2.5", md: "4" }}
-        offsetY={{ base: "0.438rem", sm: "3", md: "5" }}
+        offsetX={getCellSizeScaledBy(0.2)}
+        offsetY={getCellSizeScaledBy(0.25)}
         placement={placement}
         textShadow={MARKUP_TEXT_SHADOW}
       >
@@ -833,7 +799,7 @@ const getRowLabelFloat = (rowNumber: RowNumber): ReactNode => {
       color="black"
       fontSize={CORNER_AND_LABEL_FONT_SIZE}
       key={`row-label-${rowNumber}`}
-      offsetX={{ base: "-8px", md: "-15px" }}
+      offsetX={getCellSizeScaledBy(-0.2)}
       placement="middle-start"
     >
       {rowNumber.toString()}
@@ -847,7 +813,7 @@ const getColumnLabelFloat = (columnNumber: ColumnNumber): ReactNode => {
       color="black"
       fontSize={CORNER_AND_LABEL_FONT_SIZE}
       key={`column-label-${columnNumber}`}
-      offsetY={{ base: "-8px", sm: "-12px", md: "-15px" }}
+      offsetY={getCellSizeScaledBy(-0.2)}
       placement="top-center"
     >
       {columnNumber.toString()}
@@ -1316,10 +1282,10 @@ export const Cell = memo(
           isSeenInColumn,
           isSeenInRow,
           isSelected,
+          isShowSeenCellsEnabled,
           rowNumber,
           selectedColumnNumber,
           selectedRowNumber,
-          isShowSeenCellsEnabled,
           ...selectedAdjacentCells,
         })}
         borderColor="black"

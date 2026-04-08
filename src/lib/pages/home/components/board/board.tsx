@@ -1008,11 +1008,7 @@ export const Board = ({
         border="2px solid black"
         columns={CELLS_PER_HOUSE}
         gap="0"
-        minWidth={{
-          base: "301px",
-          sm: "463px",
-          md: "724px",
-        }}
+        minWidth="calc(var(--cell-size, 80px) * 9 + 4px)"
         ref={boardRef}
         role="grid"
         touchAction="none"
