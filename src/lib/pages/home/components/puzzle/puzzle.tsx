@@ -5,6 +5,7 @@ import {
   memo,
   type SetStateAction,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -29,6 +30,31 @@ import {
 const COLUMN_HEIGHT_DIVISOR = 14;
 const ROW_WIDTH_DIVISOR = 14.5;
 const MINIMUM_CELL_SIZE = 33;
+
+type LayoutState = {
+  cellSize: number;
+  isRowLayout: boolean;
+};
+
+const getLayoutFromDimensions = (
+  availableWidth: number,
+  availableHeight: number,
+): LayoutState => {
+  const columnCellSize = Math.min(
+    availableWidth / CELLS_PER_HOUSE,
+    availableHeight / COLUMN_HEIGHT_DIVISOR,
+  );
+  const rowCellSize = Math.min(
+    availableWidth / ROW_WIDTH_DIVISOR,
+    availableHeight / CELLS_PER_HOUSE,
+  );
+
+  const isRowLayout = rowCellSize > columnCellSize;
+  const constrainedCellSize = isRowLayout ? rowCellSize : columnCellSize;
+  const cellSize = Math.max(MINIMUM_CELL_SIZE, constrainedCellSize);
+
+  return { cellSize, isRowLayout };
+};
 
 // #region Outside Click Handler
 const handleClearAllSelections = (
@@ -89,40 +115,40 @@ export const Puzzle = memo(
       "--cell-size": `${cellSize}px`,
     };
 
+    useLayoutEffect(() => {
+      const container = containerRef.current;
+      if (container === null) {
+        return;
+      }
+
+      const { width, height } = container.getBoundingClientRect();
+      const initialLayout = getLayoutFromDimensions(width, height);
+      setIsRowLayout(initialLayout.isRowLayout);
+      setCellSize(initialLayout.cellSize);
+    }, []);
+
     useEffect(() => {
       const container = containerRef.current;
       if (container === null) {
         return;
       }
 
-      const observer = new ResizeObserver((entries) => {
+      const resizeObserver = new ResizeObserver((entries) => {
         const entry = entries[0];
         if (entry === undefined) {
           return;
         }
 
-        const availableWidth = entry.contentRect.width;
-        const availableHeight = entry.contentRect.height;
-
-        const colCellSize = Math.min(
-          availableWidth / CELLS_PER_HOUSE,
-          availableHeight / COLUMN_HEIGHT_DIVISOR,
+        const nextLayout = getLayoutFromDimensions(
+          entry.contentRect.width,
+          entry.contentRect.height,
         );
-        const rowCellSize = Math.min(
-          availableWidth / ROW_WIDTH_DIVISOR,
-          availableHeight / CELLS_PER_HOUSE,
-        );
-
-        const nextIsRowLayout = rowCellSize > colCellSize;
-        const constrainedCellSize = nextIsRowLayout ? rowCellSize : colCellSize;
-        const nextCellSize = Math.max(MINIMUM_CELL_SIZE, constrainedCellSize);
-
-        setIsRowLayout(nextIsRowLayout);
-        setCellSize(nextCellSize);
+        setIsRowLayout(nextLayout.isRowLayout);
+        setCellSize(nextLayout.cellSize);
       });
 
-      observer.observe(container);
-      return () => observer.disconnect();
+      resizeObserver.observe(container);
+      return () => resizeObserver.disconnect();
     }, []);
 
     useEffect(() => {
