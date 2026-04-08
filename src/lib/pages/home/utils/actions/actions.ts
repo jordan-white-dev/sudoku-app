@@ -12,9 +12,9 @@ import { getCurrentBoardStateFromPuzzleState } from "@/lib/pages/home/utils/tran
 import {
   type BoardState,
   type CellState,
-  type KeypadMode,
   type MarkupColor,
   type MarkupDigitsCellContent,
+  type MarkupKeypadMode,
   type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
@@ -131,11 +131,9 @@ export const handleDigitInput = (
 // #endregion
 
 // #region Markup Digit Input Actions
-type MarkupType = Extract<KeypadMode, "Center" | "Corner">;
-
 const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
   currentBoardState: BoardState,
-  markupType: MarkupType,
+  markupKeypadMode: MarkupKeypadMode,
   sudokuDigit: SudokuDigit,
 ): boolean =>
   currentBoardState.every((currentCellState) => {
@@ -155,7 +153,7 @@ const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
 
     const doesContainSudokuDigitAsMarkup =
       isMarkupDigitsInCellContent(cellContent) &&
-      (markupType === "Center"
+      (markupKeypadMode === "Center"
         ? cellContent.centerMarkups.filter(isSudokuDigit).includes(sudokuDigit)
         : cellContent.cornerMarkups
             .filter(isSudokuDigit)
@@ -171,7 +169,7 @@ const areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup = (
 const getCellStateWithRemovedMarkupDigit = (
   currentCellState: CellState,
   currentMarkups: Array<SudokuDigit>,
-  markupType: MarkupType,
+  markupKeypadMode: MarkupKeypadMode,
   sudokuDigit: SudokuDigit,
 ): CellState => {
   const currentCellContent = currentCellState.content;
@@ -190,10 +188,14 @@ const getCellStateWithRemovedMarkupDigit = (
       : [""];
 
   const centerMarkups =
-    markupType === "Center" ? nextMarkups : currentCellContent.centerMarkups;
+    markupKeypadMode === "Center"
+      ? nextMarkups
+      : currentCellContent.centerMarkups;
 
   const cornerMarkups =
-    markupType === "Corner" ? nextMarkups : currentCellContent.cornerMarkups;
+    markupKeypadMode === "Corner"
+      ? nextMarkups
+      : currentCellContent.cornerMarkups;
 
   const cellContentAfterRemoveCheck: MarkupDigitsCellContent = {
     centerMarkups,
@@ -211,7 +213,7 @@ const getCellStateWithRemovedMarkupDigit = (
 const getCellStateWithAddedMarkupDigit = (
   currentCellState: CellState,
   currentMarkups: Array<SudokuDigit>,
-  markupType: MarkupType,
+  markupKeypadMode: MarkupKeypadMode,
   sudokuDigit: SudokuDigit,
 ): CellState => {
   const currentCellContent = currentCellState.content;
@@ -225,10 +227,14 @@ const getCellStateWithAddedMarkupDigit = (
     : [...currentMarkups, sudokuDigit];
 
   const centerMarkups =
-    markupType === "Center" ? nextMarkups : currentCellContent.centerMarkups;
+    markupKeypadMode === "Center"
+      ? nextMarkups
+      : currentCellContent.centerMarkups;
 
   const cornerMarkups =
-    markupType === "Corner" ? nextMarkups : currentCellContent.cornerMarkups;
+    markupKeypadMode === "Corner"
+      ? nextMarkups
+      : currentCellContent.cornerMarkups;
 
   const cellContentAfterAddCheck: MarkupDigitsCellContent = {
     centerMarkups,
@@ -243,13 +249,13 @@ const getCellStateWithAddedMarkupDigit = (
   return nextCellState;
 };
 
-const getCellStateWithAnEmptyMarkupType = (
+const getCellStateWithAnEmptyMarkup = (
   currentCellState: CellState,
-  markupType: MarkupType,
+  markupKeypadMode: MarkupKeypadMode,
   sudokuDigit: SudokuDigit,
 ): CellState => {
   const nextMarkupDigitsCellContent: MarkupDigitsCellContent =
-    markupType === "Center"
+    markupKeypadMode === "Center"
       ? {
           centerMarkups: [sudokuDigit],
           cornerMarkups: [""],
@@ -268,7 +274,7 @@ const getCellStateWithAnEmptyMarkupType = (
 };
 
 const getMarkupDigitsCellState = (
-  markupType: MarkupType,
+  markupKeypadMode: MarkupKeypadMode,
   currentCellState: CellState,
   shouldMarkupDigitBeRemoved: boolean,
   sudokuDigit: SudokuDigit,
@@ -292,7 +298,7 @@ const getMarkupDigitsCellState = (
 
   if (isMarkupDigitsInCellContent(currentCellContent)) {
     const currentMarkups =
-      markupType === "Center"
+      markupKeypadMode === "Center"
         ? currentCellContent.centerMarkups.filter(isSudokuDigit)
         : currentCellContent.cornerMarkups.filter(isSudokuDigit);
 
@@ -300,7 +306,7 @@ const getMarkupDigitsCellState = (
       return getCellStateWithRemovedMarkupDigit(
         currentCellState,
         currentMarkups,
-        markupType,
+        markupKeypadMode,
         sudokuDigit,
       );
     }
@@ -308,14 +314,14 @@ const getMarkupDigitsCellState = (
     return getCellStateWithAddedMarkupDigit(
       currentCellState,
       currentMarkups,
-      markupType,
+      markupKeypadMode,
       sudokuDigit,
     );
   }
   if (isEmptyCellContent(currentCellContent)) {
-    return getCellStateWithAnEmptyMarkupType(
+    return getCellStateWithAnEmptyMarkup(
       currentCellState,
-      markupType,
+      markupKeypadMode,
       sudokuDigit,
     );
   }
@@ -324,7 +330,7 @@ const getMarkupDigitsCellState = (
 };
 
 const handleMarkupInput = (
-  markupType: MarkupType,
+  markupKeypadMode: MarkupKeypadMode,
   puzzleState: PuzzleState,
   sudokuDigit: SudokuDigit,
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
@@ -334,13 +340,13 @@ const handleMarkupInput = (
   const shouldMarkupDigitBeRemoved =
     areAllSelectedCellsGivenEnteredOrContainSudokuDigitAsMarkup(
       currentBoardState,
-      markupType,
+      markupKeypadMode,
       sudokuDigit,
     );
 
   const nextBoardState: BoardState = currentBoardState.map((currentCellState) =>
     getMarkupDigitsCellState(
-      markupType,
+      markupKeypadMode,
       currentCellState,
       shouldMarkupDigitBeRemoved,
       sudokuDigit,

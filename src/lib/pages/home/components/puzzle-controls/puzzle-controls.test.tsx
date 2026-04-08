@@ -10,7 +10,10 @@ import {
   getStartingPuzzleStateFromBoardState,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
-import { type PuzzleState } from "@/lib/pages/home/utils/types";
+import {
+  type KeypadMode,
+  type PuzzleState,
+} from "@/lib/pages/home/utils/types";
 
 // #region Module Mocks
 const mockHandleCenterMarkupInput = vi.fn();
@@ -81,16 +84,16 @@ const KEYPAD_MODE_SESSION_STORAGE_KEY = "keypad-mode";
 const renderPuzzleControls = async ({
   initialIsMultiselectMode = false,
   initialPuzzleState,
-  startingBaseKeypadMode,
+  startingKeypadMode,
 }: {
   initialIsMultiselectMode?: boolean;
   initialPuzzleState?: PuzzleState;
-  startingBaseKeypadMode?: "Digit" | "Center" | "Corner" | "Color";
+  startingKeypadMode?: KeypadMode;
 } = {}): Promise<RenderedPuzzleControls> => {
-  if (startingBaseKeypadMode !== undefined) {
+  if (startingKeypadMode !== undefined) {
     window.sessionStorage.setItem(
       KEYPAD_MODE_SESSION_STORAGE_KEY,
-      JSON.stringify(startingBaseKeypadMode),
+      JSON.stringify(startingKeypadMode),
     );
   }
 
@@ -178,7 +181,7 @@ describe("PuzzleControls rendering", () => {
 describe("Keyboard digit input", () => {
   it("dispatches digit input in Digit base mode", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", { code: "Digit1", key: "1" });
@@ -190,7 +193,7 @@ describe("Keyboard digit input", () => {
 
   it("dispatches center markup input in Center base mode", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Center" });
+    await renderPuzzleControls({ startingKeypadMode: "Center" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", { code: "Digit3", key: "3" });
@@ -202,7 +205,7 @@ describe("Keyboard digit input", () => {
 
   it("dispatches corner markup input in Corner base mode", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Corner" });
+    await renderPuzzleControls({ startingKeypadMode: "Corner" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", { code: "Digit5", key: "5" });
@@ -214,7 +217,7 @@ describe("Keyboard digit input", () => {
 
   it("dispatches color input in Color base mode", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Color" });
+    await renderPuzzleControls({ startingKeypadMode: "Color" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", { code: "Digit2", key: "2" });
@@ -228,7 +231,7 @@ describe("Keyboard digit input", () => {
 describe("Modifier key overrides", () => {
   it("uses Center mode while Control is held and returns to base on release", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", { key: "Control" });
@@ -245,7 +248,7 @@ describe("Modifier key overrides", () => {
 
   it("uses Corner mode while Shift is held", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", { key: "Shift" });
@@ -258,7 +261,7 @@ describe("Modifier key overrides", () => {
 
   it("uses Color mode while Alt is held", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", { key: "Alt" });
@@ -271,7 +274,7 @@ describe("Modifier key overrides", () => {
 
   it("uses the most recently pressed modifier when multiple modifiers are down", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", { key: "Control" });
@@ -292,7 +295,7 @@ describe("Keyboard shortcuts", () => {
   it("switches keypad mode with Z/X/C/V shortcuts", async () => {
     // Arrange
     const renderedPuzzleControls = await renderPuzzleControls({
-      startingBaseKeypadMode: "Digit",
+      startingKeypadMode: "Digit",
     });
 
     // Act + Assert
@@ -397,7 +400,7 @@ describe("Keyboard shortcuts", () => {
 describe("Numpad and editable element handling", () => {
   it("dispatches digit input for numpad key events", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", {
@@ -413,7 +416,7 @@ describe("Numpad and editable element handling", () => {
 
   it("uses shifted numpad mapping for keys like End and ArrowDown", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", {
@@ -438,7 +441,7 @@ describe("Window blur behavior", () => {
   it("resets held modifiers on blur and returns to base mode", async () => {
     // Arrange
     const renderedPuzzleControls = await renderPuzzleControls({
-      startingBaseKeypadMode: "Digit",
+      startingKeypadMode: "Digit",
     });
 
     // Act
@@ -460,7 +463,7 @@ describe("Window blur behavior", () => {
 describe("Numpad modifier key behavior", () => {
   it("uses Corner mode for a numpad digit key when Shift is held", async () => {
     // Arrange
-    await renderPuzzleControls({ startingBaseKeypadMode: "Digit" });
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
 
     // Act
     await dispatchWindowKeyboardEvent("keydown", { key: "Shift" });
@@ -481,7 +484,7 @@ describe("Keypad mode shortcut blocking", () => {
   it("does not switch keypad mode when Alt is held alongside a shortcut key", async () => {
     // Arrange
     const renderedPuzzleControls = await renderPuzzleControls({
-      startingBaseKeypadMode: "Digit",
+      startingKeypadMode: "Digit",
     });
 
     // Act
@@ -498,7 +501,7 @@ describe("Keypad mode shortcut blocking", () => {
   it("does not switch keypad mode when Control is held alongside a shortcut key", async () => {
     // Arrange
     const renderedPuzzleControls = await renderPuzzleControls({
-      startingBaseKeypadMode: "Digit",
+      startingKeypadMode: "Digit",
     });
 
     // Act

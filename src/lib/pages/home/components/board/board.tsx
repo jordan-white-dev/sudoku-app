@@ -36,22 +36,13 @@ import {
   isRowNumber,
 } from "@/lib/pages/home/utils/validators/validators";
 
-// #region Arrow Key Direction
-type ArrowKeyDirection = "ArrowUp" | "ArrowDown" | "ArrowLeft" | "ArrowRight";
+// #region Arrow Keys
 
-const arrowKeyDirectionOffsets: Record<
-  ArrowKeyDirection,
-  { columnOffset: number; rowOffset: number }
-> = {
-  ArrowUp: { columnOffset: 0, rowOffset: -1 },
-  ArrowDown: { columnOffset: 0, rowOffset: 1 },
-  ArrowLeft: { columnOffset: -1, rowOffset: 0 },
-  ArrowRight: { columnOffset: 1, rowOffset: 0 },
-};
+const arrowKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"] as const;
+type ArrowKey = (typeof arrowKeys)[number];
 
-const isArrowKeyDirection = (
-  keyboardKey: string,
-): keyboardKey is ArrowKeyDirection => keyboardKey in arrowKeyDirectionOffsets;
+const isArrowKey = (keyboardKey: string): keyboardKey is ArrowKey =>
+  arrowKeys.some((arrowKey) => arrowKey === keyboardKey);
 // #endregion
 
 // #region Conflict Cell Checking
@@ -182,8 +173,18 @@ const getSelectionAnchorCellId = (
   return selectedCellStates.at(-1)?.id;
 };
 
+const arrowKeyOffsets: Record<
+  ArrowKey,
+  { columnOffset: number; rowOffset: number }
+> = {
+  ArrowUp: { columnOffset: 0, rowOffset: -1 },
+  ArrowDown: { columnOffset: 0, rowOffset: 1 },
+  ArrowLeft: { columnOffset: -1, rowOffset: 0 },
+  ArrowRight: { columnOffset: 1, rowOffset: 0 },
+};
+
 const getWrappedCellIdInDirection = (
-  arrowKeyDirection: ArrowKeyDirection,
+  arrowKey: ArrowKey,
   startingCellId: CellId,
 ): CellId => {
   const zeroBasedStartingCellId = startingCellId - 1;
@@ -192,8 +193,7 @@ const getWrappedCellIdInDirection = (
     zeroBasedStartingCellId / CELLS_PER_HOUSE,
   );
 
-  const { columnOffset, rowOffset } =
-    arrowKeyDirectionOffsets[arrowKeyDirection];
+  const { columnOffset, rowOffset } = arrowKeyOffsets[arrowKey];
 
   const wrappedColumnNumber =
     (startingColumnNumber + columnOffset + CELLS_PER_HOUSE) % CELLS_PER_HOUSE;
@@ -204,7 +204,7 @@ const getWrappedCellIdInDirection = (
 
   if (!isCellId(candidateCellId)) {
     throw new Error(
-      `Failed to get a wrapped CellId from "${startingCellId}" in arrow key direction "${arrowKeyDirection}".`,
+      `Failed to get a wrapped CellId from "${startingCellId}" in "${arrowKey}" direction.`,
     );
   }
 
@@ -212,13 +212,13 @@ const getWrappedCellIdInDirection = (
 };
 
 const handleMoveOrAddToCellSelection = ({
-  arrowKeyDirection,
+  arrowKey,
   lastSelectedCellId,
   getBoardStateForCellSelectionAddOrMove,
   setLastSelectedCellId,
   setPuzzleState,
 }: {
-  arrowKeyDirection: ArrowKeyDirection;
+  arrowKey: ArrowKey;
   lastSelectedCellId: CellId | undefined;
   getBoardStateForCellSelectionAddOrMove: (
     boardState: BoardState,
@@ -241,7 +241,7 @@ const handleMoveOrAddToCellSelection = ({
     }
 
     const nextCellId = getWrappedCellIdInDirection(
-      arrowKeyDirection,
+      arrowKey,
       selectionAnchorCellId,
     );
 
@@ -276,13 +276,13 @@ const getBoardStateWithTargetCellAddedToSelection = (
   );
 
 const handleAddToCellSelectionInDirection = (
-  arrowKeyDirection: ArrowKeyDirection,
+  arrowKey: ArrowKey,
   lastSelectedCellId: CellId | undefined,
   setLastSelectedCellId: (cellId: CellId) => void,
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
   handleMoveOrAddToCellSelection({
-    arrowKeyDirection,
+    arrowKey,
     lastSelectedCellId,
     getBoardStateForCellSelectionAddOrMove:
       getBoardStateWithTargetCellAddedToSelection,
@@ -309,13 +309,13 @@ const getBoardStateWithOnlyTargetCellSelected = (
   });
 
 const handleMoveSingleCellSelectionInDirection = (
-  arrowKeyDirection: ArrowKeyDirection,
+  arrowKey: ArrowKey,
   lastSelectedCellId: CellId | undefined,
   setLastSelectedCellId: (cellId: CellId) => void,
   setPuzzleState: Dispatch<SetStateAction<PuzzleState>>,
 ) =>
   handleMoveOrAddToCellSelection({
-    arrowKeyDirection,
+    arrowKey,
     lastSelectedCellId,
     getBoardStateForCellSelectionAddOrMove:
       getBoardStateWithOnlyTargetCellSelected,
@@ -1002,7 +1002,7 @@ export const Board = ({
 
   useEffect(() => {
     const handleAddToOrMoveCellSelection = (
-      arrowKeyDirection: ArrowKeyDirection,
+      arrowKey: ArrowKey,
       event: KeyboardEvent,
     ) => {
       if (event.location === KeyboardEvent.DOM_KEY_LOCATION_NUMPAD) {
@@ -1020,7 +1020,7 @@ export const Board = ({
         event.preventDefault();
         shouldHandleKeyboardNavRef.current = true;
         handleAddToCellSelectionInDirection(
-          arrowKeyDirection,
+          arrowKey,
           lastSelectedCellIdRef.current,
           (cellId) => (lastSelectedCellIdRef.current = cellId),
           setPuzzleState,
@@ -1032,7 +1032,7 @@ export const Board = ({
       event.preventDefault();
       shouldHandleKeyboardNavRef.current = true;
       handleMoveSingleCellSelectionInDirection(
-        arrowKeyDirection,
+        arrowKey,
         lastSelectedCellIdRef.current,
         (cellId) => (lastSelectedCellIdRef.current = cellId),
         setPuzzleState,
@@ -1068,7 +1068,7 @@ export const Board = ({
     const handleKeyDown = (event: KeyboardEvent) => {
       const keyboardKey = event.key;
 
-      if (isArrowKeyDirection(keyboardKey)) {
+      if (isArrowKey(keyboardKey)) {
         handleAddToOrMoveCellSelection(keyboardKey, event);
       }
 

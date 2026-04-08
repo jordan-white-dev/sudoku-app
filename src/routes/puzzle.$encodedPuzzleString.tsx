@@ -15,6 +15,16 @@ import {
   isRawPuzzleString,
 } from "@/lib/pages/home/utils/validators/validators";
 
+const tryOrNotFound = <TryResult,>(
+  functionToTry: () => TryResult,
+): TryResult => {
+  try {
+    return functionToTry();
+  } catch {
+    throw notFound();
+  }
+};
+
 const getRawPuzzleStringFromEncodedPuzzleString = (
   encodedPuzzleString: EncodedPuzzleString,
 ): RawPuzzleString => {
@@ -86,38 +96,22 @@ const HomeRoute = () => {
 
 export const Route = createFileRoute("/puzzle/$encodedPuzzleString")({
   loader: ({ params }) => {
-    const encodedPuzzleString = (() => {
-      const candidateEncodedPuzzleString =
-        params.encodedPuzzleString.toLowerCase();
+    const candidateEncodedPuzzleString =
+      params.encodedPuzzleString.toLowerCase();
 
-      if (!isEncodedPuzzleString(candidateEncodedPuzzleString)) {
-        throw notFound();
-      }
+    if (!isEncodedPuzzleString(candidateEncodedPuzzleString)) {
+      throw notFound();
+    }
 
-      return candidateEncodedPuzzleString;
-    })();
+    const encodedPuzzleString = candidateEncodedPuzzleString;
 
-    const rawPuzzleString = (() => {
-      try {
-        const rawPuzzleString =
-          getRawPuzzleStringFromEncodedPuzzleString(encodedPuzzleString);
+    const rawPuzzleString = tryOrNotFound(() =>
+      getRawPuzzleStringFromEncodedPuzzleString(encodedPuzzleString),
+    );
 
-        return rawPuzzleString;
-      } catch {
-        throw notFound();
-      }
-    })();
-
-    const rawBoardState = (() => {
-      try {
-        const rawBoardState =
-          getRawBoardStateFromRawPuzzleString(rawPuzzleString);
-
-        return rawBoardState;
-      } catch {
-        throw notFound();
-      }
-    })();
+    const rawBoardState = tryOrNotFound(() =>
+      getRawBoardStateFromRawPuzzleString(rawPuzzleString),
+    );
 
     const isPuzzleSolvable = solvePuzzle(rawBoardState);
     if (!isPuzzleSolvable) {

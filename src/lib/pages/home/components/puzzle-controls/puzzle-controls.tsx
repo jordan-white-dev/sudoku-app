@@ -33,8 +33,8 @@ import {
 import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region Modifier Key Utilities
-type ModifierKeyboardKey = "Control" | "Shift" | "Alt";
 const modifierKeyboardKeys = ["Control", "Shift", "Alt"] as const;
+type ModifierKeyboardKey = (typeof modifierKeyboardKeys)[number];
 
 const isModifierKeyboardKey = (
   keyboardKey: string,

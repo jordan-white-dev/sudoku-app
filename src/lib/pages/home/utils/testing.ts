@@ -17,12 +17,14 @@ import {
   type BoardState,
   type CellId,
   type CellState,
+  type EnteredDigitCellContent,
+  type GivenDigitCellContent,
   type PuzzleState,
   type RawBoardState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 
-// #region Async Test Helpers
+// #region Async Helper
 export const waitForReactToFinishUpdating = async () => {
   await Promise.resolve();
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
@@ -30,7 +32,7 @@ export const waitForReactToFinishUpdating = async () => {
 };
 // #endregion
 
-// #region Board State Factories
+// #region Board and Puzzle State Factories
 export const getEmptyRawBoardState = (): RawBoardState =>
   Array.from({ length: TOTAL_CELLS_IN_BOARD }, () => null);
 
@@ -117,7 +119,7 @@ export const getBoardStateWithEnteredDigitInTargetCell = (
 };
 
 const getBoardStateWithDigitsInTargetCells = (
-  digitType: "givenDigit" | "enteredDigit",
+  digitType: keyof GivenDigitCellContent | keyof EnteredDigitCellContent,
   digitsToEnterInTargetCells: Array<{
     cellId: CellId;
     digit: SudokuDigit;

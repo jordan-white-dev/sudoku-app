@@ -36,7 +36,8 @@ import {
   type BoardState,
   type CellId,
   type CellState,
-  type KeypadMode,
+  type MarkupDigitsCellContent,
+  type MarkupKeypadMode,
   type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
@@ -406,7 +407,7 @@ const dispatchKeyboardEvent = async (keyboardEventInit: KeyboardEventInit) => {
 
 // #region Board State Content
 const getBoardStateWithMarkupsInTargetCells = (
-  markupType: Extract<KeypadMode, "Center" | "Corner">,
+  markupKeypadMode: MarkupKeypadMode,
   markupsToEnterInTargetCells: Array<{
     cellId: CellId;
     markups: Array<SudokuDigit>;
@@ -422,14 +423,14 @@ const getBoardStateWithMarkupsInTargetCells = (
       );
 
       if (markupsToEnterInTargetCell) {
-        const markupTypeKey =
-          markupType === "Center" ? "centerMarkups" : "cornerMarkups";
+        const markupContentKey: keyof MarkupDigitsCellContent =
+          markupKeypadMode === "Center" ? "centerMarkups" : "cornerMarkups";
 
         const cellStateWithMarkups: CellState = {
           ...cellState,
           content: {
             ...cellState.content,
-            [markupTypeKey]: markupsToEnterInTargetCell.markups,
+            [markupContentKey]: markupsToEnterInTargetCell.markups,
           },
         };
 

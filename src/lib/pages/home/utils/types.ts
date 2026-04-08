@@ -36,7 +36,7 @@ export type RawBoardState = Array<RawCellState>;
 // #region Cell Content Types
 export type SudokuDigit = typeof BrandedSudokuDigit;
 
-type GivenDigitCellContent = { givenDigit: SudokuDigit };
+export type GivenDigitCellContent = { givenDigit: SudokuDigit };
 
 export type EnteredDigitCellContent = { enteredDigit: SudokuDigit };
 
@@ -57,8 +57,9 @@ export type CellContent = Prettify<
 // #endregion
 
 // #region Board Coordinate Types
-export type BoxNumber = typeof BrandedBoxNumber;
 export type CellId = typeof BrandedCellId;
+
+export type BoxNumber = typeof BrandedBoxNumber;
 export type ColumnNumber = typeof BrandedColumnNumber;
 export type RowNumber = typeof BrandedRowNumber;
 // #endregion
@@ -86,6 +87,7 @@ export type PuzzleState = {
 };
 // #endregion
 
-// #region UI Type
+// #region Keypad Mode Types
 export type KeypadMode = (typeof keypadModes)[number];
+export type MarkupKeypadMode = Extract<KeypadMode, "Center" | "Corner">;
 // #endregion
