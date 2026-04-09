@@ -15,8 +15,8 @@ import {
   sudokuDigits,
 } from "@/lib/pages/home/utils/constants";
 import {
-  isEnteredDigitInCellContent,
-  isMarkupDigitsInCellContent,
+  isEnteredDigitCellContent,
+  isMarkupDigitsCellContent,
 } from "@/lib/pages/home/utils/guards";
 import {
   getBoardStateWithEnteredDigitInTargetCell,
@@ -399,9 +399,9 @@ describe("Keypad input actions", () => {
     const selectedCellState =
       getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
-    expect(isEnteredDigitInCellContent(selectedCellState.content)).toBe(true);
+    expect(isEnteredDigitCellContent(selectedCellState.content)).toBe(true);
 
-    if (isEnteredDigitInCellContent(selectedCellState.content)) {
+    if (isEnteredDigitCellContent(selectedCellState.content)) {
       expect(selectedCellState.content.enteredDigit).toBe("9");
     }
   });
@@ -428,9 +428,9 @@ describe("Keypad input actions", () => {
     const selectedCellState =
       getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
-    expect(isMarkupDigitsInCellContent(selectedCellState.content)).toBe(true);
+    expect(isMarkupDigitsCellContent(selectedCellState.content)).toBe(true);
 
-    if (isMarkupDigitsInCellContent(selectedCellState.content)) {
+    if (isMarkupDigitsCellContent(selectedCellState.content)) {
       expect(selectedCellState.content.centerMarkups).toEqual(["3"]);
     }
   });
@@ -457,9 +457,9 @@ describe("Keypad input actions", () => {
     const selectedCellState =
       getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
-    expect(isMarkupDigitsInCellContent(selectedCellState.content)).toBe(true);
+    expect(isMarkupDigitsCellContent(selectedCellState.content)).toBe(true);
 
-    if (isMarkupDigitsInCellContent(selectedCellState.content)) {
+    if (isMarkupDigitsCellContent(selectedCellState.content)) {
       expect(selectedCellState.content.cornerMarkups).toEqual(["7"]);
     }
   });
@@ -520,7 +520,7 @@ describe("Keypad input actions", () => {
     const selectedCellState =
       getSelectedCellStateFromPuzzleState(nextPuzzleState);
 
-    expect(isEnteredDigitInCellContent(selectedCellState.content)).toBe(false);
+    expect(isEnteredDigitCellContent(selectedCellState.content)).toBe(false);
   });
 });
 

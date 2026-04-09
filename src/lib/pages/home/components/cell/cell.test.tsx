@@ -464,10 +464,7 @@ describe("Content display", () => {
     const startingBoardState = getBoardStateWithUpdatedTargetCell(
       targetCellId,
       {
-        content: {
-          centerMarkups: [""],
-          cornerMarkups: [""],
-        },
+        content: { emptyCell: "" },
       },
     );
     const cellState = getTargetCellStateFromBoardState(

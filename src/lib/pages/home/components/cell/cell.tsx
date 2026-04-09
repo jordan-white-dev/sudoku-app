@@ -16,30 +16,36 @@ import {
   getCellSizeScaledBy,
 } from "@/lib/pages/home/utils/display";
 import {
-  isEnteredDigitInCellContent,
-  isGivenDigitInCellContent,
-  isGivenOrEnteredDigitInCellContent,
-  isMarkupDigitsInCellContent,
-  isNonEmptyMarkupColor,
+  isEmptyCellContent,
+  isEmptyCornerMarkupsCellContent,
+  isEmptyMarkupColors,
+  isEmptyMarkupDigits,
+  isEnteredDigitCellContent,
+  isGivenDigitCellContent,
+  isGivenOrEnteredDigitCellContent,
+  isMarkupColor,
+  isMarkupDigitsCellContent,
+  isNonEmptyCenterMarkupsCellContent,
+  isNonEmptyCornerMarkupsCellContent,
+  isNonEmptyMarkupColors,
+  isNonEmptyMarkupDigits,
 } from "@/lib/pages/home/utils/guards";
-import {
-  getCurrentBoardStateFromPuzzleState,
-  getGivenOrEnteredDigitInCellIfPresent,
-} from "@/lib/pages/home/utils/transforms/transforms";
+import { getCurrentBoardStateFromPuzzleState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
   type CellContent,
   type CellId,
   type CellState,
   type ColumnNumber,
-  type MarkupColor,
+  type EnteredDigitCellContent,
+  type GivenDigitCellContent,
+  type MarkupColors,
   type MarkupDigits,
   type MarkupDigitsCellContent,
   type PuzzleState,
   type RowNumber,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
-import { isSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region CSS Properties
 
@@ -92,9 +98,9 @@ type Rectangle = {
 };
 
 const getMarkupColorsBackground = (
-  cellMarkupColors: Array<MarkupColor> | [""],
+  cellMarkupColors: MarkupColors,
 ): ButtonProps["background"] => {
-  const appliedMarkupColors = cellMarkupColors.filter(isNonEmptyMarkupColor);
+  const appliedMarkupColors = cellMarkupColors.filter(isMarkupColor);
 
   if (appliedMarkupColors.length === 0) {
     return "transparent";
@@ -585,7 +591,6 @@ const getSelectedCellBackground = ({
 // #endregion
 
 const getCellBackground = ({
-  cellMarkupColors,
   columnNumber,
   hasDigitConflict,
   isSeenInBox,
@@ -600,12 +605,12 @@ const getCellBackground = ({
   isSelectedCellBelowRight,
   isSelectedCellToLeft,
   isSelectedCellToRight,
+  isShowSeenCellsEnabled,
+  markupColors,
   rowNumber,
   selectedColumnNumber,
   selectedRowNumber,
-  isShowSeenCellsEnabled,
 }: {
-  cellMarkupColors: Array<MarkupColor> | [""];
   columnNumber: ColumnNumber;
   hasDigitConflict: boolean;
   isSeenInBox: boolean;
@@ -620,10 +625,11 @@ const getCellBackground = ({
   isSelectedCellBelowRight: boolean;
   isSelectedCellToLeft: boolean;
   isSelectedCellToRight: boolean;
+  isShowSeenCellsEnabled: boolean;
+  markupColors: MarkupColors;
   rowNumber: RowNumber;
   selectedColumnNumber: ColumnNumber | undefined;
   selectedRowNumber: RowNumber | undefined;
-  isShowSeenCellsEnabled: boolean;
 }): ButtonProps["background"] => {
   const backgroundLayers = [
     getSelectedCellBackground({
@@ -648,7 +654,7 @@ const getCellBackground = ({
       selectedRowNumber,
       isShowSeenCellsEnabled,
     }),
-    getMarkupColorsBackground(cellMarkupColors),
+    getMarkupColorsBackground(markupColors),
   ].filter(Boolean);
 
   const cellBackground = backgroundLayers.join(", ");
@@ -659,10 +665,10 @@ const getCellBackground = ({
 
 // #region Other Cell Styles
 const getFontSize = (cellContent: CellContent): ButtonProps["fontSize"] => {
-  if (isGivenOrEnteredDigitInCellContent(cellContent)) {
+  if (isGivenOrEnteredDigitCellContent(cellContent)) {
     return DIGIT_FONT_SIZE;
   }
-  if (isMarkupDigitsInCellContent(cellContent)) {
+  if (isMarkupDigitsCellContent(cellContent)) {
     const centerMarkupsCount = cellContent.centerMarkups.length;
 
     switch (centerMarkupsCount) {
@@ -681,10 +687,7 @@ const getFontSize = (cellContent: CellContent): ButtonProps["fontSize"] => {
 };
 
 const getTextShadow = (cellContent: CellContent): ButtonProps["textShadow"] =>
-  isMarkupDigitsInCellContent(cellContent) &&
-  cellContent.centerMarkups[0] !== ""
-    ? "none"
-    : DIGIT_TEXT_SHADOW;
+  isNonEmptyCenterMarkupsCellContent(cellContent) ? "none" : DIGIT_TEXT_SHADOW;
 
 const getCellBorderStyles = (
   columnNumber: ColumnNumber,
@@ -771,10 +774,7 @@ const getFloatPlacement = (
 };
 
 const getCornerMarkups = (cellContent: CellContent): Array<string> => {
-  if (
-    isMarkupDigitsInCellContent(cellContent) &&
-    cellContent.cornerMarkups[0] !== ""
-  ) {
+  if (isNonEmptyCornerMarkupsCellContent(cellContent)) {
     return [...cellContent.cornerMarkups].sort();
   }
 
@@ -786,7 +786,7 @@ const getCornerMarkupFloats = (
 ): Array<ReactNode> | undefined => {
   const cornerMarkups = getCornerMarkups(cellContent);
 
-  if (cornerMarkups.length === 0 || cornerMarkups[0] === "") {
+  if (isEmptyCornerMarkupsCellContent(cellContent)) {
     return;
   }
 
@@ -840,44 +840,33 @@ const getColumnLabelFloat = (columnNumber: ColumnNumber): ReactNode => (
 // #endregion
 
 // #region Handle Double Click
-
-// #region Array Guards
-const isArrayOfSudokuDigits = (
-  values: MarkupDigits,
-): values is Array<SudokuDigit> =>
-  values.length > 0 && values.every((value) => isSudokuDigit(value));
-
-const isArrayOfMarkupColors = (
-  values: [""] | Array<MarkupColor>,
-): values is Array<MarkupColor> => values[0] !== "";
-// #endregion
+const getGivenOrEnteredDigit = (
+  cellContent: GivenDigitCellContent | EnteredDigitCellContent,
+): SudokuDigit =>
+  isGivenDigitCellContent(cellContent)
+    ? cellContent.givenDigit
+    : cellContent.enteredDigit;
 
 const isEmptyEditableCellWithoutMarkup = (cellState: CellState) => {
   const { content: cellContent } = cellState;
 
-  if (isGivenDigitInCellContent(cellContent)) {
+  if (isGivenDigitCellContent(cellContent)) {
     return false;
   }
 
-  if (isEnteredDigitInCellContent(cellContent)) {
+  if (isEnteredDigitCellContent(cellContent)) {
     return false;
   }
 
-  if (
-    isMarkupDigitsInCellContent(cellContent) &&
-    cellContent.cornerMarkups[0] !== ""
-  ) {
+  if (isNonEmptyCornerMarkupsCellContent(cellContent)) {
     return false;
   }
 
-  if (
-    isMarkupDigitsInCellContent(cellContent) &&
-    cellContent.centerMarkups[0] !== ""
-  ) {
+  if (isNonEmptyCenterMarkupsCellContent(cellContent)) {
     return false;
   }
 
-  if (cellState.markupColors[0] !== "") {
+  if (isNonEmptyMarkupColors(cellState.markupColors)) {
     return false;
   }
 
@@ -885,13 +874,13 @@ const isEmptyEditableCellWithoutMarkup = (cellState: CellState) => {
 };
 
 const getCellStateAsSelectedIfMatchingMarkupColorsExist = (
-  sourceMarkupColors: [""] | Array<MarkupColor>,
-  candidateMarkupColors: [""] | Array<MarkupColor>,
+  sourceMarkupColors: MarkupColors,
+  candidateMarkupColors: MarkupColors,
   candidateCellState: CellState,
 ): CellState => {
   const hasAtLeastOneMatchingMarkupColor =
-    isArrayOfMarkupColors(sourceMarkupColors) &&
-    isArrayOfMarkupColors(candidateMarkupColors) &&
+    isNonEmptyMarkupColors(sourceMarkupColors) &&
+    isNonEmptyMarkupColors(candidateMarkupColors) &&
     sourceMarkupColors.some((markupColor) =>
       candidateMarkupColors.includes(markupColor),
     );
@@ -912,8 +901,8 @@ const doBothCellsContainAtLeastOneMatchingMarkupDigit = (
   sourceMarkupDigits: MarkupDigits,
   candidateMarkupDigits: MarkupDigits,
 ): boolean =>
-  isArrayOfSudokuDigits(sourceMarkupDigits) &&
-  isArrayOfSudokuDigits(candidateMarkupDigits) &&
+  isNonEmptyMarkupDigits(sourceMarkupDigits) &&
+  isNonEmptyMarkupDigits(candidateMarkupDigits) &&
   sourceMarkupDigits.some((markupDigit) =>
     candidateMarkupDigits.includes(markupDigit),
   );
@@ -946,14 +935,14 @@ const getCellStateAsSelectedIfMatchingMarkupDigitsExist = (
 };
 
 const doMarkupColorsMatchExactly = (
-  sourceMarkupColors: [""] | Array<MarkupColor>,
-  candidateMarkupColors: [""] | Array<MarkupColor>,
+  sourceMarkupColors: MarkupColors,
+  candidateMarkupColors: MarkupColors,
 ): boolean => {
-  if (!isArrayOfMarkupColors(sourceMarkupColors)) {
-    return !isArrayOfMarkupColors(candidateMarkupColors);
+  if (isEmptyMarkupColors(sourceMarkupColors)) {
+    return isEmptyMarkupColors(candidateMarkupColors);
   }
 
-  if (!isArrayOfMarkupColors(candidateMarkupColors)) {
+  if (isEmptyMarkupColors(candidateMarkupColors)) {
     return false;
   }
 
@@ -987,11 +976,11 @@ const doMarkupDigitsMatchExactly = (
   sourceMarkupDigits: MarkupDigits,
   candidateMarkupDigits: MarkupDigits,
 ): boolean => {
-  if (!isArrayOfSudokuDigits(sourceMarkupDigits)) {
-    return !isArrayOfSudokuDigits(candidateMarkupDigits);
+  if (isEmptyMarkupDigits(sourceMarkupDigits)) {
+    return isEmptyMarkupDigits(candidateMarkupDigits);
   }
 
-  if (!isArrayOfSudokuDigits(candidateMarkupDigits)) {
+  if (isEmptyMarkupDigits(candidateMarkupDigits)) {
     return false;
   }
 
@@ -1017,70 +1006,42 @@ const doesMarkupDigitsCellContentMatchExactly = (
   sourceCellContent: MarkupDigitsCellContent,
   candidateCellContent: MarkupDigitsCellContent,
 ): boolean => {
-  const doesCenterMarkupsMatchExactly = doMarkupDigitsMatchExactly(
+  const doCenterMarkupsMatchExactly = doMarkupDigitsMatchExactly(
     sourceCellContent.centerMarkups,
     candidateCellContent.centerMarkups,
   );
 
-  const doesCornerMarkupsMatchExactly = doMarkupDigitsMatchExactly(
+  const doCornerMarkupsMatchExactly = doMarkupDigitsMatchExactly(
     sourceCellContent.cornerMarkups,
     candidateCellContent.cornerMarkups,
   );
 
   const doesSourceCellContainAtLeastOneMarkupDigit =
-    isArrayOfSudokuDigits(sourceCellContent.centerMarkups) ||
-    isArrayOfSudokuDigits(sourceCellContent.cornerMarkups);
+    isNonEmptyCenterMarkupsCellContent(sourceCellContent) ||
+    isNonEmptyCornerMarkupsCellContent(sourceCellContent);
 
   const doesCandidateCellContainAtLeastOneMarkupDigit =
-    isArrayOfSudokuDigits(candidateCellContent.centerMarkups) ||
-    isArrayOfSudokuDigits(candidateCellContent.cornerMarkups);
+    isNonEmptyCenterMarkupsCellContent(candidateCellContent) ||
+    isNonEmptyCornerMarkupsCellContent(candidateCellContent);
 
   const doesMarkupDigitsCellContentMatchExactly =
-    doesCenterMarkupsMatchExactly &&
-    doesCornerMarkupsMatchExactly &&
+    doCenterMarkupsMatchExactly &&
+    doCornerMarkupsMatchExactly &&
     doesSourceCellContainAtLeastOneMarkupDigit &&
     doesCandidateCellContainAtLeastOneMarkupDigit;
 
   return doesMarkupDigitsCellContentMatchExactly;
 };
 
-const doesCellContentContainGivenOrEnteredDigit = (
-  cellContent: CellContent,
-): boolean =>
-  isGivenOrEnteredDigitInCellContent(cellContent) &&
-  getGivenOrEnteredDigitInCellIfPresent(cellContent) !== "";
-
-const doesCellContentContainMarkupDigits = (
-  cellContent: CellContent,
-): boolean =>
-  isMarkupDigitsInCellContent(cellContent) &&
-  (isArrayOfSudokuDigits(cellContent.centerMarkups) ||
-    isArrayOfSudokuDigits(cellContent.cornerMarkups));
-
-const doCellsContainOnlyMarkupColors = (
+const doBothCellsHaveEmptyCellContent = (
   sourceCellContent: CellContent,
   candidateCellContent: CellContent,
 ): boolean => {
-  const doesSourceCellContainGivenOrEnteredDigit =
-    doesCellContentContainGivenOrEnteredDigit(sourceCellContent);
+  const isSourceCellContentEmpty = isEmptyCellContent(sourceCellContent);
 
-  const doesCandidateCellContainGivenOrEnteredDigit =
-    doesCellContentContainGivenOrEnteredDigit(candidateCellContent);
+  const isCandidateCellContentEmpty = isEmptyCellContent(candidateCellContent);
 
-  const doesSourceCellContainMarkupDigits =
-    doesCellContentContainMarkupDigits(sourceCellContent);
-
-  const doesCandidateCellContainMarkupDigits =
-    doesCellContentContainMarkupDigits(candidateCellContent);
-
-  const doCellsContainOnlyMarkupColors = !(
-    doesSourceCellContainGivenOrEnteredDigit ||
-    doesCandidateCellContainGivenOrEnteredDigit ||
-    doesSourceCellContainMarkupDigits ||
-    doesCandidateCellContainMarkupDigits
-  );
-
-  return doCellsContainOnlyMarkupColors;
+  return isSourceCellContentEmpty && isCandidateCellContentEmpty;
 };
 
 const getSelectedCellStateWithStrictMatching = (
@@ -1103,34 +1064,24 @@ const getSelectedCellStateWithStrictMatching = (
   const sourceCellContent = sourceCellState.content;
   const candidateCellContent = candidateCellState.content;
 
-  const sourceGivenOrEnteredDigit =
-    getGivenOrEnteredDigitInCellIfPresent(sourceCellContent);
-
-  const candidateGivenOrEnteredDigit =
-    getGivenOrEnteredDigitInCellIfPresent(candidateCellContent);
-
   const doGivenOrEnteredDigitsMatchExactly =
-    isGivenOrEnteredDigitInCellContent(sourceCellContent) &&
-    isGivenOrEnteredDigitInCellContent(candidateCellContent) &&
-    sourceGivenOrEnteredDigit === candidateGivenOrEnteredDigit &&
-    sourceGivenOrEnteredDigit !== "" &&
-    candidateGivenOrEnteredDigit !== "";
+    isGivenOrEnteredDigitCellContent(sourceCellContent) &&
+    isGivenOrEnteredDigitCellContent(candidateCellContent) &&
+    getGivenOrEnteredDigit(sourceCellContent) ===
+      getGivenOrEnteredDigit(candidateCellContent);
 
-  const doMarkupDigitsMatchExactlyBetweenCells =
-    isMarkupDigitsInCellContent(sourceCellContent) &&
-    isMarkupDigitsInCellContent(candidateCellContent) &&
+  const doMarkupDigitsMatchExactly =
+    isMarkupDigitsCellContent(sourceCellContent) &&
+    isMarkupDigitsCellContent(candidateCellContent) &&
     doesMarkupDigitsCellContentMatchExactly(
       sourceCellContent,
       candidateCellContent,
     );
 
-  const doCellsContainOnlyMarkupColorsAndMatchExactly =
-    doCellsContainOnlyMarkupColors(sourceCellContent, candidateCellContent);
-
   if (
     doGivenOrEnteredDigitsMatchExactly ||
-    doMarkupDigitsMatchExactlyBetweenCells ||
-    doCellsContainOnlyMarkupColorsAndMatchExactly
+    doMarkupDigitsMatchExactly ||
+    doBothCellsHaveEmptyCellContent(sourceCellContent, candidateCellContent)
   ) {
     const nextCellState = {
       ...candidateCellState,
@@ -1155,8 +1106,8 @@ const getSelectedCellStateWithPartialMatching = (
   const candidateCellContent = candidateCellState.content;
 
   if (
-    sourceCellState.markupColors[0] !== "" &&
-    candidateCellState.markupColors[0] !== ""
+    isNonEmptyMarkupColors(sourceCellState.markupColors) &&
+    isNonEmptyMarkupColors(candidateCellState.markupColors)
   ) {
     return getCellStateAsSelectedIfMatchingMarkupColorsExist(
       sourceCellState.markupColors,
@@ -1166,8 +1117,8 @@ const getSelectedCellStateWithPartialMatching = (
   }
 
   if (
-    isMarkupDigitsInCellContent(sourceCellContent) &&
-    isMarkupDigitsInCellContent(candidateCellContent)
+    isMarkupDigitsCellContent(sourceCellContent) &&
+    isMarkupDigitsCellContent(candidateCellContent)
   ) {
     return getCellStateAsSelectedIfMatchingMarkupDigitsExist(
       sourceCellContent,
@@ -1176,18 +1127,11 @@ const getSelectedCellStateWithPartialMatching = (
     );
   }
 
-  const sourceGivenOrEnteredDigit =
-    getGivenOrEnteredDigitInCellIfPresent(sourceCellContent);
-
-  const candidateGivenOrEnteredDigit =
-    getGivenOrEnteredDigitInCellIfPresent(candidateCellContent);
-
   if (
-    isGivenOrEnteredDigitInCellContent(sourceCellContent) &&
-    isGivenOrEnteredDigitInCellContent(candidateCellContent) &&
-    sourceGivenOrEnteredDigit === candidateGivenOrEnteredDigit &&
-    sourceGivenOrEnteredDigit !== "" &&
-    candidateGivenOrEnteredDigit !== ""
+    isGivenOrEnteredDigitCellContent(sourceCellContent) &&
+    isGivenOrEnteredDigitCellContent(candidateCellContent) &&
+    getGivenOrEnteredDigit(sourceCellContent) ===
+      getGivenOrEnteredDigit(candidateCellContent)
   ) {
     const nextCellState = {
       ...candidateCellState,
@@ -1240,13 +1184,13 @@ const handleCellDoubleClick = (
 // #endregion
 
 const getNonCornerCellDigits = (cellContent: CellContent): string => {
-  if (isGivenDigitInCellContent(cellContent)) {
+  if (isGivenDigitCellContent(cellContent)) {
     return cellContent.givenDigit;
   }
-  if (isEnteredDigitInCellContent(cellContent)) {
+  if (isEnteredDigitCellContent(cellContent)) {
     return cellContent.enteredDigit;
   }
-  if (isMarkupDigitsInCellContent(cellContent)) {
+  if (isMarkupDigitsCellContent(cellContent)) {
     return [...cellContent.centerMarkups].sort().join("");
   }
 
@@ -1310,10 +1254,10 @@ export const Cell = memo(
         aria-colindex={columnNumber}
         aria-invalid={hasDigitConflict}
         aria-label={getAriaLabelForTargetCell(cellState)}
-        aria-readonly={isGivenDigitInCellContent(cellContent)}
+        aria-readonly={isGivenDigitCellContent(cellContent)}
         aria-selected={isSelected}
         background={getCellBackground({
-          cellMarkupColors,
+          markupColors: cellMarkupColors,
           columnNumber,
           hasDigitConflict,
           isSeenInBox,
@@ -1328,7 +1272,7 @@ export const Cell = memo(
         })}
         borderColor="black"
         borderRadius="0"
-        color={isGivenDigitInCellContent(cellContent) ? "black" : "#1212f0"}
+        color={isGivenDigitCellContent(cellContent) ? "black" : "#1212f0"}
         data-cell-number={cellId}
         data-selected={isSelected}
         fontSize={getFontSize(cellContent)}

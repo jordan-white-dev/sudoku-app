@@ -41,10 +41,19 @@ export type GivenDigitCellContent = { givenDigit: SudokuDigit };
 export type EnteredDigitCellContent = { enteredDigit: SudokuDigit };
 
 export type MarkupDigits = [""] | Array<SudokuDigit>;
-export type MarkupDigitsCellContent = {
-  centerMarkups: MarkupDigits;
-  cornerMarkups: MarkupDigits;
-};
+export type MarkupDigitsCellContent =
+  | {
+      centerMarkups: Array<SudokuDigit>;
+      cornerMarkups: [""];
+    }
+  | {
+      centerMarkups: [""];
+      cornerMarkups: Array<SudokuDigit>;
+    }
+  | {
+      centerMarkups: Array<SudokuDigit>;
+      cornerMarkups: Array<SudokuDigit>;
+    };
 
 export type EmptyCellContent = { emptyCell: "" };
 
@@ -66,6 +75,7 @@ export type RowNumber = typeof BrandedRowNumber;
 
 // #region Cell, Board, and Puzzle State Types
 export type MarkupColor = (typeof markupColors)[number];
+export type MarkupColors = [""] | Array<MarkupColor>;
 
 export type CellState = {
   content: CellContent;
@@ -76,7 +86,7 @@ export type CellState = {
   };
   id: CellId;
   isSelected: boolean;
-  markupColors: [""] | Array<MarkupColor>;
+  markupColors: MarkupColors;
 };
 
 export type BoardState = Array<CellState>;

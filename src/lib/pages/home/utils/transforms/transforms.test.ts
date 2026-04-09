@@ -15,13 +15,11 @@ import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleState,
   getEncodedPuzzleStringFromRawPuzzleString,
-  getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
   updatePuzzleStateWithCurrentBoardState,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
-  type CellContent,
   type CellId,
   type PuzzleState,
   type RawBoardState,
@@ -410,60 +408,5 @@ describe("Board State Transform", () => {
       expect(nextPuzzleState.puzzleHistory[1]).toBe(replacementBoardState);
       expect(nextPuzzleState.puzzleHistory[2]).toBe(thirdBoardState);
     });
-  });
-});
-
-describe("Digit Accessor", () => {
-  it("returns the given digit when a cell contains a given digit", () => {
-    // Arrange
-    const cellContent: CellContent = {
-      givenDigit: getBrandedSudokuDigit("8"),
-    };
-
-    // Act
-    const digitInCell = getGivenOrEnteredDigitInCellIfPresent(cellContent);
-
-    // Assert
-    expect(digitInCell).toBe(getBrandedSudokuDigit("8"));
-  });
-
-  it("returns the entered digit when a cell contains an entered digit", () => {
-    // Arrange
-    const cellContent: CellContent = {
-      enteredDigit: getBrandedSudokuDigit("6"),
-    };
-
-    // Act
-    const digitInCell = getGivenOrEnteredDigitInCellIfPresent(cellContent);
-
-    // Assert
-    expect(digitInCell).toBe(getBrandedSudokuDigit("6"));
-  });
-
-  it("returns an empty string when an editable cell is still blank", () => {
-    // Arrange
-    const cellContent: CellContent = {
-      emptyCell: "",
-    };
-
-    // Act
-    const digitInCell = getGivenOrEnteredDigitInCellIfPresent(cellContent);
-
-    // Assert
-    expect(digitInCell).toBe("");
-  });
-
-  it("returns an empty string when a cell contains only markup digits", () => {
-    // Arrange
-    const cellContent: CellContent = {
-      centerMarkups: [getBrandedSudokuDigit("2"), getBrandedSudokuDigit("7")],
-      cornerMarkups: [getBrandedSudokuDigit("3"), getBrandedSudokuDigit("5")],
-    };
-
-    // Act
-    const digitInCell = getGivenOrEnteredDigitInCellIfPresent(cellContent);
-
-    // Assert
-    expect(digitInCell).toBe("");
   });
 });

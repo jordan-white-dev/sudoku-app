@@ -406,11 +406,11 @@ const dispatchKeyboardEvent = async (keyboardEventInit: KeyboardEventInit) => {
 // #endregion
 
 // #region Board State Content
-const getBoardStateWithMarkupsInTargetCells = (
+const getBoardStateWithMarkupDigitsInTargetCells = (
   markupKeypadMode: MarkupKeypadMode,
-  markupsToEnterInTargetCells: Array<{
+  markupDigitsToEnterInTargetCells: Array<{
     cellId: CellId;
-    markups: Array<SudokuDigit>;
+    markupDigits: Array<SudokuDigit>;
   }>,
   startingBoardState?: BoardState,
 ): BoardState => {
@@ -418,23 +418,25 @@ const getBoardStateWithMarkupsInTargetCells = (
 
   const nextBoardState: BoardState = boardState.map((cellState) => {
     const nextCellState: CellState = (() => {
-      const markupsToEnterInTargetCell = markupsToEnterInTargetCells.find(
-        (digitInCellObject) => digitInCellObject.cellId === cellState.id,
-      );
+      const markupDigitsToEnterInTargetCell =
+        markupDigitsToEnterInTargetCells.find(
+          (markupDigitsToEnterInTargetCell) =>
+            markupDigitsToEnterInTargetCell.cellId === cellState.id,
+        );
 
-      if (markupsToEnterInTargetCell) {
+      if (markupDigitsToEnterInTargetCell) {
         const markupContentKey: keyof MarkupDigitsCellContent =
           markupKeypadMode === "Center" ? "centerMarkups" : "cornerMarkups";
 
-        const cellStateWithMarkups: CellState = {
+        const cellStateWithMarkupDigits: CellState = {
           ...cellState,
           content: {
             ...cellState.content,
-            [markupContentKey]: markupsToEnterInTargetCell.markups,
+            [markupContentKey]: markupDigitsToEnterInTargetCell.markupDigits,
           },
         };
 
-        return cellStateWithMarkups;
+        return cellStateWithMarkupDigits;
       }
 
       return cellState;
@@ -447,28 +449,28 @@ const getBoardStateWithMarkupsInTargetCells = (
 };
 
 const getBoardStateWithCenterMarkupsInTargetCells = (
-  markupsToEnterInTargetCells: Array<{
+  markupDigitsToEnterInTargetCells: Array<{
     cellId: CellId;
-    markups: Array<SudokuDigit>;
+    markupDigits: Array<SudokuDigit>;
   }>,
   startingBoardState?: BoardState,
 ): BoardState =>
-  getBoardStateWithMarkupsInTargetCells(
+  getBoardStateWithMarkupDigitsInTargetCells(
     "Center",
-    markupsToEnterInTargetCells,
+    markupDigitsToEnterInTargetCells,
     startingBoardState,
   );
 
 const getBoardStateWithCornerMarkupsInTargetCells = (
-  markupsToEnterInTargetCells: Array<{
+  markupDigitsToEnterInTargetCells: Array<{
     cellId: CellId;
-    markups: Array<SudokuDigit>;
+    markupDigits: Array<SudokuDigit>;
   }>,
   startingBoardState?: BoardState,
 ): BoardState =>
-  getBoardStateWithMarkupsInTargetCells(
+  getBoardStateWithMarkupDigitsInTargetCells(
     "Corner",
-    markupsToEnterInTargetCells,
+    markupDigitsToEnterInTargetCells,
     startingBoardState,
   );
 // #endregion
@@ -1530,19 +1532,31 @@ describe("Show conflict digit highlights", () => {
       [
         {
           cellId: getBrandedCellId(1),
-          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+          markupDigits: [
+            getBrandedSudokuDigit("5"),
+            getBrandedSudokuDigit("6"),
+          ],
         },
         {
           cellId: getBrandedCellId(9),
-          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+          markupDigits: [
+            getBrandedSudokuDigit("5"),
+            getBrandedSudokuDigit("6"),
+          ],
         },
         {
           cellId: getBrandedCellId(10),
-          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+          markupDigits: [
+            getBrandedSudokuDigit("5"),
+            getBrandedSudokuDigit("6"),
+          ],
         },
         {
           cellId: getBrandedCellId(21),
-          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+          markupDigits: [
+            getBrandedSudokuDigit("5"),
+            getBrandedSudokuDigit("6"),
+          ],
         },
       ],
       boardStateWithEnteredDigitInTargetCell,
@@ -1576,19 +1590,31 @@ describe("Show conflict digit highlights", () => {
       [
         {
           cellId: getBrandedCellId(1),
-          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+          markupDigits: [
+            getBrandedSudokuDigit("5"),
+            getBrandedSudokuDigit("6"),
+          ],
         },
         {
           cellId: getBrandedCellId(9),
-          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+          markupDigits: [
+            getBrandedSudokuDigit("5"),
+            getBrandedSudokuDigit("6"),
+          ],
         },
         {
           cellId: getBrandedCellId(10),
-          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+          markupDigits: [
+            getBrandedSudokuDigit("5"),
+            getBrandedSudokuDigit("6"),
+          ],
         },
         {
           cellId: getBrandedCellId(21),
-          markups: [getBrandedSudokuDigit("5"), getBrandedSudokuDigit("6")],
+          markupDigits: [
+            getBrandedSudokuDigit("5"),
+            getBrandedSudokuDigit("6"),
+          ],
         },
       ],
       boardStateWithEnteredDigitInTargetCell,

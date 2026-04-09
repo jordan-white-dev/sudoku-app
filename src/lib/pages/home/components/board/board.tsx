@@ -16,9 +16,12 @@ import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-us
 import { CELLS_PER_HOUSE } from "@/lib/pages/home/utils/constants";
 import { getAriaLabelForTargetCell } from "@/lib/pages/home/utils/display";
 import {
+  isGivenDigitCellContent,
+  isMarkupDigitsOrEmptyCellContent,
+} from "@/lib/pages/home/utils/guards";
+import {
   getBoardStateWithNoCellsSelected,
   getCurrentBoardStateFromPuzzleState,
-  getGivenOrEnteredDigitInCellIfPresent,
   updatePuzzleStateWithCurrentBoardState,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -95,13 +98,13 @@ const getConflictedCellIds = (boardState: BoardState): Set<CellId> => {
   const sudokuDigitOccurrencesByRow = getEmptyDigitOccurrencesByHouse();
 
   for (const cellState of boardState) {
-    const sudokuDigit = getGivenOrEnteredDigitInCellIfPresent(
-      cellState.content,
-    );
-
-    if (sudokuDigit === "") {
+    if (isMarkupDigitsOrEmptyCellContent(cellState.content)) {
       continue;
     }
+
+    const sudokuDigit = isGivenDigitCellContent(cellState.content)
+      ? cellState.content.givenDigit
+      : cellState.content.enteredDigit;
 
     addSudokuDigitOccurrenceToHouse(
       cellState.id,

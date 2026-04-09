@@ -30,12 +30,15 @@ import {
 } from "@/lib/pages/home/utils/actions/actions";
 import { CELLS_PER_HOUSE } from "@/lib/pages/home/utils/constants";
 import { getCellSizeScaledBy } from "@/lib/pages/home/utils/display";
+import {
+  isGivenDigitCellContent,
+  isMarkupDigitsOrEmptyCellContent,
+} from "@/lib/pages/home/utils/guards";
 import { makePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
 import {
   getBoardStateFromRawBoardState,
   getCurrentBoardStateFromPuzzleState,
   getEncodedPuzzleStringFromRawPuzzleString,
-  getGivenOrEnteredDigitInCellIfPresent,
   getRawPuzzleStringFromRawBoardState,
 } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -314,12 +317,13 @@ const getIsPuzzleSolved = (boardState: BoardState): boolean => {
   );
 
   for (const cellState of boardState) {
-    const givenOrEnteredDigit = getGivenOrEnteredDigitInCellIfPresent(
-      cellState.content,
-    );
-    if (givenOrEnteredDigit === "") {
+    if (isMarkupDigitsOrEmptyCellContent(cellState.content)) {
       return false;
     }
+
+    const givenOrEnteredDigit = isGivenDigitCellContent(cellState.content)
+      ? cellState.content.givenDigit
+      : cellState.content.enteredDigit;
 
     const boxIndex = cellState.houses.boxNumber - 1;
     const columnIndex = cellState.houses.columnNumber - 1;

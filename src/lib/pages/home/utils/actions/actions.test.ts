@@ -22,8 +22,8 @@ import {
   MARKUP_COLOR_YELLOW,
 } from "@/lib/pages/home/utils/constants";
 import {
-  isEnteredDigitInCellContent,
-  isMarkupDigitsInCellContent,
+  isNotEnteredDigitCellContent,
+  isNotMarkupDigitsCellContent,
 } from "@/lib/pages/home/utils/guards";
 import {
   doesTargetCellContainEmptyCellContent,
@@ -38,9 +38,12 @@ import {
 import { getCurrentBoardStateFromPuzzleState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
   type BoardState,
+  type CellContent,
   type CellId,
   type CellState,
   type MarkupColor,
+  type MarkupColors,
+  type MarkupDigits,
   type PuzzleState,
   type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
@@ -242,22 +245,47 @@ const getBoardStateWithMarkupDigitsInTargetCell = (
   cornerMarkups: Array<SudokuDigit>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
-      cellState.id === cellId
-        ? {
-            ...cellState,
-            content: {
-              centerMarkups:
-                centerMarkups.length > 0
-                  ? centerMarkups.map(getBrandedSudokuDigit)
-                  : [""],
-              cornerMarkups:
-                cornerMarkups.length > 0
-                  ? cornerMarkups.map(getBrandedSudokuDigit)
-                  : [""],
-            },
-          }
-        : cellState;
+    if (cellState.id !== cellId) {
+      return cellState;
+    }
+
+    if (centerMarkups.length === 0 && cornerMarkups.length === 0) {
+      const nextCellState: CellState = {
+        ...cellState,
+        content: { emptyCell: "" },
+      };
+
+      return nextCellState;
+    }
+
+    if (centerMarkups.length === 0) {
+      const content: CellContent = {
+        centerMarkups: [""],
+        cornerMarkups,
+      };
+
+      const nextCellState: CellState = { ...cellState, content };
+
+      return nextCellState;
+    }
+
+    if (cornerMarkups.length === 0) {
+      const content: CellContent = {
+        centerMarkups,
+        cornerMarkups: [""],
+      };
+
+      const nextCellState: CellState = { ...cellState, content };
+
+      return nextCellState;
+    }
+
+    const content: CellContent = {
+      centerMarkups,
+      cornerMarkups,
+    };
+
+    const nextCellState: CellState = { ...cellState, content };
 
     return nextCellState;
   });
@@ -271,20 +299,24 @@ const getBoardStateWithCenterMarkupsInTargetCell = (
   centerMarkups: Array<SudokuDigit>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
-      cellState.id === cellId
-        ? {
-            ...cellState,
-            content: {
-              centerMarkups:
-                centerMarkups.length > 0
-                  ? centerMarkups.map(getBrandedSudokuDigit)
-                  : [""],
-              cornerMarkups: [""],
-            },
-          }
-        : cellState;
+    if (cellState.id !== cellId) {
+      return cellState;
+    }
 
+    if (centerMarkups.length === 0) {
+      const nextCellState: CellState = {
+        ...cellState,
+        content: { emptyCell: "" },
+      };
+      return nextCellState;
+    }
+
+    const content: CellContent = {
+      centerMarkups: centerMarkups.map(getBrandedSudokuDigit),
+      cornerMarkups: [""],
+    };
+
+    const nextCellState: CellState = { ...cellState, content };
     return nextCellState;
   });
 
@@ -297,20 +329,24 @@ const getBoardStateWithCornerMarkupsInTargetCell = (
   cornerMarkups: Array<SudokuDigit>,
 ): BoardState => {
   const nextBoardState: BoardState = boardState.map((cellState) => {
-    const nextCellState: CellState =
-      cellState.id === cellId
-        ? {
-            ...cellState,
-            content: {
-              centerMarkups: [""],
-              cornerMarkups:
-                cornerMarkups.length > 0
-                  ? cornerMarkups.map(getBrandedSudokuDigit)
-                  : [""],
-            },
-          }
-        : cellState;
+    if (cellState.id !== cellId) {
+      return cellState;
+    }
 
+    if (cornerMarkups.length === 0) {
+      const nextCellState: CellState = {
+        ...cellState,
+        content: { emptyCell: "" },
+      };
+      return nextCellState;
+    }
+
+    const content: CellContent = {
+      centerMarkups: [""],
+      cornerMarkups: cornerMarkups.map(getBrandedSudokuDigit),
+    };
+
+    const nextCellState: CellState = { ...cellState, content };
     return nextCellState;
   });
 
@@ -347,7 +383,7 @@ const getEnteredDigitInTargetCell = (
 ): SudokuDigit | undefined => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  if (!isEnteredDigitInCellContent(cellState.content)) {
+  if (isNotEnteredDigitCellContent(cellState.content)) {
     return;
   }
 
@@ -357,10 +393,10 @@ const getEnteredDigitInTargetCell = (
 const getCenterMarkupsInTargetCell = (
   boardState: BoardState,
   cellId: CellId,
-): [""] | Array<SudokuDigit> | undefined => {
+): MarkupDigits | undefined => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  if (!isMarkupDigitsInCellContent(cellState.content)) {
+  if (isNotMarkupDigitsCellContent(cellState.content)) {
     return;
   }
 
@@ -370,10 +406,10 @@ const getCenterMarkupsInTargetCell = (
 const getCornerMarkupsInTargetCell = (
   boardState: BoardState,
   cellId: CellId,
-): [""] | Array<SudokuDigit> | undefined => {
+): MarkupDigits | undefined => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  if (!isMarkupDigitsInCellContent(cellState.content)) {
+  if (isNotMarkupDigitsCellContent(cellState.content)) {
     return;
   }
 
@@ -383,7 +419,7 @@ const getCornerMarkupsInTargetCell = (
 const getMarkupColorsInTargetCell = (
   boardState: BoardState,
   cellId: CellId,
-): [""] | Array<MarkupColor> => {
+): MarkupColors => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
   return cellState.markupColors;
@@ -1148,11 +1184,17 @@ describe("Center markup entry", () => {
 
     // Assert
     expect(
-      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
-    ).toEqual([""]);
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(1),
+      ),
+    ).toBe(true);
     expect(
-      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(2)),
-    ).toEqual([""]);
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(2),
+      ),
+    ).toBe(true);
   });
 
   it("removes only the entered center markup from all selected cells when they contain the markup and another center markup", () => {
@@ -1306,8 +1348,11 @@ describe("Center markup entry", () => {
       getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
     ).toBe(getBrandedSudokuDigit("5"));
     expect(
-      getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(3)),
-    ).toEqual([""]);
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(3),
+      ),
+    ).toBe(true);
   });
 
   it("leaves unselected cells unchanged when entering a center markup", () => {
@@ -1754,8 +1799,11 @@ describe("Corner markup entry", () => {
 
     // Assert
     expect(
-      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
-    ).toEqual([""]);
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(1),
+      ),
+    ).toBe(true);
   });
 
   it("removes only the entered corner markup from all selected cells when they contain the markup and another corner markup", () => {
@@ -1909,8 +1957,11 @@ describe("Corner markup entry", () => {
       getEnteredDigitInTargetCell(currentBoardState, getBrandedCellId(2)),
     ).toBe(getBrandedSudokuDigit("5"));
     expect(
-      getCornerMarkupsInTargetCell(currentBoardState, getBrandedCellId(3)),
-    ).toEqual([""]);
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(3),
+      ),
+    ).toBe(true);
   });
 
   it("leaves unselected cells unchanged when entering a corner markup", () => {

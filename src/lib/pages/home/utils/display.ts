@@ -11,9 +11,11 @@ import {
   markupColors,
 } from "@/lib/pages/home/utils/constants";
 import {
-  isEnteredDigitInCellContent,
-  isGivenDigitInCellContent,
-  isMarkupDigitsInCellContent,
+  isEnteredDigitCellContent,
+  isGivenDigitCellContent,
+  isMarkupDigitsCellContent,
+  isNonEmptyCenterMarkupsCellContent,
+  isNonEmptyCornerMarkupsCellContent,
 } from "@/lib/pages/home/utils/guards";
 import { type CellState } from "@/lib/pages/home/utils/types";
 
@@ -40,18 +42,18 @@ export const getAriaLabelForTargetCell = (targetCell: CellState): string => {
   const location = `Row ${rowNumber}, Column ${columnNumber}`;
   const parts: Array<string> = [];
 
-  if (isGivenDigitInCellContent(cellContent)) {
+  if (isGivenDigitCellContent(cellContent)) {
     parts.push(`given digit ${cellContent.givenDigit}`);
-  } else if (isEnteredDigitInCellContent(cellContent)) {
+  } else if (isEnteredDigitCellContent(cellContent)) {
     parts.push(`entered digit ${cellContent.enteredDigit}`);
-  } else if (isMarkupDigitsInCellContent(cellContent)) {
-    if (cellContent.centerMarkups[0] !== "") {
+  } else if (isMarkupDigitsCellContent(cellContent)) {
+    if (isNonEmptyCenterMarkupsCellContent(cellContent)) {
       parts.push(
         `center markup ${[...cellContent.centerMarkups].sort().join(" ")}`,
       );
     }
 
-    if (cellContent.cornerMarkups[0] !== "") {
+    if (isNonEmptyCornerMarkupsCellContent(cellContent)) {
       parts.push(
         `corner markup ${[...cellContent.cornerMarkups].sort().join(" ")}`,
       );

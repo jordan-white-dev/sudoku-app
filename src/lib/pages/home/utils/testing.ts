@@ -7,7 +7,7 @@ import {
 } from "@/lib/pages/home/utils/constants";
 import {
   isEmptyCellContent,
-  isGivenDigitInCellContent,
+  isNotGivenDigitCellContent,
 } from "@/lib/pages/home/utils/guards";
 import { getBoardStateFromRawBoardState } from "@/lib/pages/home/utils/transforms/transforms";
 import {
@@ -197,7 +197,7 @@ export const getGivenDigitInTargetCell = (
 ): SudokuDigit | undefined => {
   const cellState = getTargetCellStateFromBoardState(cellId, boardState);
 
-  if (!isGivenDigitInCellContent(cellState.content)) {
+  if (isNotGivenDigitCellContent(cellState.content)) {
     return;
   }
 

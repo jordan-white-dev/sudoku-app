@@ -3,10 +3,6 @@ import {
   TOTAL_CELLS_IN_BOARD,
 } from "@/lib/pages/home/utils/constants";
 import {
-  isEnteredDigitInCellContent,
-  isGivenDigitInCellContent,
-} from "@/lib/pages/home/utils/guards";
-import {
   type BoardState,
   type CellContent,
   type CellState,
@@ -16,7 +12,6 @@ import {
   type RawBoardState,
   type RawGivenDigit,
   type RawPuzzleString,
-  type SudokuDigit,
 } from "@/lib/pages/home/utils/types";
 import {
   getBrandedBoxNumber,
@@ -183,19 +178,5 @@ export const updatePuzzleStateWithCurrentBoardState = (
   };
 
   return nextPuzzleState;
-};
-// #endregion
-
-// #region Digit Accessor
-export const getGivenOrEnteredDigitInCellIfPresent = (
-  cellContent: CellContent,
-): SudokuDigit | "" => {
-  if (isGivenDigitInCellContent(cellContent)) {
-    return cellContent.givenDigit;
-  }
-  if (isEnteredDigitInCellContent(cellContent)) {
-    return cellContent.enteredDigit;
-  }
-  return "";
 };
 // #endregion
