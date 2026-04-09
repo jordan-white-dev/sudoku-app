@@ -41,11 +41,8 @@ export const [isRawGivenDigit, BrandedRawGivenDigit] = branded(
 // #endregion
 
 // #region Sudoku Digit Validator
-const sudokuDigitStringSet = new Set<string>(sudokuDigits);
-
 export const [isSudokuDigit, BrandedSudokuDigit] = branded(
-  (input: string) =>
-    typeof input === "string" && sudokuDigitStringSet.has(input),
+  (input: string) => sudokuDigits.some((sudokuDigit) => sudokuDigit === input),
   "SudokuDigit",
 );
 // #endregion
