@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
+  getBrandedBoxNumber,
+  getBrandedColumnNumber,
+  getBrandedRowNumber,
   getBrandedSudokuDigit,
   isBoxNumber,
   isCellId,
@@ -817,6 +820,80 @@ describe("Board Coordinate Validators", () => {
 
       // Assert
       expect(isValidRowNumber).toBe(false);
+    });
+  });
+});
+
+describe("Branded or Throw Validators", () => {
+  describe("getBrandedBoxNumber", () => {
+    it("returns a valid box number unchanged", () => {
+      // Act
+      const boxNumber = getBrandedBoxNumber(5);
+
+      // Assert
+      expect(boxNumber).toBe(5);
+    });
+
+    it("throws for a box number below the valid range", () => {
+      // Assert
+      expect(() => getBrandedBoxNumber(0)).toThrow(
+        'Encountered an invalid BoxNumber "0".',
+      );
+    });
+
+    it("throws for a box number above the valid range", () => {
+      // Assert
+      expect(() => getBrandedBoxNumber(10)).toThrow(
+        'Encountered an invalid BoxNumber "10".',
+      );
+    });
+  });
+
+  describe("getBrandedColumnNumber", () => {
+    it("returns a valid column number unchanged", () => {
+      // Act
+      const columnNumber = getBrandedColumnNumber(3);
+
+      // Assert
+      expect(columnNumber).toBe(3);
+    });
+
+    it("throws for a column number below the valid range", () => {
+      // Assert
+      expect(() => getBrandedColumnNumber(0)).toThrow(
+        'Encountered an invalid ColumnNumber "0".',
+      );
+    });
+
+    it("throws for a column number above the valid range", () => {
+      // Assert
+      expect(() => getBrandedColumnNumber(10)).toThrow(
+        'Encountered an invalid ColumnNumber "10".',
+      );
+    });
+  });
+
+  describe("getBrandedRowNumber", () => {
+    it("returns a valid row number unchanged", () => {
+      // Act
+      const rowNumber = getBrandedRowNumber(7);
+
+      // Assert
+      expect(rowNumber).toBe(7);
+    });
+
+    it("throws for a row number below the valid range", () => {
+      // Assert
+      expect(() => getBrandedRowNumber(0)).toThrow(
+        'Encountered an invalid RowNumber "0".',
+      );
+    });
+
+    it("throws for a row number above the valid range", () => {
+      // Assert
+      expect(() => getBrandedRowNumber(10)).toThrow(
+        'Encountered an invalid RowNumber "10".',
+      );
     });
   });
 });

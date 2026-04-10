@@ -408,3 +408,15 @@ describe("Board state transforms", () => {
     });
   });
 });
+
+describe("getRawPuzzleStringFromRawBoardState error handling", () => {
+  it("throws when the raw board state produces an invalid raw puzzle string", () => {
+    // Arrange
+    const emptyBoardState = [] as unknown as RawBoardState;
+
+    // Assert
+    expect(() => getRawPuzzleStringFromRawBoardState(emptyBoardState)).toThrow(
+      'Failed to get a RawPuzzleString from the RawBoardState. The attempted final output "" was invalid.',
+    );
+  });
+});

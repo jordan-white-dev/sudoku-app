@@ -249,6 +249,23 @@ describe("Stopwatch rendering", () => {
     expect(await getHiddenStopwatchRootElement(renderedStopwatch)).toBeTruthy();
   });
 
+  it("shows a wider stopwatch button when the formatted time is 6 characters (100+ minutes)", async () => {
+    // Arrange
+    const renderedStopwatch = await renderStopwatch({
+      stopwatchHookValue: {
+        hours: 1,
+        minutes: 40,
+        seconds: 0,
+        totalSeconds: 6000,
+      },
+    });
+
+    // Assert
+    await expect
+      .element(renderedStopwatch.getByText("100:00"))
+      .toBeInTheDocument();
+  });
+
   it("keeps the stopwatch visible when the hide stopwatch setting is disabled", async () => {
     // Arrange
     const renderedStopwatch = await renderStopwatch({

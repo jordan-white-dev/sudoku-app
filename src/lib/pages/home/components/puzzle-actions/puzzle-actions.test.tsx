@@ -571,3 +571,65 @@ describe("Restart puzzle dialog", () => {
     expect(setPuzzleStateSpy).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("Row layout rendering", () => {
+  it("renders action buttons with row layout aspect ratios when isRowLayout is true", async () => {
+    // Arrange
+    const rendered = await render(
+      <Provider>
+        <UserSettingsProvider>
+          <SudokuStopwatchProviderBridge encodedPuzzleString="test-puzzle">
+            <PuzzleActions
+              isRowLayout={true}
+              puzzleState={getUnsolvedPuzzleState()}
+              rawBoardState={EMPTY_RAW_BOARD_STATE}
+              setPuzzleState={vi.fn()}
+            />
+          </SudokuStopwatchProviderBridge>
+        </UserSettingsProvider>
+      </Provider>,
+    );
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    await expect
+      .element(
+        rendered.getByRole("button", { name: "Check the current solution" }),
+      )
+      .toBeInTheDocument();
+  });
+});
+
+describe("Check solution dialog with conflicting digits", () => {
+  it("shows Try Again when all cells are filled but duplicate digits exist in the same box", async () => {
+    // Arrange
+    const allCellsWithSameDigit = Array.from(
+      { length: TOTAL_CELLS_IN_BOARD },
+      (_, index) => ({
+        cellId: getBrandedCellId(index + 1),
+        digit: getBrandedSudokuDigit("1"),
+      }),
+    );
+    const conflictingBoardState = getBoardStateWithEnteredDigitsInTargetCells(
+      allCellsWithSameDigit,
+    );
+    const conflictingPuzzleState = getStartingPuzzleStateFromBoardState(
+      conflictingBoardState,
+    );
+
+    const { renderedPuzzleActions } = await renderPuzzleActions({
+      puzzleState: conflictingPuzzleState,
+    });
+
+    // Act
+    await openDialogFromActionButton(
+      renderedPuzzleActions,
+      "Check the current solution",
+    );
+
+    // Assert
+    await expect
+      .element(renderedPuzzleActions.getByText("Try Again"))
+      .toBeInTheDocument();
+  });
+});

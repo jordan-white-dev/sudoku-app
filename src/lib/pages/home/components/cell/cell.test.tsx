@@ -1410,6 +1410,32 @@ describe("Background state: seen cells", () => {
     ).toBe(false);
   });
 
+  it("shows a seen-column highlight even when selected row/column numbers are undefined", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(10);
+    const targetCellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      getStartingEmptyBoardState(),
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      cellState: targetCellState,
+      isSeenInColumn: true,
+      selectedColumnNumber: undefined,
+      selectedRowNumber: undefined,
+      userSettings: {
+        ...defaultUserSettings,
+        isShowSeenCellsEnabled: true,
+      },
+    });
+
+    // Assert
+    expect(
+      await hasSeenCellHighlightInTargetCell(renderedCell, targetCellId),
+    ).toBe(true);
+  });
+
   it("uses a single full-cell seen rectangle when row, column, and box highlights all apply", async () => {
     // Arrange
     const targetCellId = getBrandedCellId(40);
@@ -2007,6 +2033,41 @@ describe("Double-click selection (partial highlight mode)", () => {
     expect(getSelectedCellIds(nextBoardState)).toEqual([10, 60]);
   });
 
+  it("does not select cells with non-overlapping markup colors", async () => {
+    // Arrange
+    const sourceCellId = getBrandedCellId(10);
+    const nonMatchingCellId = getBrandedCellId(61);
+    let boardState = getStartingEmptyBoardState();
+
+    boardState = getBoardStateWithUpdatedTargetCell(
+      sourceCellId,
+      {
+        markupColors: [MARKUP_COLOR_RED],
+      },
+      boardState,
+    );
+    boardState = getBoardStateWithUpdatedTargetCell(
+      nonMatchingCellId,
+      {
+        markupColors: [MARKUP_COLOR_BLUE],
+      },
+      boardState,
+    );
+
+    // Act
+    const nextBoardState = await getNextBoardStateAfterDoubleClick({
+      boardState,
+      targetCellId: sourceCellId,
+      userSettings: defaultUserSettings,
+    });
+
+    // Assert
+    expect(
+      getTargetCellStateFromBoardState(nonMatchingCellId, nextBoardState)
+        .isSelected,
+    ).toBe(false);
+  });
+
   it("does not select empty cells when double-clicking a non-empty cell", async () => {
     // Arrange
     const sourceCellId = getBrandedCellId(10);
@@ -2272,6 +2333,89 @@ describe("Double-click selection (strict highlight mode)", () => {
     // Assert
     expect(
       getTargetCellStateFromBoardState(emptyCellId, nextBoardState).isSelected,
+    ).toBe(false);
+  });
+
+  it("does not select a same-digit candidate when source markup colors are non-empty but candidate markup colors are empty", async () => {
+    // Arrange
+    const sourceCellId = getBrandedCellId(10);
+    const candidateCellId = getBrandedCellId(21);
+    let boardState = getStartingEmptyBoardState();
+    boardState = getBoardStateWithUpdatedTargetCell(
+      sourceCellId,
+      {
+        content: { enteredDigit: getBrandedSudokuDigit("6") },
+        markupColors: [MARKUP_COLOR_GREEN],
+      },
+      boardState,
+    );
+    boardState = getBoardStateWithUpdatedTargetCell(
+      candidateCellId,
+      {
+        content: { enteredDigit: getBrandedSudokuDigit("6") },
+        markupColors: [""],
+      },
+      boardState,
+    );
+
+    // Act
+    const nextBoardState = await getNextBoardStateAfterDoubleClick({
+      boardState,
+      targetCellId: sourceCellId,
+      userSettings: {
+        ...defaultUserSettings,
+        isStrictHighlightsEnabled: true,
+      },
+    });
+
+    // Assert
+    expect(
+      getTargetCellStateFromBoardState(candidateCellId, nextBoardState)
+        .isSelected,
+    ).toBe(false);
+  });
+
+  it("does not select a candidate when strict markup corners are empty on the candidate", async () => {
+    // Arrange
+    const sourceCellId = getBrandedCellId(10);
+    const candidateCellId = getBrandedCellId(22);
+    let boardState = getStartingEmptyBoardState();
+
+    boardState = getBoardStateWithUpdatedTargetCell(
+      sourceCellId,
+      {
+        content: {
+          centerMarkups: [getBrandedSudokuDigit("1")],
+          cornerMarkups: [getBrandedSudokuDigit("3")],
+        },
+      },
+      boardState,
+    );
+    boardState = getBoardStateWithUpdatedTargetCell(
+      candidateCellId,
+      {
+        content: {
+          centerMarkups: [getBrandedSudokuDigit("1")],
+          cornerMarkups: [""],
+        },
+      },
+      boardState,
+    );
+
+    // Act
+    const nextBoardState = await getNextBoardStateAfterDoubleClick({
+      boardState,
+      targetCellId: sourceCellId,
+      userSettings: {
+        ...defaultUserSettings,
+        isStrictHighlightsEnabled: true,
+      },
+    });
+
+    // Assert
+    expect(
+      getTargetCellStateFromBoardState(candidateCellId, nextBoardState)
+        .isSelected,
     ).toBe(false);
   });
 });

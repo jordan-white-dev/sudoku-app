@@ -225,3 +225,65 @@ describe("Pointer down inside puzzle selection behavior", () => {
     ).toBe("true");
   });
 });
+
+describe("Pointer down outside with multi-entry puzzle history", () => {
+  it("preserves non-current history entries when clearing selection", async () => {
+    // Arrange
+    const initialBoardState = getStartingEmptyBoardState();
+    const boardStateWithSelectedCell = getBoardStateWithTargetCellsSelected([
+      getBrandedCellId(5),
+    ]);
+    const puzzleStateWithHistory = {
+      historyIndex: 1,
+      puzzleHistory: [initialBoardState, boardStateWithSelectedCell],
+    };
+    window.sessionStorage.setItem(
+      "puzzle-state-test-puzzle",
+      JSON.stringify(puzzleStateWithHistory),
+    );
+    const renderedPuzzle = await renderPuzzle();
+    const selectedCellBeforeOutsidePointerDown = await getCellElement(
+      renderedPuzzle,
+      getBrandedCellId(5),
+    );
+
+    // Act
+    await dispatchPointerDownEvent(document.body);
+
+    // Assert
+    expect(
+      selectedCellBeforeOutsidePointerDown.getAttribute("data-selected"),
+    ).toBe("false");
+  });
+});
+
+describe("Row layout from dimensions", () => {
+  it("renders in row direction when the container is wider than it is tall", async () => {
+    // Arrange
+    vi.spyOn(Element.prototype, "getBoundingClientRect").mockReturnValue({
+      width: 1000,
+      height: 100,
+      top: 0,
+      right: 1000,
+      bottom: 100,
+      left: 0,
+      x: 0,
+      y: 0,
+      toJSON: () => ({}),
+    } as DOMRect);
+
+    // Act
+    const renderedPuzzle = await renderPuzzle();
+
+    // Assert
+    await expect
+      .element(
+        renderedPuzzle.getByRole("radiogroup", {
+          name: "Keypad mode selector",
+        }),
+      )
+      .toBeInTheDocument();
+
+    vi.restoreAllMocks();
+  });
+});

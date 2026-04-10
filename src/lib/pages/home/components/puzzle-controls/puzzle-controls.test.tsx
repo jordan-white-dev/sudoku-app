@@ -564,3 +564,126 @@ describe("Keypad mode shortcut blocking", () => {
       .toBeChecked();
   });
 });
+
+describe("Duplicate modifier key press", () => {
+  it("stays in the same effective mode when the same modifier key is pressed twice", async () => {
+    // Arrange
+    const renderedPuzzleControls = await renderPuzzleControls({
+      startingKeypadMode: "Digit",
+    });
+
+    // Act
+    await dispatchWindowKeyboardEvent("keydown", { key: "Control" });
+    await dispatchWindowKeyboardEvent("keydown", { key: "Control" });
+
+    // Assert
+    await expect
+      .element(await getKeypadModeRadio(renderedPuzzleControls, "Center"))
+      .toBeChecked();
+
+    // Cleanup
+    await dispatchWindowKeyboardEvent("keyup", { key: "Control" });
+  });
+});
+
+describe("Shift timestamp tracking for numpad", () => {
+  it("treats a numpad key as unshifted when Shift was pressed but not yet released", async () => {
+    // Arrange
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
+
+    // Act
+    await dispatchWindowKeyboardEvent("keydown", { key: "Shift" });
+    await dispatchWindowKeyboardEvent("keydown", {
+      code: "Numpad5",
+      key: "5",
+      location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+      shiftKey: false,
+    });
+    await dispatchWindowKeyboardEvent("keyup", { key: "Shift" });
+
+    // Assert
+    expect(mockHandleCornerMarkupInput).toHaveBeenCalled();
+    expect(mockHandleDigitInput).not.toHaveBeenCalled();
+  });
+
+  it("reaches the timestamp calculation when Shift is pressed and released before a numpad key", async () => {
+    // Arrange
+    await renderPuzzleControls({ startingKeypadMode: "Digit" });
+
+    // Act
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        key: "Shift",
+      }),
+    );
+    window.dispatchEvent(
+      new KeyboardEvent("keyup", {
+        bubbles: true,
+        cancelable: true,
+        key: "Shift",
+      }),
+    );
+    window.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        bubbles: true,
+        cancelable: true,
+        code: "Numpad7",
+        key: "7",
+        location: KeyboardEvent.DOM_KEY_LOCATION_NUMPAD,
+        shiftKey: false,
+      }),
+    );
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    expect(mockHandleCornerMarkupInput).toHaveBeenCalledWith(
+      expect.anything(),
+      "7",
+      expect.anything(),
+    );
+  });
+});
+
+describe("Row layout rendering", () => {
+  it("renders puzzle controls in column direction when isRowLayout is true", async () => {
+    // Arrange
+    const TestPuzzleControls = () => {
+      const [isMultiselectMode, setIsMultiselectMode] = useState(false);
+      const [puzzleState, setPuzzleState] = useState(
+        getStartingPuzzleStateFromBoardState(getStartingEmptyBoardState()),
+      );
+
+      return (
+        <PuzzleControls
+          isMultiselectMode={isMultiselectMode}
+          isRowLayout={true}
+          puzzleState={puzzleState}
+          rawBoardState={EMPTY_RAW_BOARD_STATE}
+          setIsMultiselectMode={setIsMultiselectMode}
+          setPuzzleState={setPuzzleState}
+        />
+      );
+    };
+    const renderedPuzzleControls = await render(
+      <Provider>
+        <UserSettingsProvider>
+          <SudokuStopwatchProviderBridge>
+            <TestPuzzleControls />
+          </SudokuStopwatchProviderBridge>
+        </UserSettingsProvider>
+      </Provider>,
+    );
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    await expect
+      .element(
+        renderedPuzzleControls.getByRole("button", {
+          name: "Check the current solution",
+        }),
+      )
+      .toBeInTheDocument();
+  });
+});

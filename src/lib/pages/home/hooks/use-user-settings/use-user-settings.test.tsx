@@ -235,3 +235,25 @@ describe("Updating a setting", () => {
     expect(storedSettings.isConflictCheckerEnabled).toBe(true);
   });
 });
+
+describe("Hook error boundary", () => {
+  it("throws when useUserSettings is used outside UserSettingsProvider", async () => {
+    // Arrange
+    const ThrowingComponent = () => {
+      useUserSettings();
+
+      return null;
+    };
+
+    // Assert
+    await expect(
+      render(
+        <Provider>
+          <ThrowingComponent />
+        </Provider>,
+      ),
+    ).rejects.toThrow(
+      "useUserSettings must be used inside UserSettingsProvider",
+    );
+  });
+});

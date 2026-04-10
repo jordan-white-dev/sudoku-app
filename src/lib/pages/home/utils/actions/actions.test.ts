@@ -445,6 +445,26 @@ const doesPuzzleStateMatchItsStartingState = (
 // #endregion
 
 describe("Digit entry", () => {
+  it("does not change the puzzle state when no cells are selected", () => {
+    // Arrange
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied();
+
+    // Act
+    const nextPuzzleState = getPuzzleStateAfterDigitInput(
+      startingPuzzleState,
+      getBrandedSudokuDigit("5"),
+    );
+
+    // Assert
+    expect(
+      doesPuzzleStateMatchItsStartingState(
+        nextPuzzleState,
+        startingPuzzleState,
+      ),
+    ).toBe(true);
+  });
+
   it("fills all selected editable cells with the entered digit when they're empty", () => {
     const startingBoardState = getBoardStateWithTargetCellsSelected([
       getBrandedCellId(1),
@@ -1480,6 +1500,43 @@ describe("Center markup entry", () => {
     expect(
       getCenterMarkupsInTargetCell(currentBoardState, getBrandedCellId(1)),
     ).toEqual([getBrandedSudokuDigit("1"), getBrandedSudokuDigit("3")]);
+  });
+
+  it("preserves corner markups in the cell when removing the last center markup from a cell that has both center and corner markups", () => {
+    // Arrange
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
+        (currentBoardState) =>
+          getBoardStateWithMarkupDigitsInTargetCell(
+            currentBoardState,
+            getBrandedCellId(1),
+            [getBrandedSudokuDigit("3")],
+            [getBrandedSudokuDigit("7")],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellId(1)],
+            currentBoardState,
+          ),
+      ]);
+
+    // Act
+    const nextPuzzleState = getPuzzleStateAfterCenterMarkupInput(
+      startingPuzzleState,
+      getBrandedSudokuDigit("3"),
+    );
+    const currentBoardState =
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
+    const cell1State = getTargetCellStateFromBoardState(
+      getBrandedCellId(1),
+      currentBoardState,
+    );
+
+    // Assert
+    expect(cell1State.content).toEqual({
+      centerMarkups: [""],
+      cornerMarkups: [getBrandedSudokuDigit("7")],
+    });
   });
 });
 

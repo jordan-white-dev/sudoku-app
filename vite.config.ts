@@ -61,11 +61,17 @@ export default defineConfig(({ mode }) => {
       open: true,
     },
     test: {
+      include: ["src/**/*.test.{ts,tsx}"],
       coverage: {
         provider: "v8",
-        include: ["**/*test.{ts,tsx,js,jsx}"],
+        include: ["src/**/*.{ts,tsx}"],
+        exclude: [
+          "src/**/*.test.{ts,tsx}",
+          "src/**/__tests__/**",
+          "src/routeTree.gen.ts",
+        ],
+        reporter: ["text", "html"],
       },
-      include: ["src/**/*.test.{ts,tsx}"],
       browser: {
         enabled: true,
         provider: playwright(),

@@ -147,4 +147,65 @@ describe("Changing keypad modes", () => {
       await isKeypadModeSelected(renderedKeypadModeSelector, "Digit"),
     ).toBe(false);
   });
+
+  it("updates to Corner mode, evaluating through Digit, Color, and Center branches in isKeypadMode", async () => {
+    // Arrange
+    const renderedKeypadModeSelector = await renderKeypadModeSelector({
+      startingKeypadMode: "Digit",
+    });
+    const cornerInput = await getKeypadModeInput(
+      renderedKeypadModeSelector,
+      "Corner",
+    );
+
+    // Act
+    cornerInput.click();
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    expect(
+      await isKeypadModeSelected(renderedKeypadModeSelector, "Corner"),
+    ).toBe(true);
+    expect(
+      await isKeypadModeSelected(renderedKeypadModeSelector, "Digit"),
+    ).toBe(false);
+  });
+});
+
+describe("Row layout rendering", () => {
+  it("renders all four keypad modes when isRowLayout is true", async () => {
+    // Arrange
+    const TestKeypadModeSelector = () => {
+      const [keypadMode, setBaseKeypadMode] = useState<KeypadMode>("Digit");
+
+      return (
+        <KeypadModeSelector
+          isRowLayout={true}
+          keypadMode={keypadMode}
+          setBaseKeypadMode={setBaseKeypadMode}
+        />
+      );
+    };
+    const renderedKeypadModeSelector = await render(
+      <Provider>
+        <TestKeypadModeSelector />
+      </Provider>,
+    );
+
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    expect(
+      await getKeypadModeInput(renderedKeypadModeSelector, "Digit"),
+    ).toBeTruthy();
+    expect(
+      await getKeypadModeInput(renderedKeypadModeSelector, "Center"),
+    ).toBeTruthy();
+    expect(
+      await getKeypadModeInput(renderedKeypadModeSelector, "Corner"),
+    ).toBeTruthy();
+    expect(
+      await getKeypadModeInput(renderedKeypadModeSelector, "Color"),
+    ).toBeTruthy();
+  });
 });

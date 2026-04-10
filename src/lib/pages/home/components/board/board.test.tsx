@@ -3951,4 +3951,124 @@ describe("Selecting cells by focusing the board", () => {
       getBrandedCellId(5),
     ]);
   });
+
+  it("does not change selection when focus moves between cells inside the board", async () => {
+    // Arrange
+    const renderedBoard = await renderBoard({
+      startingBoardState: getBoardStateWithTargetCellsSelected([
+        getBrandedCellId(5),
+      ]),
+    });
+    const firstFocusedCell = await getCellElement(
+      renderedBoard,
+      getBrandedCellId(5),
+    );
+    const secondFocusedCell = await getCellElement(
+      renderedBoard,
+      getBrandedCellId(6),
+    );
+
+    // Act
+    firstFocusedCell.focus();
+    await waitForReactToFinishUpdating();
+    secondFocusedCell.focus();
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    await expectOnlyTargetCellsToBeSelected(renderedBoard, [
+      getBrandedCellId(5),
+    ]);
+  });
+});
+
+describe("Board announcements", () => {
+  it("announces conflict count transitions", async () => {
+    // Arrange
+    const conflictFreeBoardState = getStartingEmptyBoardState();
+    const conflictedBoardState = getBoardStateWithEnteredDigitsInTargetCells([
+      {
+        cellId: getBrandedCellId(1),
+        digit: getBrandedSudokuDigit("1"),
+      },
+      {
+        cellId: getBrandedCellId(2),
+        digit: getBrandedSudokuDigit("1"),
+      },
+    ]);
+    window.sessionStorage.setItem(
+      USER_SETTINGS_SESSION_STORAGE_KEY,
+      JSON.stringify({
+        ...defaultUserSettings,
+        isConflictCheckerEnabled: true,
+      }),
+    );
+    const TestBoardWithStateChanges = () => {
+      const [puzzleState, setPuzzleState] = useState<PuzzleState>(
+        getStartingPuzzleStateFromBoardState(conflictFreeBoardState),
+      );
+      return (
+        <>
+          <button
+            type="button"
+            onClick={() => {
+              setPuzzleState(
+                getStartingPuzzleStateFromBoardState(conflictedBoardState),
+              );
+            }}
+          >
+            Introduce conflict
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setPuzzleState(
+                getStartingPuzzleStateFromBoardState(conflictFreeBoardState),
+              );
+            }}
+          >
+            Resolve conflict
+          </button>
+          <Board
+            isMultiselectMode={false}
+            puzzleState={puzzleState}
+            setPuzzleState={setPuzzleState}
+          />
+        </>
+      );
+    };
+    const renderedBoard = await render(
+      <Provider>
+        <UserSettingsProvider>
+          <TestBoardWithStateChanges />
+        </UserSettingsProvider>
+      </Provider>,
+    );
+    await waitForReactToFinishUpdating();
+
+    // Act
+    await renderedBoard
+      .getByRole("button", {
+        name: "Introduce conflict",
+      })
+      .click();
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    await expect
+      .element(renderedBoard.getByText("Digit conflict detected"))
+      .toBeInTheDocument();
+
+    // Act
+    await renderedBoard
+      .getByRole("button", {
+        name: "Resolve conflict",
+      })
+      .click();
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    await expect
+      .element(renderedBoard.getByText("No conflicts"))
+      .toBeInTheDocument();
+  });
 });

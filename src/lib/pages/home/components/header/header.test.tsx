@@ -384,6 +384,29 @@ describe("Settings menu interactions", () => {
     const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
     expect(parsedUserSettings.isStopwatchDisabled).toBe(false);
   });
+
+  it("toggles Show Row + Column Labels in session storage", async () => {
+    // Arrange
+    const renderedHeader = await renderHeader();
+    await openSettingsMenu(renderedHeader);
+
+    // Act
+    const showRowColumnLabelsOption = await getSettingCheckboxMenuItemLocator(
+      renderedHeader,
+      "Show Row + Column Labels",
+    );
+    await showRowColumnLabelsOption.click();
+
+    // Assert
+    const userSettingsInSessionStorage = window.sessionStorage.getItem(
+      USER_SETTINGS_SESSION_STORAGE_KEY,
+    );
+    if (!userSettingsInSessionStorage) {
+      throw new Error("Could not find user settings in session storage.");
+    }
+    const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
+    expect(parsedUserSettings.isShowRowAndColumnLabelsEnabled).toBe(true);
+  });
 });
 
 describe("Shortcuts menu content", () => {

@@ -263,3 +263,137 @@ describe("Re-enabling the stopwatch", () => {
     expect(mockOnChange).toHaveBeenCalledWith(false);
   });
 });
+
+describe("Page visibility", () => {
+  it("pauses the stopwatch when the page becomes hidden while it is running", async () => {
+    // Arrange
+    await renderWithProvider({
+      children: <FormattedStopwatchTimeDisplay />,
+      stopwatchHookValue: { isRunning: true },
+    });
+
+    mockPauseStopwatch.mockReset();
+
+    // Act
+    Object.defineProperty(document, "hidden", {
+      value: true,
+      configurable: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    expect(mockPauseStopwatch).toHaveBeenCalledOnce();
+
+    // Cleanup
+    Object.defineProperty(document, "hidden", {
+      value: false,
+      configurable: true,
+    });
+  });
+
+  it("does not pause the stopwatch when the page becomes hidden while it is not running", async () => {
+    // Arrange
+    await renderWithProvider({
+      children: <FormattedStopwatchTimeDisplay />,
+      stopwatchHookValue: { isRunning: false },
+    });
+
+    mockPauseStopwatch.mockReset();
+
+    // Act
+    Object.defineProperty(document, "hidden", {
+      value: true,
+      configurable: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    expect(mockPauseStopwatch).not.toHaveBeenCalled();
+
+    // Cleanup
+    Object.defineProperty(document, "hidden", {
+      value: false,
+      configurable: true,
+    });
+  });
+
+  it("resumes the stopwatch when the page becomes visible again if it was running before being hidden", async () => {
+    // Arrange
+    await renderWithProvider({
+      children: <FormattedStopwatchTimeDisplay />,
+      stopwatchHookValue: { isRunning: true },
+    });
+
+    Object.defineProperty(document, "hidden", {
+      value: true,
+      configurable: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+    await waitForReactToFinishUpdating();
+
+    mockStart.mockReset();
+
+    // Act
+    Object.defineProperty(document, "hidden", {
+      value: false,
+      configurable: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    expect(mockStart).toHaveBeenCalledOnce();
+  });
+
+  it("does not resume the stopwatch when the page becomes visible if it was not running when hidden", async () => {
+    // Arrange
+    await renderWithProvider({
+      children: <FormattedStopwatchTimeDisplay />,
+      stopwatchHookValue: { isRunning: false },
+    });
+
+    Object.defineProperty(document, "hidden", {
+      value: true,
+      configurable: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+    await waitForReactToFinishUpdating();
+
+    mockStart.mockReset();
+
+    // Act
+    Object.defineProperty(document, "hidden", {
+      value: false,
+      configurable: true,
+    });
+    document.dispatchEvent(new Event("visibilitychange"));
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    expect(mockStart).not.toHaveBeenCalled();
+  });
+});
+
+describe("Hook error boundary", () => {
+  it("throws when useSudokuStopwatch is used outside SudokuStopwatchProvider", async () => {
+    // Arrange
+    const ThrowingComponent = () => {
+      useSudokuStopwatch();
+
+      return null;
+    };
+
+    // Assert
+    await expect(
+      render(
+        <Provider>
+          <ThrowingComponent />
+        </Provider>,
+      ),
+    ).rejects.toThrow(
+      "useSudokuStopwatch must be used inside SudokuStopwatchProvider",
+    );
+  });
+});
