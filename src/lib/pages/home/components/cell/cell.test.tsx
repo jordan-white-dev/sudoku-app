@@ -12,6 +12,8 @@ import {
 import {
   MARKUP_COLOR_BLUE,
   MARKUP_COLOR_GREEN,
+  MARKUP_COLOR_ORANGE,
+  MARKUP_COLOR_PURPLE,
   MARKUP_COLOR_RED,
 } from "@/lib/pages/home/utils/constants";
 import {
@@ -265,6 +267,209 @@ describe("Accessible name", () => {
       .element(
         renderedCell.getByRole("gridcell", {
           name: getCellAccessibleName(targetCellId),
+        }),
+      )
+      .toBeInTheDocument();
+  });
+
+  it("includes the given digit in the accessible name for a given-digit cell", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(23);
+    const boardState = getBoardStateWithUpdatedTargetCell(targetCellId, {
+      content: { givenDigit: getBrandedSudokuDigit("7") },
+    });
+    const cellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      boardState,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      startingBoardState: boardState,
+      cellState,
+    });
+
+    // Assert
+    await expect
+      .element(
+        renderedCell.getByRole("gridcell", {
+          name: "Row 3, Column 5: given digit 7",
+        }),
+      )
+      .toBeInTheDocument();
+  });
+
+  it("includes the entered digit in the accessible name for an entered-digit cell", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(23);
+    const boardState = getBoardStateWithUpdatedTargetCell(targetCellId, {
+      content: { enteredDigit: getBrandedSudokuDigit("3") },
+    });
+    const cellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      boardState,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      startingBoardState: boardState,
+      cellState,
+    });
+
+    // Assert
+    await expect
+      .element(
+        renderedCell.getByRole("gridcell", {
+          name: "Row 3, Column 5: entered digit 3",
+        }),
+      )
+      .toBeInTheDocument();
+  });
+
+  it("sorts center markup digits in the accessible name", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(23);
+    const boardState = getBoardStateWithUpdatedTargetCell(targetCellId, {
+      content: {
+        centerMarkups: [
+          getBrandedSudokuDigit("3"),
+          getBrandedSudokuDigit("1"),
+          getBrandedSudokuDigit("5"),
+        ],
+        cornerMarkups: [""],
+      },
+    });
+    const cellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      boardState,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      startingBoardState: boardState,
+      cellState,
+    });
+
+    // Assert
+    await expect
+      .element(
+        renderedCell.getByRole("gridcell", {
+          name: "Row 3, Column 5: center markup 1 3 5",
+        }),
+      )
+      .toBeInTheDocument();
+  });
+
+  it("includes sorted corner markup digits in the accessible name", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(23);
+    const boardState = getBoardStateWithUpdatedTargetCell(targetCellId, {
+      content: {
+        centerMarkups: [""],
+        cornerMarkups: [getBrandedSudokuDigit("9"), getBrandedSudokuDigit("2")],
+      },
+    });
+    const cellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      boardState,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      startingBoardState: boardState,
+      cellState,
+    });
+
+    // Assert
+    await expect
+      .element(
+        renderedCell.getByRole("gridcell", {
+          name: "Row 3, Column 5: corner markup 2 9",
+        }),
+      )
+      .toBeInTheDocument();
+  });
+
+  it("includes both center and corner markup digits in the accessible name", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(23);
+    const boardState = getBoardStateWithUpdatedTargetCell(targetCellId, {
+      content: {
+        centerMarkups: [getBrandedSudokuDigit("4"), getBrandedSudokuDigit("6")],
+        cornerMarkups: [getBrandedSudokuDigit("1"), getBrandedSudokuDigit("8")],
+      },
+    });
+    const cellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      boardState,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      startingBoardState: boardState,
+      cellState,
+    });
+
+    // Assert
+    await expect
+      .element(
+        renderedCell.getByRole("gridcell", {
+          name: "Row 3, Column 5: center markup 4 6; corner markup 1 8",
+        }),
+      )
+      .toBeInTheDocument();
+  });
+
+  it("lists color markups in palette order regardless of insertion order in the accessible name", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(23);
+    const boardState = getBoardStateWithUpdatedTargetCell(targetCellId, {
+      markupColors: [MARKUP_COLOR_PURPLE, MARKUP_COLOR_ORANGE],
+    });
+    const cellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      boardState,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      startingBoardState: boardState,
+      cellState,
+    });
+
+    // Assert
+    await expect
+      .element(
+        renderedCell.getByRole("gridcell", {
+          name: "Row 3, Column 5: color markup Orange Purple",
+        }),
+      )
+      .toBeInTheDocument();
+  });
+
+  it("includes both the entered digit and color markup in the accessible name", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(23);
+    const boardState = getBoardStateWithUpdatedTargetCell(targetCellId, {
+      content: { enteredDigit: getBrandedSudokuDigit("5") },
+      markupColors: [MARKUP_COLOR_GREEN],
+    });
+    const cellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      boardState,
+    );
+
+    // Act
+    const renderedCell = await renderCell({
+      startingBoardState: boardState,
+      cellState,
+    });
+
+    // Assert
+    await expect
+      .element(
+        renderedCell.getByRole("gridcell", {
+          name: "Row 3, Column 5: entered digit 5; color markup Green",
         }),
       )
       .toBeInTheDocument();
@@ -529,6 +734,28 @@ describe("Text color", () => {
     // Assert
     expect(window.getComputedStyle(cellElement).color).toBe("rgb(18, 18, 240)");
   });
+
+  it("displays center markup digits in the same blue as entered digits", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(10);
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
+      targetCellId,
+      {
+        content: getCenterMarkupsOfLength(2),
+      },
+    );
+    const cellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      startingBoardState,
+    );
+
+    // Act
+    const renderedCell = await renderCell({ startingBoardState, cellState });
+    const cellElement = await getCellElement(renderedCell, targetCellId);
+
+    // Assert
+    expect(window.getComputedStyle(cellElement).color).toBe("rgb(18, 18, 240)");
+  });
 });
 
 describe("Font size", () => {
@@ -634,54 +861,126 @@ describe("Font size", () => {
       fontSizeWithNineCenterMarkups,
     );
   });
-});
 
-describe("Text shadow", () => {
-  it("uses no text shadow for center markup content and uses text shadow for given digits", async () => {
+  it("uses the same font size for all center markup counts of 4 or fewer", async () => {
     // Arrange
     const targetCellId = getBrandedCellId(10);
 
-    const boardStateWithCenterMarkup = getBoardStateWithUpdatedTargetCell(
+    const boardStateWithOneCenterMarkup = getBoardStateWithUpdatedTargetCell(
       targetCellId,
-      {
-        content: getCenterMarkupsOfLength(2),
-      },
+      { content: getCenterMarkupsOfLength(1) },
     );
-    const boardStateWithGivenDigit = getBoardStateWithUpdatedTargetCell(
+    const boardStateWithTwoCenterMarkups = getBoardStateWithUpdatedTargetCell(
       targetCellId,
-      {
-        content: {
-          givenDigit: getBrandedSudokuDigit("5"),
-        },
-      },
+      { content: getCenterMarkupsOfLength(2) },
+    );
+    const boardStateWithThreeCenterMarkups = getBoardStateWithUpdatedTargetCell(
+      targetCellId,
+      { content: getCenterMarkupsOfLength(3) },
+    );
+    const boardStateWithFourCenterMarkups = getBoardStateWithUpdatedTargetCell(
+      targetCellId,
+      { content: getCenterMarkupsOfLength(4) },
     );
 
     // Act
-    const renderedCellWithCenterMarkup = await renderCell({
-      startingBoardState: boardStateWithCenterMarkup,
-      cellState: getTargetCellStateFromBoardState(
+    const fontSizeWithOne = getCellFontSizeInPixels(
+      await getCellElement(
+        await renderCell({
+          startingBoardState: boardStateWithOneCenterMarkup,
+          cellState: getTargetCellStateFromBoardState(
+            targetCellId,
+            boardStateWithOneCenterMarkup,
+          ),
+        }),
         targetCellId,
-        boardStateWithCenterMarkup,
       ),
-    });
-    const renderedCellWithGivenDigit = await renderCell({
-      startingBoardState: boardStateWithGivenDigit,
-      cellState: getTargetCellStateFromBoardState(
+    );
+    const fontSizeWithTwo = getCellFontSizeInPixels(
+      await getCellElement(
+        await renderCell({
+          startingBoardState: boardStateWithTwoCenterMarkups,
+          cellState: getTargetCellStateFromBoardState(
+            targetCellId,
+            boardStateWithTwoCenterMarkups,
+          ),
+        }),
         targetCellId,
-        boardStateWithGivenDigit,
       ),
+    );
+    const fontSizeWithThree = getCellFontSizeInPixels(
+      await getCellElement(
+        await renderCell({
+          startingBoardState: boardStateWithThreeCenterMarkups,
+          cellState: getTargetCellStateFromBoardState(
+            targetCellId,
+            boardStateWithThreeCenterMarkups,
+          ),
+        }),
+        targetCellId,
+      ),
+    );
+    const fontSizeWithFour = getCellFontSizeInPixels(
+      await getCellElement(
+        await renderCell({
+          startingBoardState: boardStateWithFourCenterMarkups,
+          cellState: getTargetCellStateFromBoardState(
+            targetCellId,
+            boardStateWithFourCenterMarkups,
+          ),
+        }),
+        targetCellId,
+      ),
+    );
+
+    // Assert
+    expect(fontSizeWithOne).toBe(fontSizeWithTwo);
+    expect(fontSizeWithTwo).toBe(fontSizeWithThree);
+    expect(fontSizeWithThree).toBe(fontSizeWithFour);
+  });
+});
+
+describe("Text shadow", () => {
+  it("does not apply a text shadow to center-markup content", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(10);
+    const boardState = getBoardStateWithUpdatedTargetCell(targetCellId, {
+      content: getCenterMarkupsOfLength(2),
     });
 
-    const textShadowWithCenterMarkup = window.getComputedStyle(
-      await getCellElement(renderedCellWithCenterMarkup, targetCellId),
-    ).textShadow;
-    const textShadowWithGivenDigit = window.getComputedStyle(
-      await getCellElement(renderedCellWithGivenDigit, targetCellId),
+    // Act
+    const renderedCell = await renderCell({
+      startingBoardState: boardState,
+      cellState: getTargetCellStateFromBoardState(targetCellId, boardState),
+    });
+    const textShadow = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellId),
     ).textShadow;
 
     // Assert
-    expect(textShadowWithCenterMarkup).toBe("none");
-    expect(textShadowWithGivenDigit).not.toBe("none");
+    expect(textShadow).toBe("none");
+  });
+
+  it("applies a text shadow to given-digit content", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(10);
+    const boardState = getBoardStateWithUpdatedTargetCell(targetCellId, {
+      content: {
+        givenDigit: getBrandedSudokuDigit("5"),
+      },
+    });
+
+    // Act
+    const renderedCell = await renderCell({
+      startingBoardState: boardState,
+      cellState: getTargetCellStateFromBoardState(targetCellId, boardState),
+    });
+    const textShadow = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellId),
+    ).textShadow;
+
+    // Assert
+    expect(textShadow).not.toBe("none");
   });
 });
 
@@ -779,7 +1078,7 @@ describe("Row and column labels", () => {
 });
 
 describe("Border styles", () => {
-  it("uses solid borders for all sides when the dashed grid setting is off", async () => {
+  it("uses a solid border on the right side of a cell when the dashed grid setting is off", async () => {
     // Arrange
     const targetCellId = getBrandedCellId(1);
     const cellState = getTargetCellStateFromBoardState(targetCellId);
@@ -1495,6 +1794,34 @@ describe("Background state: markup colors", () => {
 
     // Assert
     expect(backgroundImage.toLowerCase()).not.toContain("conic-gradient");
+  });
+
+  it("shows a conic-gradient containing each applied color when multiple markup colors are applied", async () => {
+    // Arrange
+    const targetCellId = getBrandedCellId(10);
+    const startingBoardState = getBoardStateWithUpdatedTargetCell(
+      targetCellId,
+      { markupColors: [MARKUP_COLOR_RED, MARKUP_COLOR_BLUE] },
+    );
+    const cellState = getTargetCellStateFromBoardState(
+      targetCellId,
+      startingBoardState,
+    );
+
+    // Act
+    const renderedCell = await renderCell({ startingBoardState, cellState });
+    const backgroundImage = window.getComputedStyle(
+      await getCellElement(renderedCell, targetCellId),
+    ).backgroundImage;
+
+    // Computed styles convert hex to rgb(); these are MARKUP_COLOR_RED and MARKUP_COLOR_BLUE
+    const redRgbValue = "rgb(249, 165, 164)";
+    const blueRgbValue = "rgb(179, 235, 242)";
+
+    // Assert
+    expect(backgroundImage.toLowerCase()).toContain("conic-gradient");
+    expect(backgroundImage).toContain(redRgbValue);
+    expect(backgroundImage).toContain(blueRgbValue);
   });
 });
 

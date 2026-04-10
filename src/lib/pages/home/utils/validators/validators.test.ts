@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
+  getBrandedSudokuDigit,
   isBoxNumber,
   isCellId,
   isColumnNumber,
@@ -434,6 +435,29 @@ describe("Sudoku Digit Validator", () => {
       expect(isValidSudokuDigit).toBe(false);
     });
   });
+
+  describe("getBrandedSudokuDigit", () => {
+    it("accepts a valid sudoku digit entered as a string", () => {
+      // Arrange
+      const candidateSudokuDigit = "7";
+
+      // Act
+      const sudokuDigit = getBrandedSudokuDigit(candidateSudokuDigit);
+
+      // Assert
+      expect(sudokuDigit).toBe("7");
+    });
+
+    it("rejects a string that is not a valid sudoku digit", () => {
+      // Arrange
+      const getInvalidSudokuDigit = () => getBrandedSudokuDigit("0");
+
+      // Act / Assert
+      expect(getInvalidSudokuDigit).toThrow(
+        'Failed to get a SudokuDigit from the candidate string "0".',
+      );
+    });
+  });
 });
 
 describe("Board Coordinate Validators", () => {
@@ -495,6 +519,28 @@ describe("Board Coordinate Validators", () => {
     it("rejects negative infinity", () => {
       // Arrange
       const candidateBoxNumber = Number.NEGATIVE_INFINITY;
+
+      // Act
+      const isValidBoxNumber = isBoxNumber(candidateBoxNumber);
+
+      // Assert
+      expect(isValidBoxNumber).toBe(false);
+    });
+
+    it("rejects NaN", () => {
+      // Arrange
+      const candidateBoxNumber = Number.NaN;
+
+      // Act
+      const isValidBoxNumber = isBoxNumber(candidateBoxNumber);
+
+      // Assert
+      expect(isValidBoxNumber).toBe(false);
+    });
+
+    it("rejects a non-number runtime value", () => {
+      // Arrange
+      const candidateBoxNumber = "5" as unknown as number;
 
       // Act
       const isValidBoxNumber = isBoxNumber(candidateBoxNumber);
@@ -572,6 +618,28 @@ describe("Board Coordinate Validators", () => {
       // Assert
       expect(isValidCellId).toBe(false);
     });
+
+    it("rejects NaN", () => {
+      // Arrange
+      const candidateCellId = Number.NaN;
+
+      // Act
+      const isValidCellId = isCellId(candidateCellId);
+
+      // Assert
+      expect(isValidCellId).toBe(false);
+    });
+
+    it("rejects a non-number runtime value", () => {
+      // Arrange
+      const candidateCellId = "1" as unknown as number;
+
+      // Act
+      const isValidCellId = isCellId(candidateCellId);
+
+      // Assert
+      expect(isValidCellId).toBe(false);
+    });
   });
 
   describe("isColumnNumber", () => {
@@ -639,6 +707,28 @@ describe("Board Coordinate Validators", () => {
       // Assert
       expect(isValidColumnNumber).toBe(false);
     });
+
+    it("rejects NaN", () => {
+      // Arrange
+      const candidateColumnNumber = Number.NaN;
+
+      // Act
+      const isValidColumnNumber = isColumnNumber(candidateColumnNumber);
+
+      // Assert
+      expect(isValidColumnNumber).toBe(false);
+    });
+
+    it("rejects a non-number runtime value", () => {
+      // Arrange
+      const candidateColumnNumber = "5" as unknown as number;
+
+      // Act
+      const isValidColumnNumber = isColumnNumber(candidateColumnNumber);
+
+      // Assert
+      expect(isValidColumnNumber).toBe(false);
+    });
   });
 
   describe("isRowNumber", () => {
@@ -699,6 +789,28 @@ describe("Board Coordinate Validators", () => {
     it("rejects negative infinity", () => {
       // Arrange
       const candidateRowNumber = Number.NEGATIVE_INFINITY;
+
+      // Act
+      const isValidRowNumber = isRowNumber(candidateRowNumber);
+
+      // Assert
+      expect(isValidRowNumber).toBe(false);
+    });
+
+    it("rejects NaN", () => {
+      // Arrange
+      const candidateRowNumber = Number.NaN;
+
+      // Act
+      const isValidRowNumber = isRowNumber(candidateRowNumber);
+
+      // Assert
+      expect(isValidRowNumber).toBe(false);
+    });
+
+    it("rejects a non-number runtime value", () => {
+      // Arrange
+      const candidateRowNumber = "5" as unknown as number;
 
       // Act
       const isValidRowNumber = isRowNumber(candidateRowNumber);

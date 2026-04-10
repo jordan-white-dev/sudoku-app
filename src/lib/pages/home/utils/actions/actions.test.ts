@@ -446,15 +446,13 @@ const doesPuzzleStateMatchItsStartingState = (
 
 describe("Digit entry", () => {
   it("fills all selected editable cells with the entered digit when they're empty", () => {
-    // Arrange
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellId(1),
+      getBrandedCellId(2),
+      getBrandedCellId(3),
+    ]);
     const startingPuzzleState =
-      getStartingPuzzleStateWithSequentialTransformsApplied([
-        (currentBoardState: BoardState) =>
-          getBoardStateWithTargetCellsSelected(
-            [getBrandedCellId(1), getBrandedCellId(2), getBrandedCellId(3)],
-            currentBoardState,
-          ),
-      ]);
+      getStartingPuzzleStateFromBoardState(startingBoardState);
 
     // Act
     const nextPuzzleState = getPuzzleStateAfterDigitInput(
@@ -472,12 +470,9 @@ describe("Digit entry", () => {
       getBrandedCellId(2),
       getBrandedCellId(3),
     ]) {
-      expect(
-        getEnteredDigitInTargetCell(
-          currentBoardState,
-          getBrandedCellId(cellId),
-        ),
-      ).toBe(getBrandedSudokuDigit("4"));
+      expect(getEnteredDigitInTargetCell(currentBoardState, cellId)).toBe(
+        getBrandedSudokuDigit("4"),
+      );
     }
   });
 
@@ -2126,32 +2121,6 @@ describe("Color markup entry", () => {
     ).toEqual([MARKUP_COLOR_RED]);
   });
 
-  it("adds the keyboard shortcut color to all selected cells", () => {
-    // Arrange
-    const startingPuzzleState =
-      getStartingPuzzleStateWithSequentialTransformsApplied([
-        (currentBoardState) =>
-          getBoardStateWithTargetCellsSelected(
-            [getBrandedCellId(1)],
-            currentBoardState,
-          ),
-      ]);
-
-    // Act
-    const nextPuzzleState = getPuzzleStateAfterColorPadInput(
-      startingPuzzleState,
-      getBrandedSudokuDigit("8"),
-    );
-    const currentBoardState =
-      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
-
-    // Assert
-    expect(
-      getTargetCellStateFromBoardState(getBrandedCellId(1), currentBoardState)
-        .markupColors,
-    ).toEqual([MARKUP_COLOR_BLUE]);
-  });
-
   it.each([
     [getBrandedSudokuDigit("1"), "gray", MARKUP_COLOR_GRAY],
     [getBrandedSudokuDigit("2"), "white", MARKUP_COLOR_WHITE],
@@ -2801,6 +2770,41 @@ describe("Clearing selected cells", () => {
         startingPuzzleState,
       ),
     ).toBe(true);
+  });
+
+  it("clears color markups from a selected empty editable cell while leaving content empty", () => {
+    // Arrange
+    const startingPuzzleState =
+      getStartingPuzzleStateWithSequentialTransformsApplied([
+        (currentBoardState) =>
+          getBoardStateWithMarkupColorsInTargetCell(
+            currentBoardState,
+            getBrandedCellId(1),
+            [MARKUP_COLOR_ORANGE],
+          ),
+        (currentBoardState) =>
+          getBoardStateWithTargetCellsSelected(
+            [getBrandedCellId(1)],
+            currentBoardState,
+          ),
+      ]);
+
+    // Act
+    const nextPuzzleState =
+      getPuzzleStateAfterClearingSelectedCells(startingPuzzleState);
+    const currentBoardState =
+      getCurrentBoardStateFromPuzzleState(nextPuzzleState);
+
+    // Assert
+    expect(
+      doesTargetCellContainEmptyCellContent(
+        currentBoardState,
+        getBrandedCellId(1),
+      ),
+    ).toBe(true);
+    expect(
+      getMarkupColorsInTargetCell(currentBoardState, getBrandedCellId(1)),
+    ).toEqual([""]);
   });
 
   it("discards all undone moves when selected cells are cleared after undoing a move", () => {

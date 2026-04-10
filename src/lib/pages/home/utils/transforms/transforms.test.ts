@@ -108,7 +108,7 @@ const getCellCoordinates = (boardState: BoardState, cellId: CellId) => {
 };
 // #endregion
 
-describe("Puzzle String Transforms", () => {
+describe("Puzzle string encoding and serialization", () => {
   describe("getEncodedPuzzleStringFromRawPuzzleString", () => {
     it("encodes a puzzle into its shareable short-string format", () => {
       // Arrange
@@ -162,33 +162,31 @@ describe("Puzzle String Transforms", () => {
       // Assert
       expect(rawPuzzleString).toBe("0".repeat(TOTAL_CELLS_IN_BOARD));
     });
+
+    it("serializes given digits at non-leading positions correctly", () => {
+      // Arrange
+      const rawBoardState = getRawBoardStateWithGivenDigitsInTargetCells([
+        {
+          cellId: getBrandedCellId(41),
+          rawGivenDigit: getBrandedRawGivenDigit(2),
+        },
+        {
+          cellId: getBrandedCellId(81),
+          rawGivenDigit: getBrandedRawGivenDigit(6),
+        },
+      ]);
+
+      // Act
+      const rawPuzzleString =
+        getRawPuzzleStringFromRawBoardState(rawBoardState);
+
+      // Assert
+      expect(rawPuzzleString).toBe(`${"0".repeat(40)}3${"0".repeat(39)}7`);
+    });
   });
 });
 
-describe("Sudoku Digit Transform", () => {
-  it("accepts a valid sudoku digit entered as a string", () => {
-    // Arrange
-    const candidateSudokuDigit = "7";
-
-    // Act
-    const sudokuDigit = getBrandedSudokuDigit(candidateSudokuDigit);
-
-    // Assert
-    expect(sudokuDigit).toBe("7");
-  });
-
-  it("rejects a string that is not a valid sudoku digit", () => {
-    // Arrange
-    const getInvalidSudokuDigit = () => getBrandedSudokuDigit("0");
-
-    // Act / Assert
-    expect(getInvalidSudokuDigit).toThrow(
-      'Failed to get a SudokuDigit from the candidate string "0".',
-    );
-  });
-});
-
-describe("Board State Transform", () => {
+describe("Board state transforms", () => {
   describe("getBoardStateFromRawBoardState", () => {
     it("creates a full 81-cell board for a puzzle", () => {
       // Arrange
