@@ -45,7 +45,7 @@ import {
   getBrandedSudokuDigit,
 } from "@/lib/pages/home/utils/validators/validators";
 
-const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
+const USER_SETTINGS_LOCAL_STORAGE_KEY = "user-settings";
 const SELECTED_CELL_HIGHLIGHT_COLOR_TOKEN = "4ca4ff";
 
 // Equivalent to: /url\("data:image\/svg\+xml,([^"]+)"\)/g
@@ -213,8 +213,8 @@ const renderCell = async ({
   ) => void;
   userSettings?: UserSettings;
 }) => {
-  window.sessionStorage.setItem(
-    USER_SETTINGS_SESSION_STORAGE_KEY,
+  window.localStorage.setItem(
+    USER_SETTINGS_LOCAL_STORAGE_KEY,
     JSON.stringify(userSettings),
   );
 
@@ -246,6 +246,7 @@ const renderCell = async ({
 };
 
 beforeEach(() => {
+  window.localStorage.clear();
   window.sessionStorage.clear();
 
   vi.spyOn(HTMLElement.prototype, "setPointerCapture").mockImplementation(

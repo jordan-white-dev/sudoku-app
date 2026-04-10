@@ -73,7 +73,7 @@ const getBoardElement = async (
 // #endregion
 
 // #region Render Board
-const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
+const USER_SETTINGS_LOCAL_STORAGE_KEY = "user-settings";
 
 const renderBoard = async ({
   startingBoardState,
@@ -84,8 +84,8 @@ const renderBoard = async ({
   isMultiselectMode?: boolean;
   userSettings?: UserSettings;
 } = {}): Promise<RenderedBoard> => {
-  window.sessionStorage.setItem(
-    USER_SETTINGS_SESSION_STORAGE_KEY,
+  window.localStorage.setItem(
+    USER_SETTINGS_LOCAL_STORAGE_KEY,
     JSON.stringify(userSettings),
   );
 
@@ -476,6 +476,7 @@ const getBoardStateWithCornerMarkupsInTargetCells = (
 // #endregion
 
 beforeEach(() => {
+  window.localStorage.clear();
   window.sessionStorage.clear();
 
   vi.spyOn(HTMLElement.prototype, "setPointerCapture").mockImplementation(
@@ -3995,8 +3996,8 @@ describe("Board announcements", () => {
         digit: getBrandedSudokuDigit("1"),
       },
     ]);
-    window.sessionStorage.setItem(
-      USER_SETTINGS_SESSION_STORAGE_KEY,
+    window.localStorage.setItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
       JSON.stringify({
         ...defaultUserSettings,
         isConflictCheckerEnabled: true,

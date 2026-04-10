@@ -35,7 +35,7 @@ import {
   getBrandedSudokuDigit,
 } from "@/lib/pages/home/utils/validators/validators";
 
-const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
+const USER_SETTINGS_LOCAL_STORAGE_KEY = "user-settings";
 
 // #region Shared Test Types
 type RenderedKeypad = Awaited<ReturnType<typeof render>>;
@@ -58,8 +58,8 @@ const renderKeypad = async ({
   puzzleState?: PuzzleState;
   setPuzzleState?: SetPuzzleState;
 } = {}): Promise<RenderedKeypad> => {
-  window.sessionStorage.setItem(
-    USER_SETTINGS_SESSION_STORAGE_KEY,
+  window.localStorage.setItem(
+    USER_SETTINGS_LOCAL_STORAGE_KEY,
     JSON.stringify({
       ...defaultUserSettings,
       isFlipKeypadEnabled,
@@ -224,6 +224,7 @@ const getPuzzleStateWithSelectedCell = () => {
 // #endregion
 
 beforeEach(() => {
+  window.localStorage.clear();
   window.sessionStorage.clear();
 });
 

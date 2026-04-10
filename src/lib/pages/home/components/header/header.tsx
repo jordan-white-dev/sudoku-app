@@ -458,12 +458,20 @@ const SettingsMenu = () => {
   const { pauseStopwatch, startStopwatch } = useSudokuStopwatch();
   const { userSettings, setUserSettings } = useUserSettings();
 
-  const toggleUserSetting = (settingKey: keyof UserSettings) => () => {
+  const setUserSetting = (
+    settingKey: keyof UserSettings,
+    isSettingEnabled: boolean,
+  ) => {
     setUserSettings((currentUserSettings) => ({
       ...currentUserSettings,
-      [settingKey]: !currentUserSettings[settingKey],
+      [settingKey]: isSettingEnabled,
     }));
   };
+
+  const getSettingCheckedChangeHandler =
+    (settingKey: keyof UserSettings) => (checked: boolean) => {
+      setUserSetting(settingKey, checked);
+    };
 
   return (
     <Menu.Root>
@@ -487,21 +495,27 @@ const SettingsMenu = () => {
                 settingKey="isConflictCheckerEnabled"
                 settingLabel="Conflict Checker"
                 userSettings={userSettings}
-                onCheckedChange={toggleUserSetting("isConflictCheckerEnabled")}
+                onCheckedChange={getSettingCheckedChangeHandler(
+                  "isConflictCheckerEnabled",
+                )}
               />
 
               <SettingsCheckbox
                 settingKey="isShowSeenCellsEnabled"
                 settingLabel="Show Seen Cells"
                 userSettings={userSettings}
-                onCheckedChange={toggleUserSetting("isShowSeenCellsEnabled")}
+                onCheckedChange={getSettingCheckedChangeHandler(
+                  "isShowSeenCellsEnabled",
+                )}
               />
 
               <SettingsCheckbox
                 settingKey="isStrictHighlightsEnabled"
                 settingLabel="Strict Highlights"
                 userSettings={userSettings}
-                onCheckedChange={toggleUserSetting("isStrictHighlightsEnabled")}
+                onCheckedChange={getSettingCheckedChangeHandler(
+                  "isStrictHighlightsEnabled",
+                )}
               />
             </Menu.ItemGroup>
             <Menu.Separator />
@@ -511,28 +525,32 @@ const SettingsMenu = () => {
                 settingKey="isFlipKeypadEnabled"
                 settingLabel="Flip Keypad"
                 userSettings={userSettings}
-                onCheckedChange={toggleUserSetting("isFlipKeypadEnabled")}
+                onCheckedChange={getSettingCheckedChangeHandler(
+                  "isFlipKeypadEnabled",
+                )}
               />
 
               <SettingsCheckbox
                 settingKey="isDashedGridEnabled"
                 settingLabel="Dashed Grid"
                 userSettings={userSettings}
-                onCheckedChange={toggleUserSetting("isDashedGridEnabled")}
+                onCheckedChange={getSettingCheckedChangeHandler(
+                  "isDashedGridEnabled",
+                )}
               />
 
               <SettingsCheckbox
                 settingKey="isStopwatchDisabled"
                 settingLabel="Disable Stopwatch"
                 userSettings={userSettings}
-                onCheckedChange={() => {
-                  if (userSettings.isStopwatchDisabled) {
-                    startStopwatch();
-                  } else {
+                onCheckedChange={(checked) => {
+                  if (checked) {
                     pauseStopwatch();
+                  } else {
+                    startStopwatch();
                   }
 
-                  toggleUserSetting("isStopwatchDisabled")();
+                  setUserSetting("isStopwatchDisabled", checked);
                 }}
               />
 
@@ -544,7 +562,9 @@ const SettingsMenu = () => {
                   checked={userSettings.isHideStopwatchEnabled}
                   closeOnSelect={false}
                   value="isHideStopwatchEnabled"
-                  onCheckedChange={toggleUserSetting("isHideStopwatchEnabled")}
+                  onCheckedChange={getSettingCheckedChangeHandler(
+                    "isHideStopwatchEnabled",
+                  )}
                 >
                   Hide Stopwatch
                   <Menu.ItemIndicator />
@@ -555,7 +575,7 @@ const SettingsMenu = () => {
                 settingKey="isShowRowAndColumnLabelsEnabled"
                 settingLabel="Show Row + Column Labels"
                 userSettings={userSettings}
-                onCheckedChange={toggleUserSetting(
+                onCheckedChange={getSettingCheckedChangeHandler(
                   "isShowRowAndColumnLabelsEnabled",
                 )}
               />

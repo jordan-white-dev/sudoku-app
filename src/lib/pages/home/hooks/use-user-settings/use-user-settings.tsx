@@ -6,7 +6,7 @@ import {
   useContext,
   useMemo,
 } from "react";
-import useSessionStorageState from "use-session-storage-state";
+import useLocalStorageState from "use-local-storage-state";
 
 // #region Context
 export type UserSettings = {
@@ -43,7 +43,7 @@ const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(
 
 // #region Provider
 export const UserSettingsProvider = ({ children }: PropsWithChildren) => {
-  const [userSettings, setUserSettings] = useSessionStorageState<UserSettings>(
+  const [userSettings, setUserSettings] = useLocalStorageState<UserSettings>(
     "user-settings",
     {
       defaultValue: defaultUserSettings,

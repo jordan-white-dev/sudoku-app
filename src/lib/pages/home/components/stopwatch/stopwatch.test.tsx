@@ -66,7 +66,7 @@ const RESUME_STOPWATCH_BUTTON_ACCESSIBLE_NAME = "Resume stopwatch";
 // #endregion
 
 // #region Session Storage
-const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
+const USER_SETTINGS_LOCAL_STORAGE_KEY = "user-settings";
 const getStopwatchSessionStorageKey = () =>
   "sudoku-stopwatch-persisted-total-seconds-test-puzzle";
 
@@ -77,8 +77,8 @@ const setSessionStorageForRender = ({
   persistedStopwatchTotalSeconds?: number;
   userSettings?: UserSettings;
 }) => {
-  window.sessionStorage.setItem(
-    USER_SETTINGS_SESSION_STORAGE_KEY,
+  window.localStorage.setItem(
+    USER_SETTINGS_LOCAL_STORAGE_KEY,
     JSON.stringify(userSettings),
   );
 
@@ -186,6 +186,7 @@ beforeEach(() => {
   mockResetStopwatch.mockReset();
   mockStartStopwatch.mockReset();
   currentMockStopwatchHookValue = defaultMockStopwatchHookValue;
+  window.localStorage.clear();
   window.sessionStorage.clear();
 });
 
@@ -354,8 +355,8 @@ describe("Choosing a pause dialog action", () => {
     // Assert
     expect(mockStartStopwatch).toHaveBeenCalledOnce();
 
-    const persistedUserSettings = window.sessionStorage.getItem(
-      USER_SETTINGS_SESSION_STORAGE_KEY,
+    const persistedUserSettings = window.localStorage.getItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
     );
 
     expect(persistedUserSettings).toContain('"isStopwatchDisabled":false');
@@ -379,8 +380,8 @@ describe("Choosing a pause dialog action", () => {
     // Assert
     expect(mockPauseStopwatch).toHaveBeenCalledTimes(2);
 
-    const persistedUserSettings = window.sessionStorage.getItem(
-      USER_SETTINGS_SESSION_STORAGE_KEY,
+    const persistedUserSettings = window.localStorage.getItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
     );
 
     expect(persistedUserSettings).toContain('"isStopwatchDisabled":true');

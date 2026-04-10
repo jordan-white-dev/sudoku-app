@@ -14,7 +14,7 @@ import {
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { waitForReactToFinishUpdating } from "@/lib/pages/home/utils/testing";
 
-const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
+const USER_SETTINGS_LOCAL_STORAGE_KEY = "user-settings";
 
 // #region Shared Test Types and Constants
 type RenderedHeader = Awaited<ReturnType<typeof render>>;
@@ -71,8 +71,8 @@ const renderHeader = async ({
 }: {
   userSettings?: UserSettings;
 } = {}): Promise<RenderedHeader> => {
-  window.sessionStorage.setItem(
-    USER_SETTINGS_SESSION_STORAGE_KEY,
+  window.localStorage.setItem(
+    USER_SETTINGS_LOCAL_STORAGE_KEY,
     JSON.stringify(userSettings),
   );
 
@@ -211,6 +211,7 @@ const getAriaCheckedAttribute = async (
 // #endregion
 
 beforeEach(() => {
+  window.localStorage.clear();
   window.sessionStorage.clear();
 });
 
@@ -281,7 +282,7 @@ describe("Settings menu checked state", () => {
 });
 
 describe("Settings menu interactions", () => {
-  it("toggles regular user settings in session storage", async () => {
+  it("toggles regular user settings in local storage", async () => {
     // Arrange
     const renderedHeader = await renderHeader();
     await openSettingsMenu(renderedHeader);
@@ -294,15 +295,15 @@ describe("Settings menu interactions", () => {
     await conflictCheckerOption.click();
 
     // Assert
-    const userSettingsInSessionStorage = window.sessionStorage.getItem(
-      USER_SETTINGS_SESSION_STORAGE_KEY,
+    const userSettingsInLocalStorage = window.localStorage.getItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
     );
 
-    if (!userSettingsInSessionStorage) {
-      throw new Error("Could not find user settings in session storage.");
+    if (!userSettingsInLocalStorage) {
+      throw new Error("Could not find user settings in local storage.");
     }
 
-    const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
+    const parsedUserSettings = JSON.parse(userSettingsInLocalStorage);
 
     expect(parsedUserSettings.isConflictCheckerEnabled).toBe(true);
   });
@@ -334,15 +335,15 @@ describe("Settings menu interactions", () => {
       )
       .toBeInTheDocument();
 
-    const userSettingsInSessionStorage = window.sessionStorage.getItem(
-      USER_SETTINGS_SESSION_STORAGE_KEY,
+    const userSettingsInLocalStorage = window.localStorage.getItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
     );
 
-    if (!userSettingsInSessionStorage) {
-      throw new Error("Could not find user settings in session storage.");
+    if (!userSettingsInLocalStorage) {
+      throw new Error("Could not find user settings in local storage.");
     }
 
-    const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
+    const parsedUserSettings = JSON.parse(userSettingsInLocalStorage);
     expect(parsedUserSettings.isStopwatchDisabled).toBe(true);
   });
 
@@ -373,19 +374,19 @@ describe("Settings menu interactions", () => {
       )
       .toBeInTheDocument();
 
-    const userSettingsInSessionStorage = window.sessionStorage.getItem(
-      USER_SETTINGS_SESSION_STORAGE_KEY,
+    const userSettingsInLocalStorage = window.localStorage.getItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
     );
 
-    if (!userSettingsInSessionStorage) {
-      throw new Error("Could not find user settings in session storage.");
+    if (!userSettingsInLocalStorage) {
+      throw new Error("Could not find user settings in local storage.");
     }
 
-    const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
+    const parsedUserSettings = JSON.parse(userSettingsInLocalStorage);
     expect(parsedUserSettings.isStopwatchDisabled).toBe(false);
   });
 
-  it("toggles Show Row + Column Labels in session storage", async () => {
+  it("toggles Show Row + Column Labels in local storage", async () => {
     // Arrange
     const renderedHeader = await renderHeader();
     await openSettingsMenu(renderedHeader);
@@ -398,13 +399,13 @@ describe("Settings menu interactions", () => {
     await showRowColumnLabelsOption.click();
 
     // Assert
-    const userSettingsInSessionStorage = window.sessionStorage.getItem(
-      USER_SETTINGS_SESSION_STORAGE_KEY,
+    const userSettingsInLocalStorage = window.localStorage.getItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
     );
-    if (!userSettingsInSessionStorage) {
-      throw new Error("Could not find user settings in session storage.");
+    if (!userSettingsInLocalStorage) {
+      throw new Error("Could not find user settings in local storage.");
     }
-    const parsedUserSettings = JSON.parse(userSettingsInSessionStorage);
+    const parsedUserSettings = JSON.parse(userSettingsInLocalStorage);
     expect(parsedUserSettings.isShowRowAndColumnLabelsEnabled).toBe(true);
   });
 });

@@ -10,7 +10,7 @@ import {
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { waitForReactToFinishUpdating } from "@/lib/pages/home/utils/testing";
 
-const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
+const USER_SETTINGS_LOCAL_STORAGE_KEY = "user-settings";
 
 // #region Test Consumer Components
 const AllSettingsDisplay = () => {
@@ -89,8 +89,8 @@ const AllSettingsDisplay = () => {
 // #region Render Helper
 const renderAllSettings = async (preloadedSettings?: Partial<UserSettings>) => {
   if (preloadedSettings) {
-    window.sessionStorage.setItem(
-      USER_SETTINGS_SESSION_STORAGE_KEY,
+    window.localStorage.setItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
       JSON.stringify({ ...defaultUserSettings, ...preloadedSettings }),
     );
   }
@@ -110,6 +110,7 @@ const renderAllSettings = async (preloadedSettings?: Partial<UserSettings>) => {
 // #endregion
 
 beforeEach(() => {
+  window.localStorage.clear();
   window.sessionStorage.clear();
 });
 
@@ -227,8 +228,8 @@ describe("Updating a setting", () => {
     await waitForReactToFinishUpdating();
 
     // Assert
-    const storedRaw = window.sessionStorage.getItem(
-      USER_SETTINGS_SESSION_STORAGE_KEY,
+    const storedRaw = window.localStorage.getItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
     );
     const storedSettings = JSON.parse(storedRaw ?? "{}");
 

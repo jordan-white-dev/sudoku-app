@@ -104,7 +104,7 @@ const WHITESPACE_SEQUENCE_REGEX =
 // #endregion
 
 // #region Session Storage
-const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
+const USER_SETTINGS_LOCAL_STORAGE_KEY = "user-settings";
 const getStopwatchSessionStorageKey = () =>
   "sudoku-stopwatch-persisted-total-seconds-test-puzzle";
 
@@ -115,8 +115,8 @@ const setSessionStorageForRender = ({
   persistedStopwatchTotalSeconds?: number;
   userSettings?: UserSettings;
 }) => {
-  window.sessionStorage.setItem(
-    USER_SETTINGS_SESSION_STORAGE_KEY,
+  window.localStorage.setItem(
+    USER_SETTINGS_LOCAL_STORAGE_KEY,
     JSON.stringify(userSettings),
   );
 
@@ -269,6 +269,7 @@ beforeEach(() => {
   mockStartStopwatch.mockReset();
 
   currentMockStopwatchHookValue = defaultMockStopwatchHookValue;
+  window.localStorage.clear();
   window.sessionStorage.clear();
 });
 
