@@ -4,10 +4,12 @@ import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { PuzzleControls } from "@/lib/pages/home/components/puzzle-controls/puzzle-controls";
+import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   EMPTY_RAW_BOARD_STATE,
   getStartingEmptyBoardState,
   getStartingPuzzleStateFromBoardState,
+  SudokuStopwatchProviderBridge,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
@@ -24,6 +26,9 @@ const mockHandleDigitInput = vi.fn();
 const mockHandleRedoMove = vi.fn();
 const mockHandleUndoMove = vi.fn();
 
+const mockNavigate = vi.fn();
+const mockMakePuzzle = vi.fn();
+
 vi.mock("@/lib/pages/home/utils/actions/actions", () => ({
   handleCenterMarkupInput: (...args: Array<unknown>) =>
     mockHandleCenterMarkupInput(...args),
@@ -37,41 +42,26 @@ vi.mock("@/lib/pages/home/utils/actions/actions", () => ({
   handleUndoMove: (...args: Array<unknown>) => mockHandleUndoMove(...args),
 }));
 
-vi.mock("@/lib/pages/home/components/puzzle-actions/puzzle-actions", () => ({
-  PuzzleActions: () => (
-    <div data-testid="mock-puzzle-actions">PuzzleActions</div>
-  ),
+vi.mock("@tanstack/react-router", () => ({
+  useNavigate: () => mockNavigate,
 }));
 
-vi.mock("@/lib/pages/home/components/keypad/keypad", () => ({
-  Keypad: ({
-    isMultiselectMode,
-    keypadMode,
-  }: {
-    isMultiselectMode: boolean;
-    keypadMode: string;
-  }) => (
-    <div data-testid="mock-keypad">
-      <div>Keypad mode: {keypadMode}</div>
-      <div>Multiselect: {String(isMultiselectMode)}</div>
-    </div>
-  ),
+vi.mock("sudoku", () => ({
+  makepuzzle: () => mockMakePuzzle(),
 }));
 
-vi.mock(
-  "@/lib/pages/home/components/keypad-mode-selector/keypad-mode-selector",
-  () => ({
-    KeypadModeSelector: ({ keypadMode }: { keypadMode: string }) => (
-      <div
-        aria-label="Keypad mode selector"
-        data-testid="mock-keypad-mode-selector"
-        role="radiogroup"
-      >
-        Active mode: {keypadMode}
-      </div>
-    ),
+vi.mock("react-timer-hook", () => ({
+  useStopwatch: () => ({
+    hours: 0,
+    isRunning: true,
+    minutes: 0,
+    pause: vi.fn(),
+    reset: vi.fn(),
+    seconds: 0,
+    start: vi.fn(),
+    totalSeconds: 0,
   }),
-);
+}));
 // #endregion
 
 // #region Shared Test Types
@@ -121,7 +111,11 @@ const renderPuzzleControls = async ({
 
   const renderedPuzzleControls = await render(
     <Provider>
-      <TestPuzzleControls />
+      <UserSettingsProvider>
+        <SudokuStopwatchProviderBridge>
+          <TestPuzzleControls />
+        </SudokuStopwatchProviderBridge>
+      </UserSettingsProvider>
     </Provider>,
   );
 
@@ -148,6 +142,25 @@ const dispatchWindowKeyboardEvent = async (
 };
 // #endregion
 
+// #region Control Lookup
+const accessibleNameByKeypadMode: Record<KeypadMode, string> = {
+  Center: "Center markup mode",
+  Color: "Color markup mode",
+  Corner: "Corner markup mode",
+  Digit: "Digit keypad mode",
+};
+
+const getKeypadModeRadio = async (
+  renderedPuzzleControls:
+    | RenderedPuzzleControls
+    | Promise<RenderedPuzzleControls>,
+  keypadMode: KeypadMode,
+) =>
+  (await renderedPuzzleControls).getByRole("radio", {
+    name: accessibleNameByKeypadMode[keypadMode],
+  });
+// #endregion
+
 beforeEach(() => {
   window.sessionStorage.clear();
 
@@ -158,6 +171,10 @@ beforeEach(() => {
   mockHandleDigitInput.mockReset();
   mockHandleRedoMove.mockReset();
   mockHandleUndoMove.mockReset();
+
+  mockNavigate.mockReset();
+  mockMakePuzzle.mockReset();
+  mockMakePuzzle.mockReturnValue(EMPTY_RAW_BOARD_STATE);
 });
 
 describe("PuzzleControls rendering", () => {
@@ -166,14 +183,42 @@ describe("PuzzleControls rendering", () => {
     const renderedPuzzleControls = await renderPuzzleControls();
 
     // Assert
+    for (const name of [
+      "Start a new puzzle",
+      "Undo the last move",
+      "Redo the last undone move",
+      "Check the current solution",
+      "Restart the puzzle",
+    ]) {
+      await expect
+        .element(renderedPuzzleControls.getByRole("button", { name }))
+        .toBeInTheDocument();
+    }
+    for (const name of [
+      "Enter digit 1",
+      "Enter digit 2",
+      "Enter digit 3",
+      "Enter digit 4",
+      "Enter digit 5",
+      "Enter digit 6",
+      "Enter digit 7",
+      "Enter digit 8",
+      "Enter digit 9",
+    ]) {
+      await expect
+        .element(
+          renderedPuzzleControls.getByRole("button", {
+            name,
+          }),
+        )
+        .toBeInTheDocument();
+    }
     await expect
-      .element(renderedPuzzleControls.getByTestId("mock-puzzle-actions"))
-      .toBeInTheDocument();
-    await expect
-      .element(renderedPuzzleControls.getByTestId("mock-keypad"))
-      .toBeInTheDocument();
-    await expect
-      .element(renderedPuzzleControls.getByTestId("mock-keypad-mode-selector"))
+      .element(
+        renderedPuzzleControls.getByRole("radiogroup", {
+          name: "Keypad mode selector",
+        }),
+      )
       .toBeInTheDocument();
   });
 });
@@ -301,23 +346,23 @@ describe("Keyboard shortcuts", () => {
     // Act + Assert
     await dispatchWindowKeyboardEvent("keydown", { key: "x" });
     await expect
-      .element(renderedPuzzleControls.getByText("Active mode: Center"))
-      .toBeInTheDocument();
+      .element(await getKeypadModeRadio(renderedPuzzleControls, "Center"))
+      .toBeChecked();
 
     await dispatchWindowKeyboardEvent("keydown", { key: "c" });
     await expect
-      .element(renderedPuzzleControls.getByText("Active mode: Corner"))
-      .toBeInTheDocument();
+      .element(await getKeypadModeRadio(renderedPuzzleControls, "Corner"))
+      .toBeChecked();
 
     await dispatchWindowKeyboardEvent("keydown", { key: "v" });
     await expect
-      .element(renderedPuzzleControls.getByText("Active mode: Color"))
-      .toBeInTheDocument();
+      .element(await getKeypadModeRadio(renderedPuzzleControls, "Color"))
+      .toBeChecked();
 
     await dispatchWindowKeyboardEvent("keydown", { key: "z" });
     await expect
-      .element(renderedPuzzleControls.getByText("Active mode: Digit"))
-      .toBeInTheDocument();
+      .element(await getKeypadModeRadio(renderedPuzzleControls, "Digit"))
+      .toBeChecked();
   });
 
   it("dispatches undo and redo shortcuts", async () => {
@@ -392,8 +437,12 @@ describe("Keyboard shortcuts", () => {
 
     // Assert
     await expect
-      .element(renderedPuzzleControls.getByText("Multiselect: true"))
-      .toBeInTheDocument();
+      .element(
+        renderedPuzzleControls.getByRole("checkbox", {
+          name: "Multiselect mode",
+        }),
+      )
+      .toBeChecked();
   });
 });
 
@@ -447,16 +496,16 @@ describe("Window blur behavior", () => {
     // Act
     await dispatchWindowKeyboardEvent("keydown", { key: "Control" });
     await expect
-      .element(renderedPuzzleControls.getByText("Active mode: Center"))
-      .toBeInTheDocument();
+      .element(await getKeypadModeRadio(renderedPuzzleControls, "Center"))
+      .toBeChecked();
 
     window.dispatchEvent(new Event("blur"));
     await waitForReactToFinishUpdating();
 
     // Assert
     await expect
-      .element(renderedPuzzleControls.getByText("Active mode: Digit"))
-      .toBeInTheDocument();
+      .element(await getKeypadModeRadio(renderedPuzzleControls, "Digit"))
+      .toBeChecked();
   });
 });
 
@@ -494,8 +543,8 @@ describe("Keypad mode shortcut blocking", () => {
 
     // Assert
     await expect
-      .element(renderedPuzzleControls.getByText("Active mode: Digit"))
-      .toBeInTheDocument();
+      .element(await getKeypadModeRadio(renderedPuzzleControls, "Digit"))
+      .toBeChecked();
   });
 
   it("does not switch keypad mode when Control is held alongside a shortcut key", async () => {
@@ -511,7 +560,7 @@ describe("Keypad mode shortcut blocking", () => {
 
     // Assert
     await expect
-      .element(renderedPuzzleControls.getByText("Active mode: Digit"))
-      .toBeInTheDocument();
+      .element(await getKeypadModeRadio(renderedPuzzleControls, "Digit"))
+      .toBeChecked();
   });
 });

@@ -1,14 +1,9 @@
-import { type ReactNode, useCallback } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Puzzle } from "@/lib/pages/home/components/puzzle/puzzle";
-import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
-import {
-  UserSettingsProvider,
-  useUserSettings,
-} from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import { UserSettingsProvider } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
   EMPTY_RAW_BOARD_STATE,
@@ -17,6 +12,7 @@ import {
   getCellElement,
   getCellLocator,
   getStartingEmptyBoardState,
+  SudokuStopwatchProviderBridge,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
@@ -38,32 +34,6 @@ vi.mock("@tanstack/react-router", () => ({
 type RenderedPuzzle = Awaited<ReturnType<typeof render>>;
 // #endregion
 
-// #region Provider Bridge
-const StopwatchBridge = ({ children }: { children: ReactNode }) => {
-  const { userSettings, setUserSettings } = useUserSettings();
-
-  const handleIsStopwatchDisabledChange = useCallback(
-    (nextIsStopwatchDisabled: boolean) => {
-      setUserSettings((current) => ({
-        ...current,
-        isStopwatchDisabled: nextIsStopwatchDisabled,
-      }));
-    },
-    [setUserSettings],
-  );
-
-  return (
-    <SudokuStopwatchProvider
-      encodedPuzzleString="test-puzzle"
-      isStopwatchDisabled={userSettings.isStopwatchDisabled}
-      onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
-    >
-      {children}
-    </SudokuStopwatchProvider>
-  );
-};
-// #endregion
-
 // #region Render Puzzle
 const renderPuzzle = async ({
   rawBoardState,
@@ -79,13 +49,13 @@ const renderPuzzle = async ({
   const renderedPuzzle = await render(
     <Provider>
       <UserSettingsProvider>
-        <StopwatchBridge>
+        <SudokuStopwatchProviderBridge encodedPuzzleString="test-puzzle">
           <Puzzle
             encodedPuzzleString="test-puzzle"
             rawBoardState={resolvedRawBoardState}
             startingBoardState={resolvedStartingBoardState}
           />
-        </StopwatchBridge>
+        </SudokuStopwatchProviderBridge>
       </UserSettingsProvider>
     </Provider>,
   );

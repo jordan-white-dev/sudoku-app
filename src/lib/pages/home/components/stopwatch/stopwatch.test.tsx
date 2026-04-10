@@ -1,18 +1,18 @@
-import { type ReactNode, useCallback } from "react";
 import SuperExpressive from "super-expressive";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
 import { Stopwatch } from "@/lib/pages/home/components/stopwatch/stopwatch";
-import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
 import {
   defaultUserSettings,
   type UserSettings,
   UserSettingsProvider,
-  useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
-import { waitForReactToFinishUpdating } from "@/lib/pages/home/utils/testing";
+import {
+  SudokuStopwatchProviderBridge,
+  waitForReactToFinishUpdating,
+} from "@/lib/pages/home/utils/testing";
 
 // #region Module Mocks
 const mockPauseStopwatch = vi.fn();
@@ -63,29 +63,6 @@ const GAME_PAUSED_TEXT = "Game Paused";
 const PAUSE_STOPWATCH_BUTTON_ACCESSIBLE_NAME = "Pause stopwatch";
 const RESUME_STOPWATCH_BUTTON_ACCESSIBLE_NAME = "Resume stopwatch";
 
-const StopwatchBridge = ({ children }: { children: ReactNode }) => {
-  const { userSettings, setUserSettings } = useUserSettings();
-
-  const handleIsStopwatchDisabledChange = useCallback(
-    (nextIsStopwatchDisabled: boolean) => {
-      setUserSettings((current) => ({
-        ...current,
-        isStopwatchDisabled: nextIsStopwatchDisabled,
-      }));
-    },
-    [setUserSettings],
-  );
-
-  return (
-    <SudokuStopwatchProvider
-      encodedPuzzleString="test-puzzle"
-      isStopwatchDisabled={userSettings.isStopwatchDisabled}
-      onIsStopwatchDisabledChange={handleIsStopwatchDisabledChange}
-    >
-      {children}
-    </SudokuStopwatchProvider>
-  );
-};
 // #endregion
 
 // #region Session Storage
@@ -135,9 +112,9 @@ const renderStopwatch = async ({
   const renderedStopwatch = await render(
     <Provider>
       <UserSettingsProvider>
-        <StopwatchBridge>
+        <SudokuStopwatchProviderBridge encodedPuzzleString="test-puzzle">
           <Stopwatch />
-        </StopwatchBridge>
+        </SudokuStopwatchProviderBridge>
       </UserSettingsProvider>
     </Provider>,
   );

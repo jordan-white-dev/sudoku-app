@@ -5,6 +5,11 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import { PuzzleActions } from "@/lib/pages/home/components/puzzle-actions/puzzle-actions";
 import {
+  defaultUserSettings,
+  type UserSettings,
+  UserSettingsProvider,
+} from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import {
   CELLS_PER_HOUSE,
   TOTAL_CELLS_IN_BOARD,
 } from "@/lib/pages/home/utils/constants";
@@ -13,6 +18,7 @@ import {
   getBoardStateWithEnteredDigitsInTargetCells,
   getStartingEmptyBoardState,
   getStartingPuzzleStateFromBoardState,
+  SudokuStopwatchProviderBridge,
   waitForReactToFinishUpdating,
 } from "@/lib/pages/home/utils/testing";
 import {
@@ -34,9 +40,30 @@ const mockMakePuzzle = vi.fn();
 const mockPauseStopwatch = vi.fn();
 const mockResetStopwatch = vi.fn();
 const mockStartStopwatch = vi.fn();
-const mockStartStopwatchIfEnabled = vi.fn();
 
-const mockUseUserSettings = vi.fn();
+type MockStopwatchHookValue = {
+  hours: number;
+  isRunning: boolean;
+  minutes: number;
+  pause: () => void;
+  reset: (offsetTimestamp?: Date, autoStart?: boolean) => void;
+  seconds: number;
+  start: () => void;
+  totalSeconds: number;
+};
+
+const defaultMockStopwatchHookValue: MockStopwatchHookValue = {
+  hours: 0,
+  isRunning: true,
+  minutes: 3,
+  pause: mockPauseStopwatch,
+  reset: mockResetStopwatch,
+  seconds: 15,
+  start: mockStartStopwatch,
+  totalSeconds: 195,
+};
+
+let currentMockStopwatchHookValue = defaultMockStopwatchHookValue;
 
 vi.mock("@/lib/pages/home/utils/actions/actions", () => ({
   handleRedoMove: (...args: Array<unknown>) => mockHandleRedoMove(...args),
@@ -51,36 +78,9 @@ vi.mock("sudoku", () => ({
   makepuzzle: () => mockMakePuzzle(),
 }));
 
-vi.mock(
-  "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch",
-  () => ({
-    useSudokuStopwatch: () => ({
-      formattedStopwatchTime: "03:15",
-      isStopwatchRunning: true,
-      pauseStopwatch: mockPauseStopwatch,
-      pauseStopwatchAndDisable: vi.fn(),
-      resetStopwatch: mockResetStopwatch,
-      resumeStopwatchAndEnable: vi.fn(),
-      startStopwatch: mockStartStopwatch,
-      startStopwatchIfEnabled: mockStartStopwatchIfEnabled,
-    }),
-  }),
-);
-
-vi.mock(
-  "@/lib/pages/home/hooks/use-user-settings/use-user-settings",
-  async (importOriginal) => {
-    const original =
-      await importOriginal<
-        typeof import("@/lib/pages/home/hooks/use-user-settings/use-user-settings")
-      >();
-
-    return {
-      ...original,
-      useUserSettings: () => mockUseUserSettings(),
-    };
-  },
-);
+vi.mock("react-timer-hook", () => ({
+  useStopwatch: () => currentMockStopwatchHookValue,
+}));
 // #endregion
 
 // #region Shared Test Types and Constants
@@ -101,6 +101,30 @@ const SOLVED_WITH_TIME_REGEX = SuperExpressive()
 // Equivalent to: /\s+/g
 const WHITESPACE_SEQUENCE_REGEX =
   SuperExpressive().allowMultipleMatches.oneOrMore.whitespaceChar.toRegex();
+// #endregion
+
+// #region Session Storage
+const USER_SETTINGS_SESSION_STORAGE_KEY = "user-settings";
+const getStopwatchSessionStorageKey = () =>
+  "sudoku-stopwatch-persisted-total-seconds-test-puzzle";
+
+const setSessionStorageForRender = ({
+  persistedStopwatchTotalSeconds = 0,
+  userSettings = defaultUserSettings,
+}: {
+  persistedStopwatchTotalSeconds?: number;
+  userSettings?: UserSettings;
+}) => {
+  window.sessionStorage.setItem(
+    USER_SETTINGS_SESSION_STORAGE_KEY,
+    JSON.stringify(userSettings),
+  );
+
+  window.sessionStorage.setItem(
+    getStopwatchSessionStorageKey(),
+    JSON.stringify(persistedStopwatchTotalSeconds),
+  );
+};
 // #endregion
 
 // #region Puzzle State Factories
@@ -147,34 +171,35 @@ const renderPuzzleActions = async ({
   renderedPuzzleActions: RenderedPuzzleActions;
   setPuzzleStateSpy: ReturnType<typeof vi.fn>;
 }> => {
-  mockUseUserSettings.mockReturnValue({
+  setSessionStorageForRender({
     userSettings: {
-      isConflictCheckerEnabled: false,
-      isDashedGridEnabled: false,
-      isFlipKeypadEnabled: false,
-      isHideStopwatchEnabled: false,
-      isShowRowAndColumnLabelsEnabled: false,
-      isShowSeenCellsEnabled: false,
+      ...defaultUserSettings,
       isStopwatchDisabled,
-      isStrictHighlightsEnabled: false,
     },
-    setUserSettings: vi.fn(),
   });
+
+  currentMockStopwatchHookValue = defaultMockStopwatchHookValue;
 
   const resolvedSetPuzzleStateSpy = vi.fn(setPuzzleState);
 
   const renderedPuzzleActions = await render(
     <Provider>
-      <PuzzleActions
-        isRowLayout={false}
-        puzzleState={puzzleState}
-        rawBoardState={rawBoardState ?? EMPTY_RAW_BOARD_STATE}
-        setPuzzleState={resolvedSetPuzzleStateSpy}
-      />
+      <UserSettingsProvider>
+        <SudokuStopwatchProviderBridge encodedPuzzleString="test-puzzle">
+          <PuzzleActions
+            isRowLayout={false}
+            puzzleState={puzzleState}
+            rawBoardState={rawBoardState ?? EMPTY_RAW_BOARD_STATE}
+            setPuzzleState={resolvedSetPuzzleStateSpy}
+          />
+        </SudokuStopwatchProviderBridge>
+      </UserSettingsProvider>
     </Provider>,
   );
 
   await waitForReactToFinishUpdating();
+
+  mockResetStopwatch.mockClear();
 
   return {
     renderedPuzzleActions,
@@ -242,9 +267,9 @@ beforeEach(() => {
   mockPauseStopwatch.mockReset();
   mockResetStopwatch.mockReset();
   mockStartStopwatch.mockReset();
-  mockStartStopwatchIfEnabled.mockReset();
 
-  mockUseUserSettings.mockReset();
+  currentMockStopwatchHookValue = defaultMockStopwatchHookValue;
+  window.sessionStorage.clear();
 });
 
 describe("PuzzleActions rendering", () => {
@@ -411,7 +436,7 @@ describe("New puzzle dialog", () => {
     await renderedPuzzleActions.getByRole("button", { name: "Cancel" }).click();
 
     // Assert
-    expect(mockStartStopwatchIfEnabled).toHaveBeenCalledTimes(1);
+    expect(mockStartStopwatch).toHaveBeenCalledTimes(1);
   });
 });
 
@@ -506,7 +531,7 @@ describe("Restart puzzle dialog", () => {
 
     // Assert
     expect(mockPauseStopwatch).toHaveBeenCalledTimes(1);
-    expect(mockStartStopwatchIfEnabled).toHaveBeenCalledTimes(1);
+    expect(mockStartStopwatch).toHaveBeenCalledTimes(1);
   });
 
   it("resets puzzle and stopwatch with Restart", async () => {

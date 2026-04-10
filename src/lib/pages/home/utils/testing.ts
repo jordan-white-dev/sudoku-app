@@ -1,6 +1,9 @@
+import { createElement, type PropsWithChildren, useCallback } from "react";
 import { type Locator } from "vitest/browser";
 import { type render } from "vitest-browser-react";
 
+import { SudokuStopwatchProvider } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
+import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   CELLS_PER_HOUSE,
   TOTAL_CELLS_IN_BOARD,
@@ -28,6 +31,39 @@ export const waitForReactToFinishUpdating = async () => {
   await Promise.resolve();
   await new Promise<void>((resolve) => setTimeout(resolve, 0));
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+};
+// #endregion
+
+// #region Provider Bridge
+type SudokuStopwatchProviderBridgeProps = PropsWithChildren<{
+  encodedPuzzleString?: string;
+}>;
+
+export const SudokuStopwatchProviderBridge = ({
+  children,
+  encodedPuzzleString = "test-puzzle",
+}: SudokuStopwatchProviderBridgeProps) => {
+  const { userSettings, setUserSettings } = useUserSettings();
+
+  const handleIsStopwatchDisabledChange = useCallback(
+    (nextIsStopwatchDisabled: boolean) => {
+      setUserSettings((current) => ({
+        ...current,
+        isStopwatchDisabled: nextIsStopwatchDisabled,
+      }));
+    },
+    [setUserSettings],
+  );
+
+  return createElement(
+    SudokuStopwatchProvider,
+    {
+      encodedPuzzleString,
+      isStopwatchDisabled: userSettings.isStopwatchDisabled,
+      onIsStopwatchDisabledChange: handleIsStopwatchDisabledChange,
+    },
+    children,
+  );
 };
 // #endregion
 
