@@ -31,7 +31,7 @@ const ErrorPage = ({ error, resetErrorBoundary }: FallbackProps) => {
         </Text>
       </Box>
 
-      <Box>
+      <Box justifySelf="center">
         <Image
           src="/assets/error-pch-vector.jpg"
           width={{ base: "320px", sm: "400px" }}
