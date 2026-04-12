@@ -4,6 +4,7 @@ import {
   type Dispatch,
   memo,
   type SetStateAction,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -95,14 +96,30 @@ export const Puzzle = memo(
       useSessionStorageState<boolean>("multiselect-mode", {
         defaultValue: false,
       });
-    const [puzzleState, setPuzzleState] = useSessionStorageState<PuzzleState>(
-      `puzzle-state-${encodedPuzzleString}`,
-      {
-        defaultValue: {
-          historyIndex: 0,
-          puzzleHistory: [startingBoardState],
-        },
+    const startingPuzzleStateRef = useRef<PuzzleState>({
+      historyIndex: 0,
+      puzzleHistory: [startingBoardState],
+    });
+    const [sessionStoragePuzzleState, setSessionStoragePuzzleState] =
+      useSessionStorageState<PuzzleState>(
+        `puzzle-state-${encodedPuzzleString}`,
+      );
+    const puzzleState =
+      sessionStoragePuzzleState ?? startingPuzzleStateRef.current;
+    const setPuzzleState: Dispatch<SetStateAction<PuzzleState>> = useCallback(
+      (nextPuzzleStateOrUpdater) => {
+        if (typeof nextPuzzleStateOrUpdater === "function") {
+          setSessionStoragePuzzleState((currentSessionStoragePuzzleState) =>
+            nextPuzzleStateOrUpdater(
+              currentSessionStoragePuzzleState ??
+                startingPuzzleStateRef.current,
+            ),
+          );
+        } else {
+          setSessionStoragePuzzleState(nextPuzzleStateOrUpdater);
+        }
       },
+      [setSessionStoragePuzzleState],
     );
     const containerRef = useRef<HTMLDivElement | null>(null);
     const puzzleRef = useRef<HTMLDivElement | null>(null);
