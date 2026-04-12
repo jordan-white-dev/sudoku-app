@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { render } from "vitest-browser-react";
 
 import { Provider } from "@/lib/components/ui/provider";
-import { Tooltip } from "@/lib/pages/home/components/tooltip";
+import { Tooltip } from "@/lib/pages/home/components/tooltip/tooltip";
 
 describe("Tooltip", () => {
   it("renders children inside a tooltip wrapper by default", async () => {

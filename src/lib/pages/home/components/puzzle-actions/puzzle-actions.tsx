@@ -21,7 +21,7 @@ import {
 import { ImCheckmark, ImRedo, ImStopwatch, ImUndo } from "react-icons/im";
 import { MdOutlineFiberNew, MdRestartAlt } from "react-icons/md";
 
-import { Tooltip } from "@/lib/pages/home/components/tooltip";
+import { Tooltip } from "@/lib/pages/home/components/tooltip/tooltip";
 import { useSudokuStopwatch } from "@/lib/pages/home/hooks/use-sudoku-stopwatch/use-sudoku-stopwatch";
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {

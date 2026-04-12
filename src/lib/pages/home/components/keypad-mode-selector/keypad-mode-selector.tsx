@@ -11,7 +11,7 @@ import {
   type SetStateAction,
 } from "react";
 
-import { Tooltip } from "@/lib/pages/home/components/tooltip";
+import { Tooltip } from "@/lib/pages/home/components/tooltip/tooltip";
 import {
   MARKUP_COLOR_BLUE,
   MARKUP_COLOR_GRAY,

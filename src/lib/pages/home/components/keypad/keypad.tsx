@@ -13,7 +13,7 @@ import { type CSSProperties, type Dispatch, type SetStateAction } from "react";
 import { FiDelete } from "react-icons/fi";
 import { GrCheckbox, GrMultiple } from "react-icons/gr";
 
-import { Tooltip } from "@/lib/pages/home/components/tooltip";
+import { Tooltip } from "@/lib/pages/home/components/tooltip/tooltip";
 import { useUserSettings } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   handleCenterMarkupInput,
