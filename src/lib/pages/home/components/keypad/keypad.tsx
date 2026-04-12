@@ -336,7 +336,11 @@ const MultiselectSwitch = ({
               <Icon as={GrCheckbox} fontSize={getCellSizeScaledBy(0.22)} />
             }
           >
-            <Icon as={GrMultiple} fontSize={getCellSizeScaledBy(0.22)} />
+            <Icon
+              as={GrMultiple}
+              color="white"
+              fontSize={getCellSizeScaledBy(0.22)}
+            />
           </Switch.Indicator>
         </Switch.Control>
       </Switch.Root>
