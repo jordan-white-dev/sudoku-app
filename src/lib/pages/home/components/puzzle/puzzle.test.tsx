@@ -196,6 +196,30 @@ describe("Pointer down outside puzzle selection behavior", () => {
       thirdSelectedCellBeforeOutsidePointerDown.getAttribute("data-selected"),
     ).toBe("false");
   });
+
+  it("clears selection when pointer down occurs in blank space within the puzzle layout", async () => {
+    // Arrange
+    const startingBoardState = getBoardStateWithTargetCellsSelected([
+      getBrandedCellId(1),
+    ]);
+    const renderedPuzzle = await renderPuzzle({ startingBoardState });
+    const selectedCellBeforeBlankSpacePointerDown = await getCellElement(
+      renderedPuzzle,
+      getBrandedCellId(1),
+    );
+    const boardGrid = (await renderedPuzzle).getByRole("grid");
+    const boardGridElement = await boardGrid.element();
+    const puzzleLayoutContainer =
+      boardGridElement.parentElement?.parentElement ?? document.body;
+
+    // Act
+    await dispatchPointerDownEvent(puzzleLayoutContainer);
+
+    // Assert
+    expect(
+      selectedCellBeforeBlankSpacePointerDown.getAttribute("data-selected"),
+    ).toBe("false");
+  });
 });
 
 describe("Pointer down inside puzzle selection behavior", () => {

@@ -122,7 +122,8 @@ export const Puzzle = memo(
       [setSessionStoragePuzzleState],
     );
     const containerRef = useRef<HTMLDivElement | null>(null);
-    const puzzleRef = useRef<HTMLDivElement | null>(null);
+    const boardWrapperRef = useRef<HTMLDivElement | null>(null);
+    const puzzleControlsWrapperRef = useRef<HTMLDivElement | null>(null);
     const [cellSize, setCellSize] = useState(80);
     const [isRowLayout, setIsRowLayout] = useState(false);
 
@@ -168,12 +169,15 @@ export const Puzzle = memo(
 
     useEffect(() => {
       const handlePointerDownOutside = (event: PointerEvent) => {
-        if (
-          puzzleRef.current &&
-          !puzzleRef.current.contains(
-            event.target instanceof Node ? event.target : null,
-          )
-        ) {
+        const targetNode = event.target instanceof Node ? event.target : null;
+        const isOutsideBoard = !(
+          boardWrapperRef.current?.contains(targetNode) ?? false
+        );
+        const isOutsidePuzzleControls = !(
+          puzzleControlsWrapperRef.current?.contains(targetNode) ?? false
+        );
+
+        if (isOutsideBoard && isOutsidePuzzleControls) {
           handleClearAllSelections(setPuzzleState);
         }
       };
@@ -200,22 +204,25 @@ export const Puzzle = memo(
           gap={getCellSizeScaledBy(0.4)}
           justifyContent="center"
           margin="auto"
-          ref={puzzleRef}
           style={flexStyle}
         >
-          <Board
-            isMultiselectMode={isMultiselectMode}
-            puzzleState={puzzleState}
-            setPuzzleState={setPuzzleState}
-          />
-          <PuzzleControls
-            isMultiselectMode={isMultiselectMode}
-            isRowLayout={isRowLayout}
-            puzzleState={puzzleState}
-            rawBoardState={rawBoardState}
-            setIsMultiselectMode={setIsMultiselectMode}
-            setPuzzleState={setPuzzleState}
-          />
+          <Box display="contents" ref={boardWrapperRef}>
+            <Board
+              isMultiselectMode={isMultiselectMode}
+              puzzleState={puzzleState}
+              setPuzzleState={setPuzzleState}
+            />
+          </Box>
+          <Box display="contents" ref={puzzleControlsWrapperRef}>
+            <PuzzleControls
+              isMultiselectMode={isMultiselectMode}
+              isRowLayout={isRowLayout}
+              puzzleState={puzzleState}
+              rawBoardState={rawBoardState}
+              setIsMultiselectMode={setIsMultiselectMode}
+              setPuzzleState={setPuzzleState}
+            />
+          </Box>
         </Flex>
       </Box>
     );
