@@ -73,7 +73,7 @@ const ActionButton = ({
   <IconButton
     aria-label={ariaLabel}
     aspectRatio={isRowLayout ? "2 / 1" : undefined}
-    height={getCellSizeScaledBy(0.64)}
+    height={getCellSizeScaledBy(0.67)}
     padding="0.25rem 0"
     rounded="md"
     width={isRowLayout ? "full" : getCellSizeScaledBy(0.8)}
@@ -627,7 +627,7 @@ export const PuzzleActions = ({
   <SimpleGrid
     columnGap={getCellSizeScaledBy(0.058)}
     columns={isRowLayout ? 2 : 1}
-    maxWidth={getCellSizeScaledBy(2.55)}
+    maxWidth={getCellSizeScaledBy(2.67)}
     rowGap={getCellSizeScaledBy(0.058)}
   >
     <NewPuzzleButton isRowLayout={isRowLayout} />

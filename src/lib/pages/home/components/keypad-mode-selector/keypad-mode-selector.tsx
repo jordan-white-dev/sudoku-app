@@ -126,6 +126,7 @@ const KeypadModeSelectorCard = ({
     _checked={{ color: "white" }}
     alignItems="center"
     aria-label={`${keypadMode} keypad mode`}
+    aspectRatio="square"
     justifyItems="center"
     padding="0"
     value={keypadMode}
@@ -135,7 +136,7 @@ const KeypadModeSelectorCard = ({
     <RadioCard.ItemText srOnly>{tooltipText}</RadioCard.ItemText>
     <Tooltip content={tooltipText} positioning={{ placement: "right-start" }}>
       <RadioCard.ItemControl padding="0">
-        <Icon boxSize={iconBoxSize} fill="currentColor">
+        <Icon alignSelf="center" boxSize={iconBoxSize} fill="currentColor">
           {children}
         </Icon>
       </RadioCard.ItemControl>
@@ -166,11 +167,11 @@ export const KeypadModeSelector = ({
 }: KeypadModeSelectorProps) => {
   const iconBoxSize = isRowLayout
     ? getCellSizeScaledBy(1.2)
-    : getCellSizeScaledBy(0.755);
+    : getCellSizeScaledBy(0.74);
 
   return (
     <RadioCard.Root
-      align="center"
+      alignSelf="center"
       aria-label="Keypad mode selector"
       colorPalette="blue"
       defaultValue="Digit"
@@ -186,12 +187,14 @@ export const KeypadModeSelector = ({
     >
       <RadioCard.Label srOnly>Keypad mode selector</RadioCard.Label>
       <SimpleGrid
+        alignContent="center"
         columns={isRowLayout ? 2 : 1}
-        gap={getCellSizeScaledBy(0.12)}
+        gap={
+          isRowLayout ? getCellSizeScaledBy(0.18) : getCellSizeScaledBy(0.12)
+        }
         gridAutoRows={isRowLayout ? getCellSizeScaledBy(1.2) : "1fr"}
-        height={isRowLayout ? undefined : getCellSizeScaledBy(3.38)}
         width={
-          isRowLayout ? getCellSizeScaledBy(2.52) : getCellSizeScaledBy(0.755)
+          isRowLayout ? getCellSizeScaledBy(2.67) : getCellSizeScaledBy(0.805)
         }
       >
         <KeypadModeSelectorCard

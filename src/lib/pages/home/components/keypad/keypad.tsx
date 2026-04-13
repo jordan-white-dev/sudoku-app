@@ -48,9 +48,9 @@ import {
 import { getBrandedSudokuDigit } from "@/lib/pages/home/utils/validators/validators";
 
 // #region CSS Properties
-const COLOR_SWATCH_SIZE = getCellSizeScaledBy(0.8);
-const ICON_SIZE: IconProps["width"] = getCellSizeScaledBy(0.55);
-const ICON_BUTTON_SIZE: IconButtonProps["width"] = getCellSizeScaledBy(0.8);
+const COLOR_SWATCH_SIZE = getCellSizeScaledBy(0.85);
+const ICON_SIZE: IconProps["width"] = getCellSizeScaledBy(0.56);
+const ICON_BUTTON_SIZE: IconButtonProps["width"] = getCellSizeScaledBy(0.85);
 const ICON_BUTTON_DIGIT_FONT_SIZE: IconButtonProps["textStyle"] =
   getCellSizeScaledBy(0.6);
 const ICON_BUTTON_NONDIGIT_FONT_SIZE: IconButtonProps["textStyle"] =
@@ -399,7 +399,7 @@ export const Keypad = ({
     columns={6}
     gap={getCellSizeScaledBy(0.06)}
     height="fit-content"
-    width={getCellSizeScaledBy(2.52)}
+    width={getCellSizeScaledBy(2.67)}
   >
     {keypadMode === "Color" ? (
       <ColorPad
