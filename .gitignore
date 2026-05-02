@@ -13,9 +13,6 @@ yarn-error.log*
 
 .vscode/settings.json
 
-# GitHub Copilot instructions
-.github/*.md
-
 # Test
 coverage/
 
