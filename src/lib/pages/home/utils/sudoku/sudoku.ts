@@ -346,8 +346,8 @@ export const getDifficultyLevelFromRating = (
   rating: number,
 ): PuzzleDifficultyLevel => {
   const cappedRating = Math.min(rating, puzzleDifficultyLevels.length - 1);
-  const level = puzzleDifficultyLevels[cappedRating];
-  return level;
+  const puzzleDifficultyLevel = puzzleDifficultyLevels[cappedRating];
+  return puzzleDifficultyLevel;
 };
 
 export const getDifficultyLevelFromRawBoardState = (

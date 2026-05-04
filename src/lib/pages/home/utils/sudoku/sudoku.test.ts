@@ -196,23 +196,43 @@ describe("ratePuzzleDifficulty", () => {
 
 describe("getDifficultyLevelFromRating", () => {
   it("returns 'Standard' for a rating of 0", () => {
-    expect(getDifficultyLevelFromRating(0)).toBe("Standard");
+    // Act
+    const puzzleDifficultyLevel = getDifficultyLevelFromRating(0);
+
+    // Assert
+    expect(puzzleDifficultyLevel).toBe("Standard");
   });
 
   it("returns 'Intermediate' for a rating of 1", () => {
-    expect(getDifficultyLevelFromRating(1)).toBe("Intermediate");
+    // Act
+    const puzzleDifficultyLevel = getDifficultyLevelFromRating(1);
+
+    // Assert
+    expect(puzzleDifficultyLevel).toBe("Intermediate");
   });
 
   it("returns 'Advanced' for a rating of 2", () => {
-    expect(getDifficultyLevelFromRating(2)).toBe("Advanced");
+    // Act
+    const puzzleDifficultyLevel = getDifficultyLevelFromRating(2);
+
+    // Assert
+    expect(puzzleDifficultyLevel).toBe("Advanced");
   });
 
   it("returns 'Expert' for a rating of 3", () => {
-    expect(getDifficultyLevelFromRating(3)).toBe("Expert");
+    // Act
+    const puzzleDifficultyLevel = getDifficultyLevelFromRating(3);
+
+    // Assert
+    expect(puzzleDifficultyLevel).toBe("Expert");
   });
 
   it("returns 'Expert' for a rating greater than 3", () => {
-    expect(getDifficultyLevelFromRating(10)).toBe("Expert");
+    // Act
+    const puzzleDifficultyLevel = getDifficultyLevelFromRating(10);
+
+    // Assert
+    expect(puzzleDifficultyLevel).toBe("Expert");
   });
 });
 
@@ -222,10 +242,11 @@ describe("getDifficultyLevelFromRawBoardState", () => {
     const rawBoardState = SOLVED_RAW_BOARD_STATE;
 
     // Act
-    const level = getDifficultyLevelFromRawBoardState(rawBoardState);
+    const puzzleDifficultyLevel =
+      getDifficultyLevelFromRawBoardState(rawBoardState);
 
     // Assert
-    expect(level).toBe("Standard");
+    expect(puzzleDifficultyLevel).toBe("Standard");
   });
 
   it("returns 'Expert' for a board with a very high computed difficulty rating", () => {
@@ -236,9 +257,10 @@ describe("getDifficultyLevelFromRawBoardState", () => {
     );
 
     // Act
-    const level = getDifficultyLevelFromRawBoardState(allEmptyBoard);
+    const puzzleDifficultyLevel =
+      getDifficultyLevelFromRawBoardState(allEmptyBoard);
 
     // Assert
-    expect(level).toBe("Expert");
+    expect(puzzleDifficultyLevel).toBe("Expert");
   });
 });
