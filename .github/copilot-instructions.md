@@ -4,14 +4,31 @@
 
 - Use TypeScript with strict typing. Prefer minimal type assertions. Use the existing `@/*` path alias from `tsconfig.json`.
 - Follow Biome rules in `biome.json`. Avoid barrel files, use inline `type` imports, use generic array syntax, and avoid default exports except where explicitly allowed (e.g., page `index.tsx` files).
-- Use descriptive function and variable names that indicate purpose well enough for explanatory comments to rarely be needed. When comments are necessary, prefer doc comments that can be surfaced in hover tooltips.
-- Collocate `*.test.tsx` files beside their corresponding implementation. Write "describe" blocks in sentence case and "it" blocks in lowercase. Ensure test descriptions reflect business behavior rather than implementation details. Structure tests using Arrange, Act, and Assert.
-- Prefer tests that cover one behavior or scenario at a time. Write tests to cover all behaviors and reasonable edge and corner cases. Favor minimal mocking and test helpers; ensure tests reflect real usage. Do not use data-testid; instead, query elements by role, label text, or visible content.
 - Prefer debuggable longform code over concise inline expressions. Avoid nested ternaries, compressed one-liners, and inline object reconstruction in non-trivial logic. Use well-named intermediate variables and explicit `return` statements.
-- Prefer deterministic, functional-style code with small, focused functions. Favor `const`, pure functions, derived values, and immutable updates. Avoid `let` bindings and mutation unless clearly justified.
+- Prefer deterministic, functional-style code with small, focused functions.
+- Each function should do one thing. When a function handles multiple concerns, extract named helper functions — one per concern — rather than keeping all logic inline.
+- Favor `const`, pure functions, derived values, and immutable updates. Avoid `let` bindings and mutation unless clearly justified.
 - Use array methods like `map`, `filter`, and `reduce` for data transformations. Avoid manual loops, mutation, and side effects in these operations.
 - Preserve import grouping order: package imports, blank line, alias imports, blank line, relative imports.
-- Do not use biome-ignore comments to disable lint rules. Instead, refactor to comply with the rule.
+
+## Naming
+
+- Every function, variable, constant, type, component, hook, and file must have a name that is correct, meaningful, descriptive, self-documenting, and nonambiguous (i.e. its purpose must be clearly indicated).
+- Names should be as long as necessary to be unambiguous; prefer specificity over brevity.
+- Single-character names (e.g. `x`, `n`, `e`) are not allowed. The sole exception is `i` as a traditional `for` loop index; array method callback indices must use `index` or a more descriptive name.
+- Use camelCase for variables, functions, and hooks; PascalCase for React components, TypeScript types, and interfaces; kebab-case for file and folder names. Use SCREAMING_SNAKE_CASE for module-level constants and named magic numbers (e.g. `BASE_36 = 36`, `MAXIMUM_RETRY_COUNT = 5`).
+- Booleans should take the form of isSomething (e.g. isUpgrade, isApproval, isProMember, etc.); actionVerbSomething, where the prefix is any action verb that fits the behavior (e.g. allowsWhitespace, willUpdate, didRestart, canSubmit, shouldReload, doesRequireAuth, etc.); or hasSomething (e.g. hasMoreThanOneWarning, hasMultipleDiscounts, hasException, etc.).
+- Integers should take the form of {integer itself} (e.g. age, year, MAXIMUM_ALLOWED_LOGIN_ATTEMPTS, tooltipDelayInMilliseconds, etc.), numberOfSomething (e.g. numberOfRetries, numberOfDescendents, numberOfAccounts, numberOfDaysWithoutRain, etc.), or somethingCount (e.g. failureCount, retryCount, currentCakeInventoryCount, etc.).
+- Floating-Point Numbers should take the form of {floating-point itself} (e.g. height, weight, priceInDanishKrone, angleInDegrees, highTemperatureInFahrenheit, etc.) or somethingAmount (e.g. discountAmount, transferAmount, refundAmount, etc.).
+- Strings should take the form of {entity itself} (e.g. fullGivenName, city, shortSpeakerBiography, playerSelectedClass, definition, etc.) or somethingAsString (e.g. monthAsString, timeZoneAsString, etc.).
+- Collections should take the form of {plural form of thing} (e.g. robots, sentientRobots, discountedProducts, customers, newlyReleasedBooks, etc.) or implementationOfThings (e.g. unorderedListOfCustomers, queueOfFirstPriorityTasks, orderedSetOfTimeStamps, etc.).
+- Maps should take the form of keyToValueMap (e.g. bookIdToAuthorMap, customerToOrderTotalMap, productIdToSuppliersMap, etc.).
+- Pairs & Tuples should take the form of firstPairAndSecondPair (e.g. lengthAndWidth, setsAndRepetitions, currentAndLifetimeXP, genusAndSpecies, etc.) or firstSecondAndThirdThing (e.g. heightWidthAndDepthInCentimeters, saturatedTransAndTotalFatInGrams, redGreenBlueAndAlpha, etc.).
+
+## Comments
+
+- Comments are only appropriate for genuinely complex or non-obvious logic that cannot be made clear through naming and structure alone. When a comment is needed, prefer a doc comment (`/** */`) that can be surfaced in hover tooltips.
+- Do not use `biome-ignore` comments to disable lint rules. Instead, refactor to comply with the rule.
 - Do not leave commented-out code, dead code, or unresolved TODO comments in production files.
 
 ## Architecture
@@ -21,8 +38,12 @@
 - Main game logic lives under `src/lib/pages/home`. UI components, hooks, utilities, and tests are organized by feature folder rather than by generic shared layers.
 - App state is mostly local to the puzzle feature and persisted with `use-session-storage-state` and `use-local-storage-state`. Reuse the existing providers and utility functions before introducing new global state.
 - Do not hand-edit `src/routeTree.gen.ts`; it is generated by TanStack Router.
+- Prefer editing existing feature folders over creating new top-level structure unless the current layout clearly no longer fits.
+- Keep puzzle behavior, keyboard interactions, and user-facing rules aligned with the project root `README.md` rather than duplicating that documentation here.
+- Use Chakra components and the existing theme/provider setup instead of introducing a parallel styling approach.
+- Treat `src/lib/components/ui/**/*` and other generated or framework-managed files as stable unless the task specifically requires changing them.
 
-## Build and Test
+## Build
 
 - Use `pnpm` for all package management.
 - Target Node `24.x` as declared in `package.json`.
@@ -34,14 +55,14 @@
   - `pnpm build`
   - `pnpm knip`
   - `pnpm check` — shorthand that runs `biome:check`, `type:check`, `test`, `build`, and `knip` in sequence
+
+## Testing
+
 - Tests run with Vitest in browser mode through Playwright. Prefer updating or adding collocated tests when changing behavior, especially in `src/lib/pages/home`.
-
-## Conventions
-
-- Prefer editing existing feature folders over creating new top-level structure unless the current layout clearly no longer fits.
-- Keep puzzle behavior, keyboard interactions, and user-facing rules aligned with the project root `README.md` rather than duplicating that documentation here.
-- Use Chakra components and the existing theme/provider setup instead of introducing a parallel styling approach.
-- Treat `src/lib/components/ui/**/*` and other generated or framework-managed files as stable unless the task specifically requires changing them.
+- Collocate `*.test.tsx` files beside their corresponding implementation. Structure tests using Arrange, Act, and Assert.
+- Write "describe" blocks in sentence case and "it" blocks in lowercase. Ensure test descriptions reflect business behavior rather than implementation details.
+- Prefer tests that cover one behavior or scenario at a time. Write tests to cover all behaviors and reasonable edge and corner cases.
+- Favor minimal mocking and test helpers; ensure tests reflect real usage. Do not use data-testid; instead, query elements by role, label text, or visible content.
 
 ## Security
 
@@ -65,10 +86,24 @@
 
 ## Review Criteria
 
-- **Naming:** Every function, variable, constant, type, component, hook, and file must have a name that is descriptive, non-misleading, and clearly indicates its purpose. Names should be as long as necessary to be unambiguous. Prefer specificity over brevity.
-- **Self-documenting code:** Code structure and naming should make intent clear without relying on inline comments. Comments are only appropriate for genuinely complex or non-obvious logic that cannot be made clear through naming and structure alone. When a comment is needed, prefer a doc comment (`/** */`) that can be surfaced in hover tooltips.
+- **Self-documenting code:** Code structure and naming should make intent clear without relying on inline comments.
 - **No duplication:** Before adding any new function, hook, utility, or component, verify that equivalent or near-equivalent functionality does not already exist — within the same file and across the entire project. Reuse or extend existing code rather than duplicating it.
-- **Code clarity:** Prefer explicit, flat code structures over clever, compact, or deeply nested ones. Logic should be easy to follow top-to-bottom. Use named intermediate variables instead of chained expressions when the intermediate values have meaningful identities.
-- **Rule compliance:** All code must comply with every rule in this file. No rule may be silently waived; if a rule cannot be followed for a specific, justified reason, that reason must be stated explicitly.
+- **Code clarity:** Prefer explicit, flat code structures over clever, compact, or deeply nested ones. Logic should be easy to follow top-to-bottom.
+- **Rule compliance:** No rule in this file may be silently waived; if a rule cannot be followed for a specific, justified reason, that reason must be stated explicitly.
 
 The structured severity rubric, naming review checklist, and duplication check procedure used to enforce these criteria during code review are in `.github/skills/code-review-gate.md`.
+
+## Artifact Style
+
+These conventions apply to all markdown artifacts written to `.github/artifacts/` (requirements documents, implementation specs, and review reports). Use them consistently across every file and every agent invocation.
+
+| Element               | Use                                         | Never use                                              |
+| --------------------- | ------------------------------------------- | ------------------------------------------------------ |
+| Italic                | `_text_` (underscores)                      | `*text*` (asterisks)                                   |
+| Bold                  | `**text**` (double asterisks)               | `__text__` (double underscores)                        |
+| Bold-italic           | `**_text_**`                                | `***text***` or `_**text**_`                           |
+| Unordered list marker | `-`                                         | `*` or `+`                                             |
+| Horizontal rule       | `---`                                       | `***` or `___`                                         |
+| Empty section         | `_(none)_` as the sole line in that section | `*(none)*`, `(none)`, or omitting the content entirely |
+
+The `_(none)_` rule applies to every section or list in every artifact that has nothing to list: individual severity headings in review reports, an entirely empty Findings section, "Files to delete" in specs, "Out of Scope" in requirements, and any other section that is intentionally empty.
