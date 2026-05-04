@@ -79,13 +79,13 @@ Examples:
 
 ---
 
-## Handoff Prompt Template
+## Preceding Message Template
 
-Run `pnpm check` as required by `.github/instructions/testing.instructions.md`. All commands it invokes must pass before sending this prompt.
+Run `pnpm check` as required by `.github/instructions/testing.instructions.md`. All commands it invokes must pass before presenting the handoff button.
 
-If `pnpm check` required any fixes, run `git status` before sending the prompt. If there are uncommitted changes from those fixes, commit them now: `git add -A && git commit -m "fix(<scope>): address pre-handoff validation failures"`
+If `pnpm check` required any fixes, run `git status` before presenting the handoff button. If there are uncommitted changes from those fixes, commit them now: `git add -A && git commit -m "fix(<scope>): address pre-handoff validation failures"`
 
-When handing off to the Reviewer, the prompt must include all of the following:
+Before presenting the handoff button, write a message to the Reviewer that includes all of the following — this is the message the Reviewer will use to reconstruct feature context:
 
 ```
 Feature number: {N}

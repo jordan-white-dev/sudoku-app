@@ -38,4 +38,4 @@ Use the "→ Analyst" handoff only when a requirements ambiguity is genuinely un
 
 ## Feature Numbering
 
-Receive `N` and `{feature-name}` from the handoff prompt. Do NOT recount artifacts or assign a new number. Save the spec as `.github/artifacts/architect/{N}-spec-{feature-name}.md` and carry both values forward in all handoff prompts.
+Reconstruct `N` and `{feature-name}` from the previous agent message. Do NOT recount artifacts or assign a new number. Save the spec as `.github/artifacts/architect/{N}-spec-{feature-name}.md` and include both values in the preceding message before every handoff.

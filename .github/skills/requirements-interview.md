@@ -79,7 +79,7 @@ Perform this procedure exactly once per feature, immediately before saving the a
 4. State aloud: "Assigning feature number {N} to this feature."
 5. Save the artifact as `.github/artifacts/analyst/{N}-requirements-{feature-name}.md`, creating the directory if it does not already exist
    - `{feature-name}` must be a short kebab-case label derived from the problem statement: lowercase letters, digits, and hyphens only. Normalize any spaces to hyphens and remove all other special characters (e.g., "Timer Pause & Resume" → `timer-pause-resume`).
-6. In the handoff prompt to the Architect, include: "Feature number: {N}, feature name: {feature-name}"
+6. In the preceding message to the Architect, include: "Feature number: {N}, feature name: {feature-name}"
 
 ---
 
@@ -118,7 +118,7 @@ Perform this procedure exactly once per feature, immediately before saving the a
 
 ## Out of Scope
 
-- [Explicit list of things this feature will NOT do.]
+_(none)_
 
 ---
 

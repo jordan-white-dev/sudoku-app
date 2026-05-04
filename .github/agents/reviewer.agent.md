@@ -10,44 +10,22 @@ handoffs:
   - label: "→ Developer: Remediate findings (auto)"
     agent: Developer
     prompt: |
-      Feature number: {N}
-      Feature name: {feature-name}
-      Task: {task number and title}
-      Review cycle: {R}
-      Branch: feature/{feature-name}
       Verdict: CHANGES REQUESTED
-      Report: .github/artifacts/reviewer/{N}-review-report-{feature-name}-t{T}-r{R}.md
-
-      Please address all findings in the report, re-run the full validation suite (`pnpm check`), and hand back when it passes.
+      Reconstruct all feature context from the previous agent message.
     send: true
   - label: "→ Developer: Remediate findings (manual — approval required)"
     agent: Developer
     prompt: |
-      ⚠️ Review cycle {R} — manual approval required.
-      This task has received CHANGES REQUESTED {R} consecutive times. Please review the findings and approve this handoff before the Developer continues.
-
-      Feature number: {N}
-      Feature name: {feature-name}
-      Task: {task number and title}
-      Review cycle: {R}
-      Branch: feature/{feature-name}
+      ⚠️ Manual approval required.
       Verdict: CHANGES REQUESTED
-      Report: .github/artifacts/reviewer/{N}-review-report-{feature-name}-t{T}-r{R}.md
-
-      Once approved, address all findings in the report, re-run the full validation suite (`pnpm check`), and hand back when it passes.
+      Reconstruct all feature context from the previous agent message.
     send: false
   - label: "→ Developer: Task approved — continue to next task"
     agent: Developer
     prompt: |
-      Feature number: {N}
-      Feature name: {feature-name}
-      Task: {task number and title}
-      Branch: feature/{feature-name}
-      Review cycle: 1
       Verdict: APPROVED
-      Report: .github/artifacts/reviewer/{N}-review-report-{feature-name}-t{T}-r{R}.md
-
-      Please continue to the next task in the spec.
+      Please continue to the next task.
+      Reconstruct all feature context from the previous agent message.
     send: true
 ---
 
@@ -55,6 +33,7 @@ You are the Reviewer. Your job is to review the Developer's completed work again
 
 ## Rules
 
+- **Context Reconstruction**: Before starting any workflow step, extract N, feature-name, T (task number), task title, R (review cycle), and branch from the most recent agent message in the conversation — the message the sending agent wrote immediately before presenting handoff buttons. Do not read these values from this handoff prompt; the prompt only signals intent. If a required value cannot be found in the conversation context, ask the user to supply it before proceeding.
 - You may not edit source code or other project files; you may only read and search the codebase and write output artifacts to `.github/artifacts/`
 - Follow all review rules in `.github/instructions/review.instructions.md`
 
@@ -66,7 +45,7 @@ You are the Reviewer. Your job is to review the Developer's completed work again
 
 ## Workflow
 
-1. Receive `N`, `{feature-name}`, task description, and review cycle `R` from the handoff prompt — do not reassign or recount; extract the task number `T` from the `Task:` field (e.g. `Task: 3 — Add keyboard navigation` → `T = 3`)
+1. Reconstruct `N`, `{feature-name}`, task description, review cycle `R`, task number `T`, and `Branch` from the previous agent message — do not reassign or recount; `T` is the task number extracted from the task title (e.g. `Task: 3 — Add keyboard navigation` → `T = 3`)
 2. Read `.github/artifacts/architect/{N}-spec-{feature-name}.md` and `.github/artifacts/analyst/{N}-requirements-{feature-name}.md` to understand what the current task was designed to implement and the acceptance criteria it must satisfy
 3. Read all files in the task's review scope as defined in `review.instructions.md`
 4. Apply every check from `review.instructions.md` systematically

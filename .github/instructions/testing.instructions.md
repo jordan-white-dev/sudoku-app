@@ -42,8 +42,8 @@ If any command fails, fix the issue and re-run `pnpm check` from the beginning b
 
 ## Review Cycle Tracking
 
-Carry `N`, `{feature-name}`, and review cycle `R` in every handoff prompt to the Reviewer:
+Include `N`, `{feature-name}`, and review cycle `R` in the preceding message before every handoff to the Reviewer:
 
 - Set `R = 1` for the first review of each new task
 - Increment `R` by 1 each time the Reviewer returns CHANGES REQUESTED for the same task
-- After receiving APPROVED, use the `Review cycle: 1` value carried in the Reviewer's APPROVED handoff prompt — do not independently compute it
+- After receiving APPROVED, reset R to 1 for the next task

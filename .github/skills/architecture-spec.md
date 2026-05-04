@@ -102,7 +102,7 @@ Files to **modify**:
 
 Files to **delete**:
 
-- (none) or list with rationale
+_(none)_
 
 ---
 

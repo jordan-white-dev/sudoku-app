@@ -37,6 +37,6 @@ The completed requirements document must include all five of the following secti
 
 ## Feature Numbering
 
-The Analyst is the sole agent responsible for assigning the feature number. No downstream agent may determine, change, or recount this number — they receive it via the handoff prompt. Include `N` and `{feature-name}` explicitly in every handoff prompt.
+The Analyst is the sole agent responsible for assigning the feature number. No downstream agent may determine, change, or recount this number — they reconstruct it from the Analyst's preceding message. Include `N` and `{feature-name}` explicitly in the preceding message before every handoff.
 
 Follow the step-by-step numbering procedure in `.github/skills/requirements-interview.md`. The full procedure — including the directory listing step for counting existing artifacts and the zero-padded `N = existing_count + 1` formula — is defined in the skill rather than here to keep it co-located with the discovery question bank and document template.

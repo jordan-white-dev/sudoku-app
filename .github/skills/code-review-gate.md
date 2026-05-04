@@ -17,7 +17,7 @@ Use this skill to conduct a structured review of completed developer work and pr
 
 ## Review Report Template
 
-Extract `T` from the `Task:` field in the Developer's handoff prompt (e.g., `Task: 3 — Add keyboard navigation` → `T = 3`).
+Extract `T` from the `Task:` field in the Developer's preceding message (e.g., `Task: 3 — Add keyboard navigation` → `T = 3`).
 
 ```markdown
 # Review Report: {feature-name} — Task {task-number}
@@ -37,7 +37,7 @@ Extract `T` from the `Task:` field in the Developer's handoff prompt (e.g., `Tas
 
 ## Findings
 
-[List findings in severity order. Omit sections with no findings.]
+[List findings by severity. Under any severity heading with no findings, write `_(none)_` as the only line. If ALL severity headings are empty, replace the entire block below the `## Findings` heading with a single `_(none)_`.]
 
 ### CRITICAL
 

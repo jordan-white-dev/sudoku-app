@@ -10,7 +10,7 @@ These rules govern how the Reviewer agent reviews the Developer's completed work
 
 For each handoff, review:
 
-- All files listed in the current task's `Files:` entry in the spec's **Phased Task List**, cross-referenced against the `Additional files modified` field and the implementation description in the Developer's handoff prompt to catch any additional files the Developer touched — these together are the authoritative source of which files to review, since the Reviewer does not have execute access to run `git diff`
+- All files listed in the current task's `Files:` entry in the spec's **Phased Task List**, cross-referenced against the `Additional files modified` field and the implementation description in the Developer's preceding message to catch any additional files the Developer touched — these together are the authoritative source of which files to review, since the Reviewer does not have execute access to run `git diff`
 - All tests added or modified for this task
 - The overall test coverage for the changed code
 
@@ -40,22 +40,22 @@ Issue CHANGES REQUESTED when any findings exist at any severity level (CRITICAL,
 
 ## Feature Numbering
 
-Receive `N`, `{feature-name}`, and review cycle `R` from the handoff prompt. Do NOT recount or reassign these values.
+Reconstruct `N`, `{feature-name}`, and review cycle `R` from the previous agent message. Do NOT recount or reassign these values.
 
 Save the report as: `.github/artifacts/reviewer/{N}-review-report-{feature-name}-t{T}-r{R}.md`
 
-Carry `N`, `{feature-name}`, `T`, and `R` in all handoff prompts.
+Include `N`, `{feature-name}`, `T`, `R`, and `Branch` in the preceding message before every handoff.
 
 ## Iteration Cap
 
-Track the review cycle number `R` received from the Developer's handoff prompt:
+Track the review cycle number `R` reconstructed from the Developer's preceding message:
 
 - **R ≤ 3**: Use the "→ Developer: Remediate findings (auto)" handoff (`send: true`) — the loop continues uninterrupted
-- **R ≥ 4**: Use the "→ Developer: Remediate findings (manual — approval required)" handoff (`send: false`) — prepend the following notice at the top of the **saved report artifact** (using blockquote and bold formatting) and include it as plain text in the handoff prompt (matching the template in `reviewer.agent.md`):
+- **R ≥ 4**: Use the "→ Developer: Remediate findings (manual — approval required)" handoff (`send: false`) — prepend the following notice at the top of the **saved report artifact** (using blockquote and bold formatting) and include it in the preceding message before the handoff:
 
   > ⚠️ **Review cycle {R} — manual approval required**
   > This task has received CHANGES REQUESTED {R} consecutive times. Please review the findings and approve this handoff before the Developer continues.
 
 When the Reviewer issues an APPROVED verdict:
 
-- Always use the "→ Developer: Task approved — continue to next task" handoff (`send: true`) — this handoff always carries `Review cycle: 1`, resetting the counter for the next task
+- Always use the "→ Developer: Task approved — continue to next task" handoff (`send: true`) — the Developer resets R to 1 independently for each new task per its own Review Cycle Tracking rule; the Reviewer does not include a reset value in the preceding message
