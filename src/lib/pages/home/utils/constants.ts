@@ -68,3 +68,12 @@ export const keypadModes = ["Digit", "Color", "Center", "Corner"] as const;
 export const TOTAL_CELLS_IN_BOARD = 81;
 export const CELLS_PER_HOUSE = 9;
 // #endregion
+
+// #region Difficulty Levels
+export const puzzleDifficultyLevels = [
+  "Standard",
+  "Intermediate",
+  "Advanced",
+  "Expert",
+] as const;
+// #endregion

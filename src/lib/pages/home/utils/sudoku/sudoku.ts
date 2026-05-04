@@ -2,9 +2,13 @@ import sudoku from "sudoku";
 
 import {
   CELLS_PER_HOUSE,
+  puzzleDifficultyLevels,
   TOTAL_CELLS_IN_BOARD,
 } from "@/lib/pages/home/utils/constants";
-import { type RawBoardState } from "@/lib/pages/home/utils/types";
+import {
+  type PuzzleDifficultyLevel,
+  type RawBoardState,
+} from "@/lib/pages/home/utils/types";
 import { isRawGivenDigit } from "@/lib/pages/home/utils/validators/validators";
 
 const POSSIBLE_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const;
@@ -253,7 +257,7 @@ const isPuzzleSolvableByDeductionOnly = (
   return true;
 };
 
-const ratePuzzleDifficulty = (rawBoardState: RawBoardState): number => {
+export const ratePuzzleDifficulty = (rawBoardState: RawBoardState): number => {
   if (isPuzzleSolvableByDeductionOnly(rawBoardState)) {
     return 0;
   }
@@ -334,6 +338,23 @@ const selectBestPuzzleOrFallback = (
   );
 
   return validatedFallbackPuzzle;
+};
+// #endregion
+
+// #region Difficulty Conversion
+export const getDifficultyLevelFromRating = (
+  rating: number,
+): PuzzleDifficultyLevel => {
+  const cappedRating = Math.min(rating, puzzleDifficultyLevels.length - 1);
+  const level = puzzleDifficultyLevels[cappedRating];
+  return level;
+};
+
+export const getDifficultyLevelFromRawBoardState = (
+  rawBoardState: RawBoardState,
+): PuzzleDifficultyLevel => {
+  const rating = ratePuzzleDifficulty(rawBoardState);
+  return getDifficultyLevelFromRating(rating);
 };
 // #endregion
 

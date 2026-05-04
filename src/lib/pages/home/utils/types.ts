@@ -1,6 +1,7 @@
 import {
   type keypadModes,
   type markupColors,
+  type puzzleDifficultyLevels,
 } from "@/lib/pages/home/utils/constants";
 import {
   type BrandedBoxNumber,
@@ -100,4 +101,8 @@ export type PuzzleState = {
 // #region Keypad Mode Types
 export type KeypadMode = (typeof keypadModes)[number];
 export type MarkupKeypadMode = Extract<KeypadMode, "Center" | "Corner">;
+// #endregion
+
+// #region Difficulty Level Types
+export type PuzzleDifficultyLevel = (typeof puzzleDifficultyLevels)[number];
 // #endregion

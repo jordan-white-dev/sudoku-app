@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
-import { makePuzzle, solvePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
+import {
+  getDifficultyLevelFromRating,
+  getDifficultyLevelFromRawBoardState,
+  makePuzzle,
+  ratePuzzleDifficulty,
+  solvePuzzle,
+} from "@/lib/pages/home/utils/sudoku/sudoku";
 import { type RawBoardState } from "@/lib/pages/home/utils/types";
 import { isRawGivenDigit } from "@/lib/pages/home/utils/validators/validators";
 
@@ -158,5 +164,81 @@ describe("solvePuzzle", () => {
 
       expect(rowDigits.size).toBe(9);
     }
+  });
+});
+
+describe("ratePuzzleDifficulty", () => {
+  it("returns 0 for a fully given board solvable by deduction alone", () => {
+    // Arrange
+    const rawBoardState = SOLVED_RAW_BOARD_STATE;
+
+    // Act
+    const rating = ratePuzzleDifficulty(rawBoardState);
+
+    // Assert
+    expect(rating).toBe(0);
+  });
+
+  it("returns a rating greater than 0 for a board with many empty cells", () => {
+    // Arrange
+    const allEmptyBoard: RawBoardState = Array.from(
+      { length: TOTAL_CELLS_IN_BOARD },
+      () => null,
+    );
+
+    // Act
+    const rating = ratePuzzleDifficulty(allEmptyBoard);
+
+    // Assert
+    expect(rating).toBeGreaterThan(0);
+  });
+});
+
+describe("getDifficultyLevelFromRating", () => {
+  it("returns 'Standard' for a rating of 0", () => {
+    expect(getDifficultyLevelFromRating(0)).toBe("Standard");
+  });
+
+  it("returns 'Intermediate' for a rating of 1", () => {
+    expect(getDifficultyLevelFromRating(1)).toBe("Intermediate");
+  });
+
+  it("returns 'Advanced' for a rating of 2", () => {
+    expect(getDifficultyLevelFromRating(2)).toBe("Advanced");
+  });
+
+  it("returns 'Expert' for a rating of 3", () => {
+    expect(getDifficultyLevelFromRating(3)).toBe("Expert");
+  });
+
+  it("returns 'Expert' for a rating greater than 3", () => {
+    expect(getDifficultyLevelFromRating(10)).toBe("Expert");
+  });
+});
+
+describe("getDifficultyLevelFromRawBoardState", () => {
+  it("returns 'Standard' for a fully given board solvable by deduction alone", () => {
+    // Arrange
+    const rawBoardState = SOLVED_RAW_BOARD_STATE;
+
+    // Act
+    const level = getDifficultyLevelFromRawBoardState(rawBoardState);
+
+    // Assert
+    expect(level).toBe("Standard");
+  });
+
+  it("returns 'Expert' for a board with a very high computed difficulty rating", () => {
+    // Arrange
+    const allEmptyBoard: RawBoardState = Array.from(
+      { length: TOTAL_CELLS_IN_BOARD },
+      () => null,
+    );
+
+    // Act
+    const level = getDifficultyLevelFromRawBoardState(allEmptyBoard);
+
+    // Assert
+    expect(level).toBe("Expert");
   });
 });
