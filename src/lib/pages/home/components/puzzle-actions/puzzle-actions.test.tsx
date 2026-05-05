@@ -36,8 +36,7 @@ const mockHandleRedoMove = vi.fn();
 const mockHandleUndoMove = vi.fn();
 
 const mockNavigate = vi.fn();
-const mockMakePuzzle = vi.fn();
-const mockMakePuzzleFn = vi.fn();
+const mockMakePuzzleUtility = vi.fn();
 
 const mockPauseStopwatch = vi.fn();
 const mockResetStopwatch = vi.fn();
@@ -76,12 +75,8 @@ vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
-vi.mock("sudoku", () => ({
-  makepuzzle: () => mockMakePuzzle(),
-}));
-
 vi.mock("@/lib/pages/home/utils/sudoku/sudoku", () => ({
-  makePuzzle: (...args: Array<unknown>) => mockMakePuzzleFn(...args),
+  makePuzzle: (...args: Array<unknown>) => mockMakePuzzleUtility(...args),
 }));
 
 vi.mock("react-timer-hook", () => ({
@@ -270,10 +265,8 @@ beforeEach(() => {
   mockHandleUndoMove.mockReset();
 
   mockNavigate.mockReset();
-  mockMakePuzzle.mockReset();
-  mockMakePuzzle.mockReturnValue(EMPTY_RAW_BOARD_STATE);
-  mockMakePuzzleFn.mockReset();
-  mockMakePuzzleFn.mockReturnValue(EMPTY_RAW_BOARD_STATE);
+  mockMakePuzzleUtility.mockReset();
+  mockMakePuzzleUtility.mockReturnValue(EMPTY_RAW_BOARD_STATE);
 
   mockPauseStopwatch.mockReset();
   mockResetStopwatch.mockReset();
@@ -468,7 +461,7 @@ describe("New puzzle dialog", () => {
     await waitForReactToFinishUpdating();
 
     // Assert
-    expect(mockMakePuzzleFn).toHaveBeenCalledWith(
+    expect(mockMakePuzzleUtility).toHaveBeenCalledWith(
       DIFFICULTY_RATING_BY_LEVEL.Expert,
     );
   });
