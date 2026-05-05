@@ -2,7 +2,8 @@
 
 ## Code Style
 
-- Use TypeScript with strict typing. Prefer minimal type assertions. Use the existing `@/*` path alias from `tsconfig.json`.
+- Use TypeScript with strict typing. Use the existing `@/*` path alias from `tsconfig.json`.
+- Type assertions (`as T`) are a last resort — only use them when there is genuinely no other logical option. Never use `as any` or `as unknown` in production code; these bypass the type system entirely and are always avoidable. Prefer narrowing through `typeof`, `instanceof`, `in`, and `Array.prototype.includes` checks. For reusable narrowing, write a user-defined type guard function that returns `value is T`. When validating parsed or external data, narrow the shape through explicit checks rather than asserting it. The sole exception is test files (`*.test.tsx`, `*.test.ts`), where `as any`, `as unknown`, and other assertions are acceptable for constructing invalid or edge-case inputs that exercise runtime validation logic.
 - Follow Biome rules in `biome.json`. Avoid barrel files, use inline `type` imports, use generic array syntax, and avoid default exports except where explicitly allowed (e.g., page `index.tsx` files).
 - Prefer debuggable longform code over concise inline expressions. Avoid nested ternaries, compressed one-liners, and inline object reconstruction in non-trivial logic. Use well-named intermediate variables and explicit `return` statements.
 - Prefer deterministic, functional-style code with small, focused functions.
@@ -30,6 +31,7 @@
 - Comments are only appropriate for genuinely complex or non-obvious logic that cannot be made clear through naming and structure alone. When a comment is needed, prefer a doc comment (`/** */`) that can be surfaced in hover tooltips.
 - Do not use `biome-ignore` comments to disable lint rules. Instead, refactor to comply with the rule.
 - Do not leave commented-out code, dead code, or unresolved TODO comments in production files.
+- Use `// #region {Name}` / `// #endregion` comments to group related code within a file, where `{Name}` is a logical, descriptive label for the contents. Add nested `// #region {Name}` / `// #endregion` blocks when a region contains meaningfully distinct sub-groups.
 
 ## Architecture
 
