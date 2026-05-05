@@ -4,15 +4,20 @@ import { render } from "vitest-browser-react";
 import { Provider } from "@/lib/components/ui/provider";
 import {
   defaultUserSettings,
+  getPreferredDifficultyRatingFromStorage,
   type UserSettings,
   UserSettingsProvider,
   useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import { USER_SETTINGS_LOCAL_STORAGE_KEY } from "@/lib/pages/home/utils/constants";
 import { waitForReactToFinishUpdating } from "@/lib/pages/home/utils/testing";
 
-const USER_SETTINGS_LOCAL_STORAGE_KEY = "user-settings";
-
 // #region Test Consumer Components
+const PreferredDifficultyLevelDisplay = () => {
+  const { userSettings } = useUserSettings();
+  return <p>{userSettings.preferredDifficultyLevel}</p>;
+};
+
 const AllSettingsDisplay = () => {
   const { userSettings, setUserSettings } = useUserSettings();
 
@@ -86,7 +91,7 @@ const AllSettingsDisplay = () => {
 };
 // #endregion
 
-// #region Render Helper
+// #region Render Helpers
 const renderAllSettings = async (preloadedSettings?: Partial<UserSettings>) => {
   if (preloadedSettings) {
     window.localStorage.setItem(
@@ -99,6 +104,29 @@ const renderAllSettings = async (preloadedSettings?: Partial<UserSettings>) => {
     <Provider>
       <UserSettingsProvider>
         <AllSettingsDisplay />
+      </UserSettingsProvider>
+    </Provider>,
+  );
+
+  await waitForReactToFinishUpdating();
+
+  return rendered;
+};
+
+const renderPreferredDifficultyLevel = async (
+  preloadedSettings?: Partial<UserSettings>,
+) => {
+  if (preloadedSettings) {
+    window.localStorage.setItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
+      JSON.stringify({ ...defaultUserSettings, ...preloadedSettings }),
+    );
+  }
+
+  const rendered = await render(
+    <Provider>
+      <UserSettingsProvider>
+        <PreferredDifficultyLevelDisplay />
       </UserSettingsProvider>
     </Provider>,
   );
@@ -256,5 +284,59 @@ describe("Hook error boundary", () => {
     ).rejects.toThrow(
       "useUserSettings must be used inside UserSettingsProvider",
     );
+  });
+});
+
+describe("Default preferred difficulty level", () => {
+  it("defaults preferred difficulty level to 'Standard' when no preferences have been saved", async () => {
+    // Arrange
+    const rendered = await renderPreferredDifficultyLevel();
+
+    // Assert
+    await expect.element(rendered.getByText("Standard")).toBeInTheDocument();
+  });
+});
+
+describe("getPreferredDifficultyRatingFromStorage", () => {
+  it("returns 0 when localStorage contains no user settings", () => {
+    // Act
+    const preferredDifficultyRating = getPreferredDifficultyRatingFromStorage();
+
+    // Assert
+    expect(preferredDifficultyRating).toBe(0);
+  });
+
+  it("returns the correct numeric rating when a valid difficulty level is stored", () => {
+    // Arrange
+    window.localStorage.setItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
+      JSON.stringify({
+        ...defaultUserSettings,
+        preferredDifficultyLevel: "Expert",
+      }),
+    );
+
+    // Act
+    const preferredDifficultyRating = getPreferredDifficultyRatingFromStorage();
+
+    // Assert
+    expect(preferredDifficultyRating).toBe(3);
+  });
+
+  it("returns 0 when the stored preferred difficulty level is not a valid level", () => {
+    // Arrange
+    window.localStorage.setItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
+      JSON.stringify({
+        ...defaultUserSettings,
+        preferredDifficultyLevel: "Invalid",
+      }),
+    );
+
+    // Act
+    const preferredDifficultyRating = getPreferredDifficultyRatingFromStorage();
+
+    // Assert
+    expect(preferredDifficultyRating).toBe(0);
   });
 });

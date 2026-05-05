@@ -8,6 +8,12 @@ import {
 } from "react";
 import useLocalStorageState from "use-local-storage-state";
 
+import {
+  puzzleDifficultyLevels,
+  USER_SETTINGS_LOCAL_STORAGE_KEY,
+} from "@/lib/pages/home/utils/constants";
+import { type PuzzleDifficultyLevel } from "@/lib/pages/home/utils/types";
+
 // #region Context
 export type UserSettings = {
   isConflictCheckerEnabled: boolean;
@@ -18,6 +24,7 @@ export type UserSettings = {
   isShowRowAndColumnLabelsEnabled: boolean;
   isShowSeenCellsEnabled: boolean;
   isStrictHighlightsEnabled: boolean;
+  preferredDifficultyLevel: PuzzleDifficultyLevel;
 };
 
 type UserSettingsContextValue = {
@@ -34,6 +41,7 @@ export const defaultUserSettings: UserSettings = {
   isShowRowAndColumnLabelsEnabled: false,
   isShowSeenCellsEnabled: false,
   isStrictHighlightsEnabled: false,
+  preferredDifficultyLevel: "Standard",
 };
 
 const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(
@@ -44,7 +52,7 @@ const UserSettingsContext = createContext<UserSettingsContextValue | undefined>(
 // #region Provider
 export const UserSettingsProvider = ({ children }: PropsWithChildren) => {
   const [userSettings, setUserSettings] = useLocalStorageState<UserSettings>(
-    "user-settings",
+    USER_SETTINGS_LOCAL_STORAGE_KEY,
     {
       defaultValue: defaultUserSettings,
     },
@@ -63,6 +71,44 @@ export const UserSettingsProvider = ({ children }: PropsWithChildren) => {
       {children}
     </UserSettingsContext.Provider>
   );
+};
+// #endregion
+
+// #region Storage Reader
+export const getPreferredDifficultyRatingFromStorage = (): number => {
+  try {
+    const rawStoredValue = window.localStorage.getItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
+    );
+
+    if (rawStoredValue === null) {
+      return 0;
+    }
+
+    const parsedStoredValue = JSON.parse(rawStoredValue) as unknown;
+
+    if (typeof parsedStoredValue !== "object" || parsedStoredValue === null) {
+      return 0;
+    }
+
+    const storedPreferredDifficultyLevel = (
+      parsedStoredValue as Record<string, unknown>
+    ).preferredDifficultyLevel;
+
+    if (
+      !puzzleDifficultyLevels.includes(
+        storedPreferredDifficultyLevel as PuzzleDifficultyLevel,
+      )
+    ) {
+      return 0;
+    }
+
+    return puzzleDifficultyLevels.indexOf(
+      storedPreferredDifficultyLevel as PuzzleDifficultyLevel,
+    );
+  } catch {
+    return 0;
+  }
 };
 // #endregion
 

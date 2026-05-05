@@ -77,3 +77,7 @@ export const puzzleDifficultyLevels = [
   "Expert",
 ] as const;
 // #endregion
+
+// #region Local Storage Keys
+export const USER_SETTINGS_LOCAL_STORAGE_KEY = "user-settings";
+// #endregion
