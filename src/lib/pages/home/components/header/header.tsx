@@ -21,10 +21,6 @@ import {
   useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 
-type BooleanUserSettingKey = {
-  [Key in keyof UserSettings]: UserSettings[Key] extends boolean ? Key : never;
-}[keyof UserSettings];
-
 // #region Shortcuts Menu
 
 // #region Shortcut Tooltip Text Components
@@ -429,6 +425,10 @@ const ShortcutsMenu = () => (
 // #endregion
 
 // #region Settings Menu
+
+type BooleanUserSettingKey = {
+  [Key in keyof UserSettings]: UserSettings[Key] extends boolean ? Key : never;
+}[keyof UserSettings];
 
 // #region Settings Checkbox
 type SettingsCheckboxProps = {
