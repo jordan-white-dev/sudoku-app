@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 
+import { getPreferredDifficultyRatingFromStorage } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { makePuzzle } from "@/lib/pages/home/utils/sudoku/sudoku";
 import {
   getEncodedPuzzleStringFromRawPuzzleString,
@@ -9,7 +10,8 @@ import { type RawBoardState } from "@/lib/pages/home/utils/types";
 
 export const Route = createFileRoute("/")({
   loader: () => {
-    const rawBoardState: RawBoardState = makePuzzle(0);
+    const targetDifficultyRating = getPreferredDifficultyRatingFromStorage();
+    const rawBoardState: RawBoardState = makePuzzle(targetDifficultyRating);
     const rawPuzzleString = getRawPuzzleStringFromRawBoardState(rawBoardState);
     const encodedPuzzleString =
       getEncodedPuzzleStringFromRawPuzzleString(rawPuzzleString);
