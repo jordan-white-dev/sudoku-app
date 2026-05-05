@@ -159,6 +159,10 @@ Hides the stopwatch from view. If the stopwatch is enabled, the solve time still
 
 Adds row labels along the left of the puzzle and column labels along the top.
 
+### Difficulty
+
+Selects the target difficulty level for newly generated puzzles. Available levels are Standard, Intermediate, Advanced, and Expert (from easiest to hardest). Changing the preference does not affect the current puzzle — it takes effect when the next puzzle is generated.
+
 ## Persistence
 
 The app uses **session storage** to preserve state while the browser tab remains open. That includes:

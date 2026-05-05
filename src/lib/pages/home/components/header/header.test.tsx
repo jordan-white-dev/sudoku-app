@@ -410,6 +410,50 @@ describe("Settings menu interactions", () => {
   });
 });
 
+describe("Difficulty radio group", () => {
+  it("shows the difficulty group label and all four difficulty options when the settings menu is opened", async () => {
+    // Arrange
+    const renderedHeader = await renderHeader();
+
+    // Act
+    await openSettingsMenu(renderedHeader);
+
+    // Assert
+    await expect
+      .element(renderedHeader.getByText("Difficulty"))
+      .toBeInTheDocument();
+
+    for (const level of ["Standard", "Intermediate", "Advanced", "Expert"]) {
+      await expect
+        .element(renderedHeader.getByRole("radio", { name: level }))
+        .toBeInTheDocument();
+    }
+  });
+
+  it("updates preferredDifficultyLevel in localStorage when a different difficulty option is selected", async () => {
+    // Arrange
+    const renderedHeader = await renderHeader();
+    await openSettingsMenu(renderedHeader);
+
+    // Act
+    await renderedHeader.getByText("Expert").click();
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    const userSettingsInLocalStorage = window.localStorage.getItem(
+      USER_SETTINGS_LOCAL_STORAGE_KEY,
+    );
+
+    if (!userSettingsInLocalStorage) {
+      throw new Error("Could not find user settings in local storage.");
+    }
+
+    const parsedUserSettings = JSON.parse(userSettingsInLocalStorage);
+
+    expect(parsedUserSettings.preferredDifficultyLevel).toBe("Expert");
+  });
+});
+
 describe("Shortcuts menu content", () => {
   it("shows major shortcut group labels and representative shortcuts", async () => {
     // Arrange

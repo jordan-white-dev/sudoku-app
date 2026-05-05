@@ -7,6 +7,8 @@ import {
   Kbd,
   Menu,
   Portal,
+  RadioGroup,
+  Text,
   VStack,
 } from "@chakra-ui/react";
 import { type ReactNode } from "react";
@@ -20,6 +22,8 @@ import {
   type UserSettings,
   useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
+import { puzzleDifficultyLevels } from "@/lib/pages/home/utils/constants";
+import { type PuzzleDifficultyLevel } from "@/lib/pages/home/utils/types";
 
 // #region Shortcuts Menu
 
@@ -457,6 +461,64 @@ const SettingsCheckbox = ({
 );
 // #endregion
 
+// #region Difficulty Radio Group
+const DIFFICULTY_GROUP_HEADING_ID = "difficulty-group-heading";
+
+const DifficultyRadioGroup = () => {
+  const { userSettings, setUserSettings } = useUserSettings();
+
+  const handleDifficultyChange = ({ value }: { value: string | null }) => {
+    if (value === null) {
+      return;
+    }
+
+    const isValidLevel = (
+      puzzleDifficultyLevels as ReadonlyArray<string>
+    ).includes(value);
+
+    if (!isValidLevel) {
+      return;
+    }
+
+    const selectedLevel = value as PuzzleDifficultyLevel;
+
+    setUserSettings((currentUserSettings) => ({
+      ...currentUserSettings,
+      preferredDifficultyLevel: selectedLevel,
+    }));
+  };
+
+  return (
+    <Box
+      aria-labelledby={DIFFICULTY_GROUP_HEADING_ID}
+      paddingX="2"
+      paddingY="1"
+      role="group"
+    >
+      <Text
+        fontWeight="semibold"
+        id={DIFFICULTY_GROUP_HEADING_ID}
+        marginBottom="1"
+      >
+        Difficulty
+      </Text>
+      <RadioGroup.Root
+        value={userSettings.preferredDifficultyLevel}
+        onValueChange={handleDifficultyChange}
+      >
+        {puzzleDifficultyLevels.map((level) => (
+          <RadioGroup.Item key={level} value={level}>
+            <RadioGroup.ItemHiddenInput />
+            <RadioGroup.ItemControl />
+            <RadioGroup.ItemText>{level}</RadioGroup.ItemText>
+          </RadioGroup.Item>
+        ))}
+      </RadioGroup.Root>
+    </Box>
+  );
+};
+// #endregion
+
 // #region Settings Menu Component
 const SettingsMenu = () => {
   const { pauseStopwatch, startStopwatch } = useSudokuStopwatch();
@@ -584,6 +646,8 @@ const SettingsMenu = () => {
                 )}
               />
             </Menu.ItemGroup>
+            <Menu.Separator />
+            <DifficultyRadioGroup />
           </Menu.Content>
         </Menu.Positioner>
       </Portal>
