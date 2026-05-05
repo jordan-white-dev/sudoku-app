@@ -76,6 +76,13 @@ export const puzzleDifficultyLevels = [
   "Advanced",
   "Expert",
 ] as const;
+
+export const DIFFICULTY_RATING_BY_LEVEL = {
+  Standard: 0,
+  Intermediate: 1,
+  Advanced: 2,
+  Expert: 3,
+} as const;
 // #endregion
 
 // #region Local Storage Keys

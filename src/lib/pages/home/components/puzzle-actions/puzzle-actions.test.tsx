@@ -11,6 +11,7 @@ import {
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import {
   CELLS_PER_HOUSE,
+  DIFFICULTY_RATING_BY_LEVEL,
   TOTAL_CELLS_IN_BOARD,
 } from "@/lib/pages/home/utils/constants";
 import {
@@ -36,6 +37,7 @@ const mockHandleUndoMove = vi.fn();
 
 const mockNavigate = vi.fn();
 const mockMakePuzzle = vi.fn();
+const mockMakePuzzleFn = vi.fn();
 
 const mockPauseStopwatch = vi.fn();
 const mockResetStopwatch = vi.fn();
@@ -76,6 +78,10 @@ vi.mock("@tanstack/react-router", () => ({
 
 vi.mock("sudoku", () => ({
   makepuzzle: () => mockMakePuzzle(),
+}));
+
+vi.mock("@/lib/pages/home/utils/sudoku/sudoku", () => ({
+  makePuzzle: (...args: Array<unknown>) => mockMakePuzzleFn(...args),
 }));
 
 vi.mock("react-timer-hook", () => ({
@@ -159,11 +165,13 @@ const getSolvedPuzzleState = (): PuzzleState => {
 // #region Render Puzzle Actions
 const renderPuzzleActions = async ({
   isStopwatchDisabled = false,
+  preferredDifficultyLevel = defaultUserSettings.preferredDifficultyLevel,
   puzzleState = getUnsolvedPuzzleState(),
   rawBoardState,
   setPuzzleState,
 }: {
   isStopwatchDisabled?: boolean;
+  preferredDifficultyLevel?: UserSettings["preferredDifficultyLevel"];
   puzzleState?: PuzzleState;
   rawBoardState?: RawBoardState;
   setPuzzleState?: (value: unknown) => void;
@@ -175,6 +183,7 @@ const renderPuzzleActions = async ({
     userSettings: {
       ...defaultUserSettings,
       isStopwatchDisabled,
+      preferredDifficultyLevel,
     },
   });
 
@@ -263,6 +272,8 @@ beforeEach(() => {
   mockNavigate.mockReset();
   mockMakePuzzle.mockReset();
   mockMakePuzzle.mockReturnValue(EMPTY_RAW_BOARD_STATE);
+  mockMakePuzzleFn.mockReset();
+  mockMakePuzzleFn.mockReturnValue(EMPTY_RAW_BOARD_STATE);
 
   mockPauseStopwatch.mockReset();
   mockResetStopwatch.mockReset();
@@ -438,6 +449,28 @@ describe("New puzzle dialog", () => {
 
     // Assert
     expect(mockStartStopwatch).toHaveBeenCalledTimes(1);
+  });
+
+  it("calls makePuzzle with the difficulty rating for the stored preferredDifficultyLevel when the New Puzzle button is confirmed", async () => {
+    // Arrange
+    const { renderedPuzzleActions } = await renderPuzzleActions({
+      preferredDifficultyLevel: "Expert",
+    });
+
+    // Act
+    await openDialogFromActionButton(
+      renderedPuzzleActions,
+      "Start a new puzzle",
+    );
+    await renderedPuzzleActions
+      .getByRole("button", { name: "New Puzzle" })
+      .click();
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    expect(mockMakePuzzleFn).toHaveBeenCalledWith(
+      DIFFICULTY_RATING_BY_LEVEL.Expert,
+    );
   });
 });
 

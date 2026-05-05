@@ -28,7 +28,10 @@ import {
   handleRedoMove,
   handleUndoMove,
 } from "@/lib/pages/home/utils/actions/actions";
-import { CELLS_PER_HOUSE } from "@/lib/pages/home/utils/constants";
+import {
+  CELLS_PER_HOUSE,
+  DIFFICULTY_RATING_BY_LEVEL,
+} from "@/lib/pages/home/utils/constants";
 import { getCellSizeScaledBy } from "@/lib/pages/home/utils/display";
 import {
   isGivenDigitCellContent,
@@ -145,8 +148,9 @@ const ActionDialog = ({
 // #region New Puzzle Button
 const handleNewPuzzleConfirmation = (
   navigateToNewPuzzle: ReturnType<typeof useNavigate>,
+  targetDifficultyRating: number,
 ) => {
-  const newRawBoardState: RawBoardState = makePuzzle(0);
+  const newRawBoardState: RawBoardState = makePuzzle(targetDifficultyRating);
   const rawPuzzleString = getRawPuzzleStringFromRawBoardState(newRawBoardState);
   const encodedPuzzleString =
     getEncodedPuzzleStringFromRawPuzzleString(rawPuzzleString);
@@ -182,11 +186,13 @@ const NewPuzzleDialogTrigger = ({
 type NewPuzzleDialogFooterProps = {
   navigate: UseNavigateResult<string>;
   startStopwatchIfEnabled: () => void;
+  targetDifficultyRating: number;
 };
 
 const NewPuzzleDialogFooter = ({
   navigate,
   startStopwatchIfEnabled,
+  targetDifficultyRating,
 }: NewPuzzleDialogFooterProps) => (
   <Dialog.Footer>
     <Dialog.ActionTrigger asChild>
@@ -202,7 +208,9 @@ const NewPuzzleDialogFooter = ({
     <Dialog.ActionTrigger asChild>
       <Button
         colorPalette="blue"
-        onClick={() => handleNewPuzzleConfirmation(navigate)}
+        onClick={() =>
+          handleNewPuzzleConfirmation(navigate, targetDifficultyRating)
+        }
       >
         New Puzzle
       </Button>
@@ -212,6 +220,9 @@ const NewPuzzleDialogFooter = ({
 
 const NewPuzzleButton = ({ isRowLayout }: { isRowLayout: boolean }) => {
   const { pauseStopwatch, startStopwatchIfEnabled } = useSudokuStopwatch();
+  const { userSettings } = useUserSettings();
+  const targetDifficultyRating =
+    DIFFICULTY_RATING_BY_LEVEL[userSettings.preferredDifficultyLevel];
 
   const navigate = useNavigate();
 
@@ -223,6 +234,7 @@ const NewPuzzleButton = ({ isRowLayout }: { isRowLayout: boolean }) => {
           <NewPuzzleDialogFooter
             navigate={navigate}
             startStopwatchIfEnabled={startStopwatchIfEnabled}
+            targetDifficultyRating={targetDifficultyRating}
           />
         }
         dialogTitleText="Confirm New"
