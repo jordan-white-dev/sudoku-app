@@ -503,16 +503,21 @@ const DifficultyRadioGroup = () => {
         Difficulty
       </Text>
       <RadioGroup.Root
+        colorPalette="blue"
         value={userSettings.preferredDifficultyLevel}
         onValueChange={handleDifficultyChange}
       >
-        {puzzleDifficultyLevels.map((level) => (
-          <RadioGroup.Item key={level} value={level}>
-            <RadioGroup.ItemHiddenInput />
-            <RadioGroup.ItemControl />
-            <RadioGroup.ItemText>{level}</RadioGroup.ItemText>
-          </RadioGroup.Item>
-        ))}
+        <VStack alignItems="start">
+          {puzzleDifficultyLevels.map((level) => (
+            <RadioGroup.Item key={level} value={level}>
+              <RadioGroup.ItemHiddenInput />
+              <RadioGroup.ItemControl>
+                <RadioGroup.ItemIndicator />
+              </RadioGroup.ItemControl>
+              <RadioGroup.ItemText>{level}</RadioGroup.ItemText>
+            </RadioGroup.Item>
+          ))}
+        </VStack>
       </RadioGroup.Root>
     </Box>
   );
