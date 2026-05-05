@@ -180,7 +180,31 @@ beforeEach(() => {
   mockMakePuzzle.mockReturnValue(EMPTY_RAW_BOARD_STATE);
 });
 
+// A known valid solved sudoku (0-indexed digit format, i.e. actual digit minus 1).
+// Original: 123456789 456789123 789123456 214365897 365897214 897214365 531642978 642978531 978531642
+// This board is solvable by deduction alone, so ratePuzzleDifficulty returns 0 → Standard.
+const SOLVED_RAW_BOARD_STATE_FOR_LABEL_TESTS: RawBoardState = [
+  0, 1, 2, 3, 4, 5, 6, 7, 8, 3, 4, 5, 6, 7, 8, 0, 1, 2, 6, 7, 8, 0, 1, 2, 3, 4,
+  5, 1, 0, 3, 2, 5, 4, 7, 8, 6, 2, 5, 4, 7, 8, 6, 1, 0, 3, 7, 8, 6, 1, 0, 3, 2,
+  5, 4, 4, 2, 0, 5, 3, 1, 8, 6, 7, 5, 3, 1, 8, 6, 7, 4, 2, 0, 8, 6, 7, 4, 2, 0,
+  5, 3, 1,
+] as RawBoardState;
+
 describe("Difficulty label", () => {
+  it("renders 'Difficulty: Standard' for a fully given board solvable by deduction alone", async () => {
+    // Arrange — solved board has 0 empty cells and passes constraint propagation → rating 0 → Standard
+
+    // Act
+    const renderedPuzzleControls = await renderPuzzleControls({
+      rawBoardState: SOLVED_RAW_BOARD_STATE_FOR_LABEL_TESTS,
+    });
+
+    // Assert
+    await expect
+      .element(renderedPuzzleControls.getByText("Difficulty: Standard"))
+      .toBeInTheDocument();
+  });
+
   it("renders 'Difficulty: Intermediate' for a board where all 81 cells are given", async () => {
     // Arrange
     // A board where every cell is 0 (given, non-null) has 0 empty cells:

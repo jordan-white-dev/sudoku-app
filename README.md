@@ -19,6 +19,10 @@ A web-based Sudoku app built with React and Chakra UI, featuring shareable puzzl
 
 When the app loads, it automatically generates a playable Sudoku puzzle and serves it at its own dedicated URL, allowing every puzzle to be revisited or shared. From there, you can begin solving immediately or generate a new puzzle.
 
+### Difficulty Label
+
+Every active puzzle displays a **Difficulty** label directly above the puzzle controls showing one of four levels: Standard, Intermediate, Advanced, or Expert. This label reflects the computed difficulty of the actual puzzle — not the difficulty level you selected as a preference. A puzzle generated at a higher target difficulty may still display a lower level if the generator could not find a matching puzzle within its attempt limit.
+
 ### Selecting Cells
 
 - Click or tap a cell to select or deselect it.
