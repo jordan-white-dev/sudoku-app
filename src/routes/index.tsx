@@ -9,7 +9,7 @@ import { type RawBoardState } from "@/lib/pages/home/utils/types";
 
 export const Route = createFileRoute("/")({
   loader: () => {
-    const rawBoardState: RawBoardState = makePuzzle();
+    const rawBoardState: RawBoardState = makePuzzle(0);
     const rawPuzzleString = getRawPuzzleStringFromRawBoardState(rawBoardState);
     const encodedPuzzleString =
       getEncodedPuzzleStringFromRawPuzzleString(rawPuzzleString);

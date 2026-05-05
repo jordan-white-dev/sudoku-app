@@ -361,7 +361,7 @@ export const getDifficultyLevelFromRawBoardState = (
 // #region Public API
 const MAX_GENERATION_ATTEMPTS = 100;
 
-export const makePuzzle = (): RawBoardState => {
+export const makePuzzle = (targetDifficultyRating: number): RawBoardState => {
   let bestFoundPuzzle: RawBoardState | null = null;
   let lowestDifficultyScoreFound = Number.POSITIVE_INFINITY;
 
@@ -373,7 +373,7 @@ export const makePuzzle = (): RawBoardState => {
     const generatedPuzzle = generateValidatedPuzzleAttempt();
     const puzzleDifficultyScore = ratePuzzleDifficulty(generatedPuzzle);
 
-    if (puzzleDifficultyScore === 0) {
+    if (puzzleDifficultyScore === targetDifficultyRating) {
       return generatedPuzzle;
     }
 

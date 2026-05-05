@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import sudokuLib from "sudoku";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
@@ -10,6 +11,18 @@ import {
 } from "@/lib/pages/home/utils/sudoku/sudoku";
 import { type RawBoardState } from "@/lib/pages/home/utils/types";
 import { isRawGivenDigit } from "@/lib/pages/home/utils/validators/validators";
+
+vi.mock("sudoku");
+
+beforeEach(async () => {
+  const actualSudoku = await vi.importActual<typeof import("sudoku")>("sudoku");
+  vi.mocked(sudokuLib.makepuzzle).mockImplementation(actualSudoku.makepuzzle);
+  vi.mocked(sudokuLib.solvepuzzle).mockImplementation(actualSudoku.solvepuzzle);
+});
+
+afterEach(() => {
+  vi.resetAllMocks();
+});
 
 // #region Test Helpers
 const buildRawBoardState = (
@@ -52,7 +65,7 @@ const SOLVABLE_PUZZLE_BOARD_STATE: RawBoardState = (() => {
 describe("makePuzzle", () => {
   it("returns a board state with exactly 81 cells", () => {
     // Act
-    const rawBoardState = makePuzzle();
+    const rawBoardState = makePuzzle(0);
 
     // Assert
     expect(rawBoardState).toHaveLength(TOTAL_CELLS_IN_BOARD);
@@ -60,7 +73,7 @@ describe("makePuzzle", () => {
 
   it("returns a board state where all non-null cells are valid raw given digits", () => {
     // Act
-    const rawBoardState = makePuzzle();
+    const rawBoardState = makePuzzle(0);
 
     // Assert
     for (const cell of rawBoardState) {
@@ -72,7 +85,7 @@ describe("makePuzzle", () => {
 
   it("returns a board state with at least one given digit (non-null cell)", () => {
     // Act
-    const rawBoardState = makePuzzle();
+    const rawBoardState = makePuzzle(0);
 
     // Assert
     const givenDigitCount = rawBoardState.filter(
@@ -84,11 +97,25 @@ describe("makePuzzle", () => {
 
   it("returns a solvable puzzle", () => {
     // Act
-    const generatedPuzzle = makePuzzle();
+    const generatedPuzzle = makePuzzle(0);
     const solution = solvePuzzle(generatedPuzzle);
 
     // Assert
     expect(solution).not.toBeNull();
+  });
+
+  it("returns on the first attempt when the generator produces a puzzle matching the target difficulty rating", () => {
+    // Arrange
+    vi.mocked(sudokuLib.makepuzzle).mockReturnValue([
+      ...SOLVABLE_PUZZLE_BOARD_STATE,
+    ]);
+
+    // Act
+    const puzzleResult = makePuzzle(13);
+
+    // Assert
+    expect(vi.mocked(sudokuLib.makepuzzle)).toHaveBeenCalledTimes(1);
+    expect(puzzleResult).toEqual(SOLVABLE_PUZZLE_BOARD_STATE);
   });
 });
 
@@ -149,7 +176,7 @@ describe("solvePuzzle", () => {
 
   it("returns a board state with all digits 0-8 represented in each row of the solution", () => {
     // Arrange
-    const rawBoardState = makePuzzle();
+    const rawBoardState = makePuzzle(0);
 
     // Act
     const solution = solvePuzzle(rawBoardState);

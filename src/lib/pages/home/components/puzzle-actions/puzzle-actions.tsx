@@ -146,7 +146,7 @@ const ActionDialog = ({
 const handleNewPuzzleConfirmation = (
   navigateToNewPuzzle: ReturnType<typeof useNavigate>,
 ) => {
-  const newRawBoardState: RawBoardState = makePuzzle();
+  const newRawBoardState: RawBoardState = makePuzzle(0);
   const rawPuzzleString = getRawPuzzleStringFromRawBoardState(newRawBoardState);
   const encodedPuzzleString =
     getEncodedPuzzleStringFromRawPuzzleString(rawPuzzleString);
