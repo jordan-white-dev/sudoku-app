@@ -231,7 +231,11 @@ const PuzzleDifficultyLabel = ({
 }: PuzzleDifficultyLabelProps) => {
   const difficultyLevel = getDifficultyLevelFromRawBoardState(rawBoardState);
 
-  return <Text fontWeight="bold">Difficulty: {difficultyLevel}</Text>;
+  return (
+    <Text fontSize={getCellSizeScaledBy(0.275)} fontWeight="bold">
+      Difficulty: {difficultyLevel}
+    </Text>
+  );
 };
 
 type PuzzleControlsProps = {
@@ -544,7 +548,6 @@ export const PuzzleControls = ({
 
   return (
     <Stack alignItems="center" direction="column" gap="2">
-      <PuzzleDifficultyLabel rawBoardState={rawBoardState} />
       <Stack
         alignItems="center"
         direction={isRowLayout ? "column" : "row"}
@@ -570,6 +573,7 @@ export const PuzzleControls = ({
           setBaseKeypadMode={setBaseKeypadMode}
         />
       </Stack>
+      <PuzzleDifficultyLabel rawBoardState={rawBoardState} />
     </Stack>
   );
 };
