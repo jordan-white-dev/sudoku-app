@@ -85,27 +85,20 @@ export const getPreferredDifficultyRatingFromStorage = (): number => {
       return 0;
     }
 
-    const parsedStoredValue = JSON.parse(rawStoredValue) as unknown;
+    const parsedStoredValue = JSON.parse(rawStoredValue);
 
     if (typeof parsedStoredValue !== "object" || parsedStoredValue === null) {
       return 0;
     }
 
-    const storedPreferredDifficultyLevel = (
-      parsedStoredValue as Record<string, unknown>
-    ).preferredDifficultyLevel;
+    const storedPreferredDifficultyLevel =
+      parsedStoredValue.preferredDifficultyLevel;
 
-    if (
-      !puzzleDifficultyLevels.includes(
-        storedPreferredDifficultyLevel as PuzzleDifficultyLevel,
-      )
-    ) {
+    if (!puzzleDifficultyLevels.includes(storedPreferredDifficultyLevel)) {
       return 0;
     }
 
-    return puzzleDifficultyLevels.indexOf(
-      storedPreferredDifficultyLevel as PuzzleDifficultyLevel,
-    );
+    return puzzleDifficultyLevels.indexOf(storedPreferredDifficultyLevel);
   } catch {
     return 0;
   }

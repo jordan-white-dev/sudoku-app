@@ -88,20 +88,20 @@ Task 1 in the spec explicitly lists adding `USER_SETTINGS_LOCAL_STORAGE_KEY` and
 
 ## Checklist
 
-| Check | Result |
-|---|---|
-| Implementation matches task spec description | Partial — L3 |
-| All task acceptance criteria met | Deferred to later tasks — noted |
-| No new files created outside spec | Pass |
-| No unused exports | Pass — deferred to avoid violation |
-| Types are strict and correct | Pass |
-| No `biome-ignore` comments | Pass |
-| No barrel files introduced | Pass |
-| No default exports added | Pass |
-| Naming rules followed | Fail — L1, L2 |
-| Test structure follows AAA convention | Fail — M1 |
-| Test descriptions in correct case | Pass |
-| Tests cover all spec-required scenarios | Pass |
-| No UI changes requiring accessibility review | Pass — no UI changes |
-| No README update required | Pass — no user-visible behavior changes |
-| `pnpm check` passed before handoff | Pass |
+| Check                                        | Result                                  |
+| -------------------------------------------- | --------------------------------------- |
+| Implementation matches task spec description | Partial — L3                            |
+| All task acceptance criteria met             | Deferred to later tasks — noted         |
+| No new files created outside spec            | Pass                                    |
+| No unused exports                            | Pass — deferred to avoid violation      |
+| Types are strict and correct                 | Pass                                    |
+| No `biome-ignore` comments                   | Pass                                    |
+| No barrel files introduced                   | Pass                                    |
+| No default exports added                     | Pass                                    |
+| Naming rules followed                        | Fail — L1, L2                           |
+| Test structure follows AAA convention        | Fail — M1                               |
+| Test descriptions in correct case            | Pass                                    |
+| Tests cover all spec-required scenarios      | Pass                                    |
+| No UI changes requiring accessibility review | Pass — no UI changes                    |
+| No README update required                    | Pass — no user-visible behavior changes |
+| `pnpm check` passed before handoff           | Pass                                    |
