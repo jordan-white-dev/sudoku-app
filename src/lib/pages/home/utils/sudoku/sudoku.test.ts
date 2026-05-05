@@ -5,6 +5,7 @@ import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
   getDifficultyLevelFromRating,
   getDifficultyLevelFromRawBoardState,
+  MAX_GENERATION_ATTEMPTS,
   makePuzzle,
   ratePuzzleDifficulty,
   solvePuzzle,
@@ -62,6 +63,9 @@ const SOLVABLE_PUZZLE_BOARD_STATE: RawBoardState = (() => {
 })();
 // #endregion
 
+/** The expected difficulty rating of SOLVABLE_PUZZLE_BOARD_STATE: Math.ceil(50 empty cells / 4) = 13 */
+const SOLVABLE_PUZZLE_EXPECTED_DIFFICULTY_RATING = 13;
+
 describe("makePuzzle", () => {
   it("returns a board state with exactly 81 cells", () => {
     // Act
@@ -111,10 +115,28 @@ describe("makePuzzle", () => {
     ]);
 
     // Act
-    const puzzleResult = makePuzzle(13);
+    const puzzleResult = makePuzzle(SOLVABLE_PUZZLE_EXPECTED_DIFFICULTY_RATING);
 
     // Assert
     expect(vi.mocked(sudokuLib.makepuzzle)).toHaveBeenCalledTimes(1);
+    expect(puzzleResult).toEqual(SOLVABLE_PUZZLE_BOARD_STATE);
+  });
+
+  it("exhausts all generation attempts and returns the lowest-rated puzzle when no attempt matches the target difficulty rating", () => {
+    // Arrange
+    // SOLVABLE_PUZZLE_BOARD_STATE rates as SOLVABLE_PUZZLE_EXPECTED_DIFFICULTY_RATING (not 0),
+    // so targeting 0 guarantees no iteration matches and the fallback path runs.
+    vi.mocked(sudokuLib.makepuzzle).mockReturnValue([
+      ...SOLVABLE_PUZZLE_BOARD_STATE,
+    ]);
+
+    // Act
+    const puzzleResult = makePuzzle(0);
+
+    // Assert
+    expect(vi.mocked(sudokuLib.makepuzzle)).toHaveBeenCalledTimes(
+      MAX_GENERATION_ATTEMPTS,
+    );
     expect(puzzleResult).toEqual(SOLVABLE_PUZZLE_BOARD_STATE);
   });
 });

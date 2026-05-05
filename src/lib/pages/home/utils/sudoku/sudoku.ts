@@ -324,20 +324,13 @@ const generateValidatedPuzzleAttempt = (): RawBoardState => {
 };
 
 const selectBestPuzzleOrFallback = (
-  bestPuzzleFound: RawBoardState | null,
+  bestFoundPuzzle: RawBoardState | null,
 ): RawBoardState => {
-  if (bestPuzzleFound !== null) {
-    return bestPuzzleFound;
+  if (bestFoundPuzzle !== null) {
+    return bestFoundPuzzle;
   }
 
-  const unvalidatedFallbackPuzzle = sudoku.makepuzzle();
-
-  const validatedFallbackPuzzle = validateAndNormalizeBoardState(
-    unvalidatedFallbackPuzzle,
-    "makepuzzle",
-  );
-
-  return validatedFallbackPuzzle;
+  return generateValidatedPuzzleAttempt();
 };
 // #endregion
 
@@ -359,7 +352,7 @@ export const getDifficultyLevelFromRawBoardState = (
 // #endregion
 
 // #region Public API
-const MAX_GENERATION_ATTEMPTS = 100;
+export const MAX_GENERATION_ATTEMPTS = 100;
 
 export const makePuzzle = (targetDifficultyRating: number): RawBoardState => {
   let bestFoundPuzzle: RawBoardState | null = null;
