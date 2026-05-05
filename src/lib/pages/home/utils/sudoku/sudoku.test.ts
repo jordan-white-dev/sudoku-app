@@ -31,7 +31,10 @@ const SOLVED_RAW_BOARD_STATE: RawBoardState = [
   5, 3, 1,
 ] as RawBoardState;
 
-// Solvable puzzle: solved state with first 50 cells cleared
+// Solvable puzzle: solved state with first 50 cells cleared.
+// Note: this puzzle has multiple valid solutions because 31 clues do not
+// uniquely determine a sudoku board. The deterministic MRV solver always
+// returns the same solution for the same input.
 const SOLVABLE_PUZZLE_BOARD_STATE: RawBoardState = (() => {
   const board = [...SOLVED_RAW_BOARD_STATE] as RawBoardState;
 
@@ -41,6 +44,16 @@ const SOLVABLE_PUZZLE_BOARD_STATE: RawBoardState = (() => {
 
   return board;
 })();
+
+// The specific solution the deterministic MRV solver returns for
+// SOLVABLE_PUZZLE_BOARD_STATE. Cells 50-80 are the original given clues;
+// cells 0-49 are one valid completion chosen deterministically by MRV order.
+const DETERMINISTIC_SOLUTION_FOR_SOLVABLE_PUZZLE: RawBoardState = [
+  0, 8, 3, 6, 1, 5, 7, 4, 2, 2, 7, 4, 3, 0, 8, 6, 1, 5, 6, 1, 5, 7, 4, 2, 3, 0,
+  8, 1, 4, 8, 2, 5, 6, 0, 7, 3, 3, 5, 2, 0, 7, 4, 1, 8, 6, 7, 0, 6, 1, 8, 3, 2,
+  5, 4, 4, 2, 0, 5, 3, 1, 8, 6, 7, 5, 3, 1, 8, 6, 7, 4, 2, 0, 8, 6, 7, 4, 2, 0,
+  5, 3, 1,
+] as RawBoardState;
 // #endregion
 
 describe("makePuzzle", () => {
@@ -158,5 +171,16 @@ describe("solvePuzzle", () => {
 
       expect(rowDigits.size).toBe(9);
     }
+  });
+
+  it("returns the same deterministic solution on every call for the same solvable puzzle", () => {
+    // Arrange
+    const rawBoardState = SOLVABLE_PUZZLE_BOARD_STATE;
+
+    // Act
+    const solution = solvePuzzle(rawBoardState);
+
+    // Assert
+    expect(solution).toEqual(DETERMINISTIC_SOLUTION_FOR_SOLVABLE_PUZZLE);
   });
 });

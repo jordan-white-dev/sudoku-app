@@ -9,11 +9,14 @@ import { isRawGivenDigit } from "@/lib/pages/home/utils/validators/validators";
 
 const POSSIBLE_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const;
 
+// #region Internal Types
+type InternalBoardState = Array<number | null>;
 type CellPossibilityMap = Array<Set<number>>;
+// #endregion
 
 // #region Board Geometry and Possibility Initialization
 const buildInitialCellPossibilities = (
-  rawBoardState: RawBoardState,
+  rawBoardState: InternalBoardState,
 ): CellPossibilityMap => {
   const initialCellPossibilities: CellPossibilityMap = rawBoardState.map(
     (cell) => {
@@ -270,6 +273,109 @@ const ratePuzzleDifficulty = (rawBoardState: RawBoardState): number => {
 };
 // #endregion
 
+// #region Solver Infrastructure
+const deepCloneCellPossibilityMap = (
+  cellPossibilities: CellPossibilityMap,
+): CellPossibilityMap =>
+  cellPossibilities.map((candidates) => new Set(candidates));
+
+const isCellPossibilityMapFullySolved = (
+  cellPossibilities: CellPossibilityMap,
+): boolean => cellPossibilities.every((candidates) => candidates.size === 1);
+
+const findCellPositionWithFewestCandidates = (
+  cellPossibilities: CellPossibilityMap,
+): number | null => {
+  type BestCandidate = {
+    readonly cellPosition: number | null;
+    readonly fewestCandidateCount: number;
+  };
+
+  const bestCandidate = cellPossibilities.reduce<BestCandidate>(
+    (currentBest, candidates, cellPosition) => {
+      if (
+        candidates.size > 1 &&
+        candidates.size < currentBest.fewestCandidateCount
+      ) {
+        return { cellPosition, fewestCandidateCount: candidates.size };
+      }
+
+      return currentBest;
+    },
+    { cellPosition: null, fewestCandidateCount: Number.POSITIVE_INFINITY },
+  );
+
+  return bestCandidate.cellPosition;
+};
+
+const extractInternalBoardStateFromSolvedCellPossibilities = (
+  cellPossibilities: CellPossibilityMap,
+): InternalBoardState =>
+  cellPossibilities.map((candidates) => {
+    const [digit] = candidates;
+    return digit;
+  });
+// #endregion
+
+// #region Backtracking Solver
+const solveWithBacktracking = (
+  cellPossibilities: CellPossibilityMap,
+  shouldRandomizeCandidates: boolean,
+): InternalBoardState | null => {
+  const workingPossibilities = deepCloneCellPossibilityMap(cellPossibilities);
+
+  if (!isConstraintPropagationSuccessful(workingPossibilities)) {
+    return null;
+  }
+
+  if (isCellPossibilityMapFullySolved(workingPossibilities)) {
+    return extractInternalBoardStateFromSolvedCellPossibilities(
+      workingPossibilities,
+    );
+  }
+
+  const targetCellPosition =
+    findCellPositionWithFewestCandidates(workingPossibilities);
+
+  if (targetCellPosition === null) {
+    return null;
+  }
+
+  const candidateDigits = Array.from(workingPossibilities[targetCellPosition]);
+  const orderedCandidateDigits = shouldRandomizeCandidates
+    ? candidateDigits
+        .map((digit) => ({ digit, sortKey: Math.random() }))
+        .sort((sortedA, sortedB) => sortedA.sortKey - sortedB.sortKey)
+        .map(({ digit }) => digit)
+    : candidateDigits;
+
+  for (const candidateDigit of orderedCandidateDigits) {
+    const candidatePossibilities =
+      deepCloneCellPossibilityMap(workingPossibilities);
+    candidatePossibilities[targetCellPosition] = new Set([candidateDigit]);
+
+    const result = solveWithBacktracking(
+      candidatePossibilities,
+      shouldRandomizeCandidates,
+    );
+
+    if (result !== null) {
+      return result;
+    }
+  }
+
+  return null;
+};
+
+const solveInternalBoard = (
+  boardState: InternalBoardState,
+): InternalBoardState | null => {
+  const cellPossibilities = buildInitialCellPossibilities(boardState);
+
+  return solveWithBacktracking(cellPossibilities, false);
+};
+// #endregion
+
 // #region Sudoku Package Validation
 const validateAndNormalizeBoardState = (
   unvalidatedBoardState: unknown,
@@ -370,14 +476,14 @@ export const makePuzzle = (): RawBoardState => {
 export const solvePuzzle = (
   rawBoardState: RawBoardState,
 ): RawBoardState | null => {
-  const unvalidatedSolution = sudoku.solvepuzzle(rawBoardState);
+  const internalSolution = solveInternalBoard(rawBoardState);
 
-  if (unvalidatedSolution === null) {
+  if (internalSolution === null) {
     return null;
   }
 
   const validatedSolution = validateAndNormalizeBoardState(
-    unvalidatedSolution,
+    internalSolution,
     "solvepuzzle",
   );
 
