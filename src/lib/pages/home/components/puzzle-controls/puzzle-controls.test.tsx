@@ -15,6 +15,7 @@ import {
 import {
   type KeypadMode,
   type PuzzleState,
+  type RawBoardState,
 } from "@/lib/pages/home/utils/types";
 
 // #region Module Mocks
@@ -74,10 +75,12 @@ const KEYPAD_MODE_SESSION_STORAGE_KEY = "keypad-mode";
 const renderPuzzleControls = async ({
   initialIsMultiselectMode = false,
   initialPuzzleState,
+  rawBoardState = EMPTY_RAW_BOARD_STATE,
   startingKeypadMode,
 }: {
   initialIsMultiselectMode?: boolean;
   initialPuzzleState?: PuzzleState;
+  rawBoardState?: RawBoardState;
   startingKeypadMode?: KeypadMode;
 } = {}): Promise<RenderedPuzzleControls> => {
   if (startingKeypadMode !== undefined) {
@@ -102,7 +105,7 @@ const renderPuzzleControls = async ({
         isMultiselectMode={isMultiselectMode}
         isRowLayout={false}
         puzzleState={puzzleState}
-        rawBoardState={EMPTY_RAW_BOARD_STATE}
+        rawBoardState={rawBoardState}
         setIsMultiselectMode={setIsMultiselectMode}
         setPuzzleState={setPuzzleState}
       />
@@ -175,6 +178,41 @@ beforeEach(() => {
   mockNavigate.mockReset();
   mockMakePuzzle.mockReset();
   mockMakePuzzle.mockReturnValue(EMPTY_RAW_BOARD_STATE);
+});
+
+describe("Difficulty label", () => {
+  it("renders 'Difficulty: Intermediate' for a board where all 81 cells are given", async () => {
+    // Arrange
+    // A board where every cell is 0 (given, non-null) has 0 empty cells:
+    // isPuzzleSolvableByDeductionOnly returns false (conflicting given values),
+    // so difficulty = Math.max(1, Math.ceil(0 / 4)) = 1 → Intermediate
+    const allGivenBoard: RawBoardState = Array.from(
+      { length: 81 },
+      () => 0,
+    ) as RawBoardState;
+
+    // Act
+    const renderedPuzzleControls = await renderPuzzleControls({
+      rawBoardState: allGivenBoard,
+    });
+
+    // Assert
+    await expect
+      .element(renderedPuzzleControls.getByText("Difficulty: Intermediate"))
+      .toBeInTheDocument();
+  });
+
+  it("renders 'Difficulty: Expert' for a board with many empty cells", async () => {
+    // Arrange — EMPTY_RAW_BOARD_STATE has 81 nulls → rating 21 → capped to Expert
+
+    // Act
+    const renderedPuzzleControls = await renderPuzzleControls();
+
+    // Assert
+    await expect
+      .element(renderedPuzzleControls.getByText("Difficulty: Expert"))
+      .toBeInTheDocument();
+  });
 });
 
 describe("PuzzleControls rendering", () => {

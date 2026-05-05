@@ -1,4 +1,4 @@
-import { Stack } from "@chakra-ui/react";
+import { Stack, Text } from "@chakra-ui/react";
 import {
   type Dispatch,
   type SetStateAction,
@@ -23,6 +23,7 @@ import {
 } from "@/lib/pages/home/utils/actions/actions";
 import { getCellSizeScaledBy } from "@/lib/pages/home/utils/display";
 import { exhaustiveGuard } from "@/lib/pages/home/utils/guards";
+import { getDifficultyLevelFromRawBoardState } from "@/lib/pages/home/utils/sudoku/sudoku";
 import {
   type KeypadMode,
   type PuzzleState,
@@ -221,6 +222,18 @@ const getModifierKeyDownOrderWithRemovedModifier = (
   );
 
 // #region Puzzle Controls Component
+type PuzzleDifficultyLabelProps = {
+  rawBoardState: RawBoardState;
+};
+
+const PuzzleDifficultyLabel = ({
+  rawBoardState,
+}: PuzzleDifficultyLabelProps) => {
+  const difficultyLevel = getDifficultyLevelFromRawBoardState(rawBoardState);
+
+  return <Text fontWeight="bold">Difficulty: {difficultyLevel}</Text>;
+};
+
 type PuzzleControlsProps = {
   isMultiselectMode: boolean;
   isRowLayout: boolean;
@@ -530,30 +543,33 @@ export const PuzzleControls = ({
   );
 
   return (
-    <Stack
-      alignItems="center"
-      direction={isRowLayout ? "column" : "row"}
-      gap="4"
-      minWidth={isRowLayout ? getCellSizeScaledBy(2.6) : undefined}
-    >
-      <PuzzleActions
-        isRowLayout={isRowLayout}
-        puzzleState={puzzleState}
-        rawBoardState={rawBoardState}
-        setPuzzleState={setPuzzleState}
-      />
-      <Keypad
-        isMultiselectMode={isMultiselectMode}
-        keypadMode={effectiveKeypadMode}
-        puzzleState={puzzleState}
-        setIsMultiselectMode={setIsMultiselectMode}
-        setPuzzleState={setPuzzleState}
-      />
-      <KeypadModeSelector
-        isRowLayout={isRowLayout}
-        keypadMode={effectiveKeypadMode}
-        setBaseKeypadMode={setBaseKeypadMode}
-      />
+    <Stack alignItems="center" direction="column" gap="2">
+      <PuzzleDifficultyLabel rawBoardState={rawBoardState} />
+      <Stack
+        alignItems="center"
+        direction={isRowLayout ? "column" : "row"}
+        gap="4"
+        minWidth={isRowLayout ? getCellSizeScaledBy(2.6) : undefined}
+      >
+        <PuzzleActions
+          isRowLayout={isRowLayout}
+          puzzleState={puzzleState}
+          rawBoardState={rawBoardState}
+          setPuzzleState={setPuzzleState}
+        />
+        <Keypad
+          isMultiselectMode={isMultiselectMode}
+          keypadMode={effectiveKeypadMode}
+          puzzleState={puzzleState}
+          setIsMultiselectMode={setIsMultiselectMode}
+          setPuzzleState={setPuzzleState}
+        />
+        <KeypadModeSelector
+          isRowLayout={isRowLayout}
+          keypadMode={effectiveKeypadMode}
+          setBaseKeypadMode={setBaseKeypadMode}
+        />
+      </Stack>
     </Stack>
   );
 };
