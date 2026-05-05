@@ -452,6 +452,39 @@ describe("Difficulty radio group", () => {
 
     expect(parsedUserSettings.preferredDifficultyLevel).toBe("Expert");
   });
+
+  it("reflects the stored preference as the checked option when the settings menu is opened", async () => {
+    // Arrange
+    const renderedHeader = await renderHeader({
+      userSettings: {
+        ...defaultUserSettings,
+        preferredDifficultyLevel: "Expert",
+      },
+    });
+
+    // Act
+    await openSettingsMenu(renderedHeader);
+
+    // Assert
+    await expect
+      .element(renderedHeader.getByRole("radio", { name: "Expert" }))
+      .toBeChecked();
+  });
+
+  it("keeps the settings menu open after a difficulty option is selected", async () => {
+    // Arrange
+    const renderedHeader = await renderHeader();
+    await openSettingsMenu(renderedHeader);
+
+    // Act
+    await renderedHeader.getByText("Intermediate").click();
+    await waitForReactToFinishUpdating();
+
+    // Assert
+    await expect
+      .element(renderedHeader.getByText("Difficulty"))
+      .toBeInTheDocument();
+  });
 });
 
 describe("Shortcuts menu content", () => {

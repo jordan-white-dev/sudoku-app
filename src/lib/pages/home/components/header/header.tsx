@@ -23,7 +23,6 @@ import {
   useUserSettings,
 } from "@/lib/pages/home/hooks/use-user-settings/use-user-settings";
 import { puzzleDifficultyLevels } from "@/lib/pages/home/utils/constants";
-import { type PuzzleDifficultyLevel } from "@/lib/pages/home/utils/types";
 
 // #region Shortcuts Menu
 
@@ -472,19 +471,17 @@ const DifficultyRadioGroup = () => {
       return;
     }
 
-    const isValidLevel = (
-      puzzleDifficultyLevels as ReadonlyArray<string>
-    ).includes(value);
+    const matchedLevel = puzzleDifficultyLevels.find(
+      (level) => level === value,
+    );
 
-    if (!isValidLevel) {
+    if (matchedLevel === undefined) {
       return;
     }
 
-    const selectedLevel = value as PuzzleDifficultyLevel;
-
     setUserSettings((currentUserSettings) => ({
       ...currentUserSettings,
-      preferredDifficultyLevel: selectedLevel,
+      preferredDifficultyLevel: matchedLevel,
     }));
   };
 
