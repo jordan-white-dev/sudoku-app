@@ -354,13 +354,13 @@ const solveWithBacktracking = (
       deepCloneCellPossibilityMap(workingPossibilities);
     candidatePossibilities[targetCellPosition] = new Set([candidateDigit]);
 
-    const result = solveWithBacktracking(
+    const candidateSolution = solveWithBacktracking(
       candidatePossibilities,
       shouldRandomizeCandidates,
     );
 
-    if (result !== null) {
-      return result;
+    if (candidateSolution !== null) {
+      return candidateSolution;
     }
   }
 

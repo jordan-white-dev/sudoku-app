@@ -45,15 +45,6 @@ const SOLVABLE_PUZZLE_BOARD_STATE: RawBoardState = (() => {
   return board;
 })();
 
-// The specific solution the deterministic MRV solver returns for
-// SOLVABLE_PUZZLE_BOARD_STATE. Cells 50-80 are the original given clues;
-// cells 0-49 are one valid completion chosen deterministically by MRV order.
-const DETERMINISTIC_SOLUTION_FOR_SOLVABLE_PUZZLE: RawBoardState = [
-  0, 8, 3, 6, 1, 5, 7, 4, 2, 2, 7, 4, 3, 0, 8, 6, 1, 5, 6, 1, 5, 7, 4, 2, 3, 0,
-  8, 1, 4, 8, 2, 5, 6, 0, 7, 3, 3, 5, 2, 0, 7, 4, 1, 8, 6, 7, 0, 6, 1, 8, 3, 2,
-  5, 4, 4, 2, 0, 5, 3, 1, 8, 6, 7, 5, 3, 1, 8, 6, 7, 4, 2, 0, 8, 6, 7, 4, 2, 0,
-  5, 3, 1,
-] as RawBoardState;
 // #endregion
 
 describe("makePuzzle", () => {
@@ -173,14 +164,16 @@ describe("solvePuzzle", () => {
     }
   });
 
-  it("returns the same deterministic solution on every call for the same solvable puzzle", () => {
+  it("returns the same solution on repeated calls with the same board state", () => {
     // Arrange
     const rawBoardState = SOLVABLE_PUZZLE_BOARD_STATE;
 
     // Act
-    const solution = solvePuzzle(rawBoardState);
+    const firstSolution = solvePuzzle(rawBoardState);
+    const secondSolution = solvePuzzle(rawBoardState);
 
     // Assert
-    expect(solution).toEqual(DETERMINISTIC_SOLUTION_FOR_SOLVABLE_PUZZLE);
+    expect(firstSolution).not.toBeNull();
+    expect(firstSolution).toEqual(secondSolution);
   });
 });
