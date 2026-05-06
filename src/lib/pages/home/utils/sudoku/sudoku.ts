@@ -338,8 +338,11 @@ const selectBestPuzzleOrFallback = (
 export const getDifficultyLevelFromRating = (
   rating: number,
 ): PuzzleDifficultyLevel => {
-  const cappedRating = Math.min(rating, puzzleDifficultyLevels.length - 1);
-  const puzzleDifficultyLevel = puzzleDifficultyLevels[cappedRating];
+  const clampedRating = Math.max(
+    0,
+    Math.min(rating, puzzleDifficultyLevels.length - 1),
+  );
+  const puzzleDifficultyLevel = puzzleDifficultyLevels[clampedRating];
   return puzzleDifficultyLevel;
 };
 

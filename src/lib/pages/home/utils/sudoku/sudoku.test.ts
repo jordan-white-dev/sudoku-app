@@ -283,6 +283,14 @@ describe("getDifficultyLevelFromRating", () => {
     // Assert
     expect(puzzleDifficultyLevel).toBe("Expert");
   });
+
+  it("returns 'Standard' for a negative rating", () => {
+    // Act
+    const puzzleDifficultyLevel = getDifficultyLevelFromRating(-1);
+
+    // Assert
+    expect(puzzleDifficultyLevel).toBe("Standard");
+  });
 });
 
 describe("getDifficultyLevelFromRawBoardState", () => {
