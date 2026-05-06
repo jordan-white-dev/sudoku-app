@@ -1,29 +1,15 @@
-import sudokuLib from "sudoku";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { TOTAL_CELLS_IN_BOARD } from "@/lib/pages/home/utils/constants";
 import {
   getDifficultyLevelFromRating,
   getDifficultyLevelFromRawBoardState,
-  MAX_GENERATION_ATTEMPTS,
   makePuzzle,
   ratePuzzleDifficulty,
   solvePuzzle,
 } from "@/lib/pages/home/utils/sudoku/sudoku";
 import { type RawBoardState } from "@/lib/pages/home/utils/types";
 import { isRawGivenDigit } from "@/lib/pages/home/utils/validators/validators";
-
-vi.mock("sudoku");
-
-beforeEach(async () => {
-  const actualSudoku = await vi.importActual<typeof import("sudoku")>("sudoku");
-  vi.mocked(sudokuLib.makepuzzle).mockImplementation(actualSudoku.makepuzzle);
-  vi.mocked(sudokuLib.solvepuzzle).mockImplementation(actualSudoku.solvepuzzle);
-});
-
-afterEach(() => {
-  vi.resetAllMocks();
-});
 
 // #region Test Helpers
 const buildRawBoardState = (
@@ -51,7 +37,10 @@ const SOLVED_RAW_BOARD_STATE: RawBoardState = [
   5, 3, 1,
 ] as RawBoardState;
 
-// Solvable puzzle: solved state with first 50 cells cleared
+// Solvable puzzle: solved state with first 50 cells cleared.
+// Note: this puzzle has multiple valid solutions because 31 clues do not
+// uniquely determine a sudoku board. The deterministic MRV solver always
+// returns the same solution for the same input.
 const SOLVABLE_PUZZLE_BOARD_STATE: RawBoardState = (() => {
   const board = [...SOLVED_RAW_BOARD_STATE] as RawBoardState;
 
@@ -61,10 +50,38 @@ const SOLVABLE_PUZZLE_BOARD_STATE: RawBoardState = (() => {
 
   return board;
 })();
-// #endregion
 
-/** The expected difficulty rating of SOLVABLE_PUZZLE_BOARD_STATE: Math.ceil(50 empty cells / 4) = 13 */
-const SOLVABLE_PUZZLE_EXPECTED_DIFFICULTY_RATING = 13;
+const canPuzzleCellHaveAlternativeSolution = (
+  puzzle: RawBoardState,
+  cellPosition: number,
+  solutionDigit: number,
+): boolean => {
+  const givenClueOverrides: Partial<Record<number, number | null>> = {};
+
+  for (let position = 0; position < TOTAL_CELLS_IN_BOARD; position++) {
+    if (puzzle[position] !== null) {
+      givenClueOverrides[position] = puzzle[position];
+    }
+  }
+
+  for (const alternativeDigit of [0, 1, 2, 3, 4, 5, 6, 7, 8]) {
+    if (alternativeDigit === solutionDigit) {
+      continue;
+    }
+
+    const testPuzzle = buildRawBoardState({
+      ...givenClueOverrides,
+      [cellPosition]: alternativeDigit,
+    });
+
+    if (solvePuzzle(testPuzzle) !== null) {
+      return true;
+    }
+  }
+
+  return false;
+};
+// #endregion
 
 describe("makePuzzle", () => {
   it("returns a board state with exactly 81 cells", () => {
@@ -108,36 +125,56 @@ describe("makePuzzle", () => {
     expect(solution).not.toBeNull();
   });
 
-  it("returns on the first attempt when the generator produces a puzzle matching the target difficulty rating", () => {
-    // Arrange
-    vi.mocked(sudokuLib.makepuzzle).mockReturnValue([
-      ...SOLVABLE_PUZZLE_BOARD_STATE,
-    ]);
-
+  it("returns a puzzle whose rating matches the target difficulty rating when targeting Standard", () => {
     // Act
-    const puzzleResult = makePuzzle(SOLVABLE_PUZZLE_EXPECTED_DIFFICULTY_RATING);
+    const puzzle = makePuzzle(0);
 
     // Assert
-    expect(vi.mocked(sudokuLib.makepuzzle)).toHaveBeenCalledTimes(1);
-    expect(puzzleResult).toEqual(SOLVABLE_PUZZLE_BOARD_STATE);
+    expect(ratePuzzleDifficulty(puzzle)).toBe(0);
   });
 
-  it("exhausts all generation attempts and returns the lowest-rated puzzle when no attempt matches the target difficulty rating", () => {
-    // Arrange
-    // SOLVABLE_PUZZLE_BOARD_STATE rates as SOLVABLE_PUZZLE_EXPECTED_DIFFICULTY_RATING (not 0),
-    // so targeting 0 guarantees no iteration matches and the fallback path runs.
-    vi.mocked(sudokuLib.makepuzzle).mockReturnValue([
-      ...SOLVABLE_PUZZLE_BOARD_STATE,
-    ]);
-
-    // Act
-    const puzzleResult = makePuzzle(0);
+  it("returns a valid puzzle when the target difficulty rating is not achievable within the attempt limit", () => {
+    // Act — targeting a rating that is never produced in practice; the fallback returns the lowest-rated puzzle
+    const puzzle = makePuzzle(999);
 
     // Assert
-    expect(vi.mocked(sudokuLib.makepuzzle)).toHaveBeenCalledTimes(
-      MAX_GENERATION_ATTEMPTS,
-    );
-    expect(puzzleResult).toEqual(SOLVABLE_PUZZLE_BOARD_STATE);
+    expect(puzzle).toHaveLength(TOTAL_CELLS_IN_BOARD);
+    expect(solvePuzzle(puzzle)).not.toBeNull();
+  });
+
+  it("returns a puzzle with a unique solution", () => {
+    // Arrange
+    const puzzle = makePuzzle(0);
+    const solution = solvePuzzle(puzzle);
+
+    // Assert
+    expect(solution).not.toBeNull();
+    if (solution === null) {
+      return;
+    }
+
+    for (
+      let cellPosition = 0;
+      cellPosition < TOTAL_CELLS_IN_BOARD;
+      cellPosition++
+    ) {
+      if (puzzle[cellPosition] !== null) {
+        continue;
+      }
+
+      const solutionDigit = solution[cellPosition];
+      if (solutionDigit === null) {
+        continue;
+      }
+
+      expect(
+        canPuzzleCellHaveAlternativeSolution(
+          puzzle,
+          cellPosition,
+          solutionDigit,
+        ),
+      ).toBe(false);
+    }
   });
 });
 
@@ -213,6 +250,19 @@ describe("solvePuzzle", () => {
 
       expect(rowDigits.size).toBe(9);
     }
+  });
+
+  it("returns the same solution on repeated calls with the same board state", () => {
+    // Arrange
+    const rawBoardState = SOLVABLE_PUZZLE_BOARD_STATE;
+
+    // Act
+    const firstSolution = solvePuzzle(rawBoardState);
+    const secondSolution = solvePuzzle(rawBoardState);
+
+    // Assert
+    expect(firstSolution).not.toBeNull();
+    expect(firstSolution).toEqual(secondSolution);
   });
 });
 

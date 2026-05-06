@@ -38,9 +38,6 @@ importers:
       react-timer-hook:
         specifier: ^4.0.5
         version: 4.0.5(react@19.2.4)
-      sudoku:
-        specifier: ^0.0.3
-        version: 0.0.3
       super-expressive:
         specifier: ^2.0.0
         version: 2.0.0
@@ -2023,9 +2020,6 @@ packages:
 
   stylis@4.2.0:
     resolution: {integrity: sha512-Orov6g6BB1sDfYgzWfTHDOxamtX1bE/zo104Dh9e6fqJ3PooipYyfJ0pUmrZO2wAvO8YbEyeFrkV91XTsGMSrw==}
-
-  sudoku@0.0.3:
-    resolution: {integrity: sha512-8UU9b39qCJzncdgGT2jbSjAaNdFNJasoZcgKWt7pZ5zVA6Way8yIP9kR8aS2TA/KOwehu0a5uS43eQxrW4hCIA==}
 
   super-expressive@2.0.0:
     resolution: {integrity: sha512-jtCS9dEBPxtq4jd0v33LnRPI0kYQP1npHxzl+Pk+IOuufIn5Pyo0AXiU6ypvhO3vZevqEE9AE3YDD7aWp+RxRg==}
@@ -4490,8 +4484,6 @@ snapshots:
   strip-json-comments@5.0.3: {}
 
   stylis@4.2.0: {}
-
-  sudoku@0.0.3: {}
 
   super-expressive@2.0.0: {}
 
