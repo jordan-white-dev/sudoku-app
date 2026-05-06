@@ -45,6 +45,36 @@ const SOLVABLE_PUZZLE_BOARD_STATE: RawBoardState = (() => {
   return board;
 })();
 
+const canPuzzleCellHaveAlternativeSolution = (
+  puzzle: RawBoardState,
+  cellPosition: number,
+  solutionDigit: number,
+): boolean => {
+  const givenClueOverrides: Partial<Record<number, number | null>> = {};
+
+  for (let position = 0; position < TOTAL_CELLS_IN_BOARD; position++) {
+    if (puzzle[position] !== null) {
+      givenClueOverrides[position] = puzzle[position];
+    }
+  }
+
+  for (const alternativeDigit of [0, 1, 2, 3, 4, 5, 6, 7, 8]) {
+    if (alternativeDigit === solutionDigit) {
+      continue;
+    }
+
+    const testPuzzle = buildRawBoardState({
+      ...givenClueOverrides,
+      [cellPosition]: alternativeDigit,
+    });
+
+    if (solvePuzzle(testPuzzle) !== null) {
+      return true;
+    }
+  }
+
+  return false;
+};
 // #endregion
 
 describe("makePuzzle", () => {
@@ -87,6 +117,41 @@ describe("makePuzzle", () => {
 
     // Assert
     expect(solution).not.toBeNull();
+  });
+
+  it("returns a puzzle with a unique solution", () => {
+    // Arrange
+    const puzzle = makePuzzle();
+    const solution = solvePuzzle(puzzle);
+
+    // Assert
+    expect(solution).not.toBeNull();
+    if (solution === null) {
+      return;
+    }
+
+    for (
+      let cellPosition = 0;
+      cellPosition < TOTAL_CELLS_IN_BOARD;
+      cellPosition++
+    ) {
+      if (puzzle[cellPosition] !== null) {
+        continue;
+      }
+
+      const solutionDigit = solution[cellPosition];
+      if (solutionDigit === null) {
+        continue;
+      }
+
+      expect(
+        canPuzzleCellHaveAlternativeSolution(
+          puzzle,
+          cellPosition,
+          solutionDigit,
+        ),
+      ).toBe(false);
+    }
   });
 });
 

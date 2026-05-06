@@ -1,5 +1,3 @@
-import sudoku from "sudoku";
-
 import {
   CELLS_PER_HOUSE,
   TOTAL_CELLS_IN_BOARD,
@@ -12,6 +10,10 @@ const POSSIBLE_DIGITS = [0, 1, 2, 3, 4, 5, 6, 7, 8] as const;
 // #region Internal Types
 type InternalBoardState = Array<number | null>;
 type CellPossibilityMap = Array<Set<number>>;
+type PositionedDigit = {
+  readonly cellPosition: number;
+  readonly digit: number;
+};
 // #endregion
 
 // #region Board Geometry and Possibility Initialization
@@ -376,24 +378,131 @@ const solveInternalBoard = (
 };
 // #endregion
 
-// #region Sudoku Package Validation
+// #region Puzzle Generation Utilities
+const createShuffledCopy = <ItemType>(
+  items: Array<ItemType>,
+): Array<ItemType> =>
+  items
+    .map((item) => ({ item, sortKey: Math.random() }))
+    .sort((sortedA, sortedB) => sortedA.sortKey - sortedB.sortKey)
+    .map(({ item }) => item);
+
+const buildBoardFromPositionedDigits = (
+  positionedDigits: Array<PositionedDigit>,
+): InternalBoardState => {
+  const board: InternalBoardState = Array.from(
+    { length: TOTAL_CELLS_IN_BOARD },
+    () => null,
+  );
+
+  for (const { cellPosition, digit } of positionedDigits) {
+    board[cellPosition] = digit;
+  }
+
+  return board;
+};
+
+const doInternalBoardsMatch = (
+  firstBoard: InternalBoardState,
+  secondBoard: InternalBoardState,
+): boolean =>
+  firstBoard.every(
+    (firstCellValue, cellPosition) =>
+      firstCellValue === secondBoard[cellPosition],
+  );
+
+const deduceAllReachableCellValues = (
+  boardState: InternalBoardState,
+): InternalBoardState => {
+  const cellPossibilities = buildInitialCellPossibilities(boardState);
+  isConstraintPropagationSuccessful(cellPossibilities);
+
+  return cellPossibilities.map((candidates) => {
+    if (candidates.size !== 1) {
+      return null;
+    }
+
+    const [deducedDigit] = candidates;
+    return deducedDigit ?? null;
+  });
+};
+// #endregion
+
+// #region Puzzle Uniqueness Validation
+const countSolutionsUpToMaximum = (
+  cellPossibilities: CellPossibilityMap,
+  maximumSolutionCount: number,
+): number => {
+  const workingPossibilities = deepCloneCellPossibilityMap(cellPossibilities);
+
+  if (!isConstraintPropagationSuccessful(workingPossibilities)) {
+    return 0;
+  }
+
+  if (isCellPossibilityMapFullySolved(workingPossibilities)) {
+    return 1;
+  }
+
+  const targetCellPosition =
+    findCellPositionWithFewestCandidates(workingPossibilities);
+
+  if (targetCellPosition === null) {
+    return 0;
+  }
+
+  let accumulatedSolutionCount = 0;
+
+  for (const candidateDigit of workingPossibilities[targetCellPosition]) {
+    const candidatePossibilities =
+      deepCloneCellPossibilityMap(workingPossibilities);
+    candidatePossibilities[targetCellPosition] = new Set([candidateDigit]);
+
+    accumulatedSolutionCount += countSolutionsUpToMaximum(
+      candidatePossibilities,
+      maximumSolutionCount,
+    );
+
+    if (accumulatedSolutionCount >= maximumSolutionCount) {
+      return accumulatedSolutionCount;
+    }
+  }
+
+  return accumulatedSolutionCount;
+};
+
+const hasPuzzleUniqueSolutionMatchingBoard = (
+  candidatePuzzle: InternalBoardState,
+  solvedBoard: InternalBoardState,
+): boolean => {
+  const solution = solveInternalBoard(candidatePuzzle);
+
+  if (solution === null) {
+    return false;
+  }
+
+  if (!doInternalBoardsMatch(solution, solvedBoard)) {
+    return false;
+  }
+
+  const cellPossibilities = buildInitialCellPossibilities(candidatePuzzle);
+  const solutionCount = countSolutionsUpToMaximum(cellPossibilities, 2);
+
+  return solutionCount === 1;
+};
+// #endregion
+
+// #region Board State Validation
 const validateAndNormalizeBoardState = (
-  unvalidatedBoardState: unknown,
-  sourceSudokuFunctionName: "makepuzzle" | "solvepuzzle",
+  internalBoardState: InternalBoardState,
+  sourceFunctionName: string,
 ): RawBoardState => {
-  if (!Array.isArray(unvalidatedBoardState)) {
+  if (internalBoardState.length !== TOTAL_CELLS_IN_BOARD) {
     throw new Error(
-      `Failed to validate output from ${sourceSudokuFunctionName}. Expected an array output.`,
+      `Failed to validate output from ${sourceFunctionName}. Expected 81 cells but received ${internalBoardState.length}.`,
     );
   }
 
-  if (unvalidatedBoardState.length !== TOTAL_CELLS_IN_BOARD) {
-    throw new Error(
-      `Failed to validate output from ${sourceSudokuFunctionName}. Expected 81 cells but received ${unvalidatedBoardState.length}.`,
-    );
-  }
-
-  const validatedBoardState = unvalidatedBoardState.map(
+  const validatedBoardState = internalBoardState.map(
     (unvalidatedCell, cellIndex) => {
       if (unvalidatedCell === null) {
         return null;
@@ -401,7 +510,7 @@ const validateAndNormalizeBoardState = (
 
       if (!isRawGivenDigit(unvalidatedCell)) {
         throw new Error(
-          `Failed to validate output from ${sourceSudokuFunctionName}. Encountered invalid cell value at index ${cellIndex}: ${String(unvalidatedCell)}.`,
+          `Failed to validate output from ${sourceFunctionName}. Encountered invalid cell value at index ${cellIndex}: ${String(unvalidatedCell)}.`,
         );
       }
 
@@ -414,15 +523,88 @@ const validateAndNormalizeBoardState = (
 // #endregion
 
 // #region Puzzle Generation Strategy
-const generateValidatedPuzzleAttempt = (): RawBoardState => {
-  const unvalidatedBoardState = sudoku.makepuzzle();
-
-  const validatedBoardState = validateAndNormalizeBoardState(
-    unvalidatedBoardState,
-    "makepuzzle",
+const generateRandomSolvedBoard = (): InternalBoardState => {
+  const emptyCellPossibilities: CellPossibilityMap = Array.from(
+    { length: TOTAL_CELLS_IN_BOARD },
+    () => new Set([0, 1, 2, 3, 4, 5, 6, 7, 8]),
   );
 
-  return validatedBoardState;
+  const solvedBoard = solveWithBacktracking(emptyCellPossibilities, true);
+
+  if (solvedBoard === null) {
+    throw new Error(
+      "Invariant violation: backtracking solver returned null for an empty grid",
+    );
+  }
+
+  return solvedBoard;
+};
+
+const selectMinimalCluesFromSolvedBoard = (
+  solvedBoard: InternalBoardState,
+): InternalBoardState => {
+  const shuffledPositions = createShuffledCopy(
+    Array.from(
+      { length: TOTAL_CELLS_IN_BOARD },
+      (_, cellPosition) => cellPosition,
+    ),
+  );
+
+  const initialClueList: Array<PositionedDigit> = [];
+  let currentDeducedBoard: InternalBoardState = Array.from(
+    { length: TOTAL_CELLS_IN_BOARD },
+    () => null,
+  );
+
+  for (const cellPosition of shuffledPositions) {
+    if (currentDeducedBoard[cellPosition] !== null) {
+      continue;
+    }
+
+    const digit = solvedBoard[cellPosition];
+    if (digit === null) {
+      continue;
+    }
+
+    initialClueList.push({ cellPosition, digit });
+    currentDeducedBoard = deduceAllReachableCellValues(
+      buildBoardFromPositionedDigits(initialClueList),
+    );
+  }
+
+  const minimizableClueList: Array<PositionedDigit> =
+    createShuffledCopy(initialClueList);
+
+  for (
+    let clueIndex = minimizableClueList.length - 1;
+    clueIndex >= 0;
+    clueIndex--
+  ) {
+    const clueAtIndex = minimizableClueList.at(clueIndex);
+
+    if (clueAtIndex === undefined) {
+      continue;
+    }
+
+    minimizableClueList.splice(clueIndex, 1);
+
+    if (
+      !hasPuzzleUniqueSolutionMatchingBoard(
+        buildBoardFromPositionedDigits(minimizableClueList),
+        solvedBoard,
+      )
+    ) {
+      minimizableClueList.push(clueAtIndex);
+    }
+  }
+
+  return buildBoardFromPositionedDigits(minimizableClueList);
+};
+
+const generateInternalPuzzleAttempt = (): InternalBoardState => {
+  const solvedBoard = generateRandomSolvedBoard();
+
+  return selectMinimalCluesFromSolvedBoard(solvedBoard);
 };
 
 const selectBestPuzzleOrFallback = (
@@ -432,14 +614,12 @@ const selectBestPuzzleOrFallback = (
     return bestPuzzleFound;
   }
 
-  const unvalidatedFallbackPuzzle = sudoku.makepuzzle();
+  const fallbackInternalPuzzle = generateInternalPuzzleAttempt();
 
-  const validatedFallbackPuzzle = validateAndNormalizeBoardState(
-    unvalidatedFallbackPuzzle,
-    "makepuzzle",
+  return validateAndNormalizeBoardState(
+    fallbackInternalPuzzle,
+    "generateInternalPuzzleAttempt",
   );
-
-  return validatedFallbackPuzzle;
 };
 // #endregion
 
@@ -455,7 +635,11 @@ export const makePuzzle = (): RawBoardState => {
     attemptNumber <= MAX_GENERATION_ATTEMPTS;
     attemptNumber++
   ) {
-    const generatedPuzzle = generateValidatedPuzzleAttempt();
+    const generatedInternalPuzzle = generateInternalPuzzleAttempt();
+    const generatedPuzzle = validateAndNormalizeBoardState(
+      generatedInternalPuzzle,
+      "generateInternalPuzzleAttempt",
+    );
     const puzzleDifficultyScore = ratePuzzleDifficulty(generatedPuzzle);
 
     if (puzzleDifficultyScore === 0) {
@@ -484,7 +668,7 @@ export const solvePuzzle = (
 
   const validatedSolution = validateAndNormalizeBoardState(
     internalSolution,
-    "solvepuzzle",
+    "solveInternalBoard",
   );
 
   return validatedSolution;
