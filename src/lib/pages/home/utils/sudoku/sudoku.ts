@@ -1,15 +1,8 @@
 // This file is a port of the "sudoku" npm package by Blagovest Dachev.
 // Source: https://github.com/dachev/sudoku
 //
-// Original notice:
-// Sudoku Generator and Solver for node.js and Web
-// Copyright (c) 2011 Blagovest Dachev. All rights reserved.
-//
-// This is a port of David Bau's python implementation:
+// Which was itself a port of David Bau's python implementation:
 // http://davidbau.com/archives/2006/09/04/sudoku_generator.html
-//
-// Licensed under the GNU General Public License v3.0 or later.
-// See http://www.gnu.org/licenses/ for the full license text.
 
 import {
   CELLS_PER_HOUSE,
