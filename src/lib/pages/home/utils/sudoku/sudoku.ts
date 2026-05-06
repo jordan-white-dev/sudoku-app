@@ -507,7 +507,7 @@ const hasPuzzleUniqueSolutionMatchingBoard = (
 // #region Board State Validation
 const validateAndNormalizeBoardState = (
   internalBoardState: InternalBoardState,
-  sourceFunctionName: string,
+  sourceFunctionName: "generateInternalPuzzleAttempt" | "solveInternalBoard",
 ): RawBoardState => {
   if (internalBoardState.length !== TOTAL_CELLS_IN_BOARD) {
     throw new Error(
