@@ -23,7 +23,7 @@ Extract `T` from the `Task:` field in the Developer's preceding message (e.g., `
 # Review Report: {feature-name} — Task {task-number}
 
 **Feature number**: {N}
-**Branch**: feature/{feature-name}
+**Branch**: feature/{N}-{feature-name}
 **Review cycle**: r{R}
 **Date**: {YYYY-MM-DD}
 

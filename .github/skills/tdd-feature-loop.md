@@ -12,9 +12,9 @@ Perform these steps exactly once at the start of a new feature, before writing a
 2. Check out main: `git checkout main`
 3. Pull latest: `git pull`
 4. Switch to the feature branch if it already exists, or create it:
-   - Run `git checkout feature/{kebab-case-feature-name}`
-   - If that command fails (the branch does not exist yet), run `git checkout -b feature/{kebab-case-feature-name}`
-   - Derive the name directly from `{feature-name}` in the spec (e.g. `feature/timer-pause-resume`)
+   - Run `git checkout feature/{N}-{kebab-case-feature-name}`
+   - If that command fails (the branch does not exist yet), run `git checkout -b feature/{N}-{kebab-case-feature-name}`
+   - Derive the name from `N` and `{feature-name}` in the spec (e.g. `feature/0003-timer-pause-resume`)
 5. Confirm the branch is active: `git branch --show-current`
 6. Commit any artifact files already written by the Analyst and Architect so they do not contaminate the task implementation commit:
    - `git add .github/artifacts/`
@@ -92,7 +92,7 @@ Feature number: {N}
 Feature name: {feature-name}
 Task: {task number and title from the spec}
 Review cycle: {R}
-Branch: feature/{feature-name}
+Branch: feature/{N}-{feature-name}
 Additional files modified: {any files touched beyond those listed in the spec's Files: entry, or "none"}
 
 [Brief description of what was implemented or remediated, and any decisions made]
@@ -136,7 +136,7 @@ Perform these steps after the Reviewer issues APPROVED on the final task in the 
 
 4. Commit the PR body file: `git add .github/artifacts/pr/{N}-pr-body-{feature-name}.md && git commit -m "docs(artifacts): add PR body for {N}-{feature-name}"`
 
-5. Push the feature branch: `git push -u origin feature/{feature-name}`
+5. Push the feature branch: `git push -u origin feature/{N}-{feature-name}`
    - If the push fails (e.g., remote rejection, authentication error, no upstream configured), do not proceed — report the exact error output to the user, provide the branch name and a one-line summary of each commit since `main` (`git log main..HEAD --oneline`), and instruct them to push manually before creating the PR. Once they confirm the push succeeded, continue to step 6.
 6. Open a pull request targeting `main` using the GitHub CLI:
    - Title: a short imperative sentence describing the change, no longer than 72 characters. Derive it from `{feature-name}` by: (1) replacing all hyphens with spaces to form a noun phrase, (2) prepending an appropriate imperative verb that matches the nature of the change, (3) adjusting the phrase for natural readability (e.g., adding conjunctions where appropriate), (4) ensuring the resulting title starts with a capital letter (e.g., `timer-pause-resume` → `Add timer pause and resume`). Cross-check the resulting title against the Problem Statement in `.github/artifacts/analyst/{N}-requirements-{feature-name}.md` to confirm it accurately describes the change.

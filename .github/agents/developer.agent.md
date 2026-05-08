@@ -58,7 +58,7 @@ _Triggered by: "→ Developer: Implement first task" from the Architect_
 
 _Triggered by: "→ Developer: Task approved — continue to next task" from the Reviewer (identifiable by `Verdict: APPROVED`)_
 
-1. Run `git checkout feature/{feature-name}` (using the branch value from the previous agent message) to ensure you are on the correct branch
+1. Run `git checkout feature/{N}-{feature-name}` (using the branch value from the previous agent message) to ensure you are on the correct branch
 2. Read `.github/artifacts/architect/{N}-spec-{feature-name}.md` and identify the task that follows the just-approved task
 3. If no next task exists (the just-approved task was the final one), switch to **Mode: Feature Completion** below instead of continuing
 4. Derive the review report path as `.github/artifacts/reviewer/{N}-review-report-{feature-name}-t{T}-r{R}.md` using T and R from the Reviewer's preceding message, and confirm the previous task was closed without open findings before proceeding
@@ -74,7 +74,7 @@ _Triggered by: "→ Developer: Task approved — continue to next task" from the
 _Triggered by: "→ Developer: Remediate findings (auto)" or "→ Developer: Remediate findings (manual — approval required)" from the Reviewer (identifiable by `Verdict: CHANGES REQUESTED`)_
 
 1. Increment R by 1 (per the Review Cycle Tracking rule in `.github/instructions/testing.instructions.md`)
-2. Run `git checkout feature/{feature-name}` (using the branch value from the previous agent message) to ensure you are on the correct branch
+2. Run `git checkout feature/{N}-{feature-name}` (using the branch value from the previous agent message) to ensure you are on the correct branch
 3. Read the current task's entry in the spec at `.github/artifacts/architect/{N}-spec-{feature-name}.md` to establish full task context before addressing findings
 4. Read the review report at `.github/artifacts/reviewer/{N}-review-report-{feature-name}-t{T}-r{R-1}.md` (where R is the value after incrementing in step 1); address every finding listed there
    - If a finding reveals a spec ambiguity that blocks remediation, use the "→ Architect: Request spec clarification" handoff rather than guessing
@@ -87,7 +87,7 @@ _Triggered by: "→ Developer: Remediate findings (auto)" or "→ Developer: Rem
 
 _Triggered by: "→ Developer: Resume implementation after spec clarification" from the Architect (identifiable by the body text "The Architect has resolved the spec ambiguity")_
 
-1. Run `git checkout feature/{feature-name}` (using the branch value from the previous agent message) to ensure you are on the correct branch
+1. Run `git checkout feature/{N}-{feature-name}` (using the branch value from the previous agent message) to ensure you are on the correct branch
 2. Read the current task's entry in the updated spec at `.github/artifacts/architect/{N}-spec-{feature-name}.md` to understand what changed before resuming
 3. Branch on R from the previous agent message:
    - **R = 1** (spec clarification was raised during initial TDD implementation): run `pnpm test` before writing any code to determine which TDD phase to pick up from — if no test for this task exists yet, begin the Red Phase from step 1; if that test **fails**, proceed to the Green Phase; if that test **passes** (the implementation satisfies the test and no further tests are needed for the clarified spec), proceed to the Refactor Phase

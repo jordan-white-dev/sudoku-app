@@ -64,7 +64,7 @@ If invoked via the "→ Architect: Create implementation spec" handoff from the 
 3. If unresolvable ambiguities exist, use the "→ Analyst: Clarify requirements gap" handoff before proceeding
 4. Write the spec following the template in `architecture-spec.md`
 5. Save the spec to `.github/artifacts/architect/{N}-spec-{feature-name}.md`, creating the directory if it does not already exist
-6. Present the "→ Developer: Implement first task" handoff for the user to approve; the Architect's preceding message must include N, feature-name, Task: 1, Review cycle: 1, and Branch: feature/{feature-name}
+6. Present the "→ Developer: Implement first task" handoff for the user to approve; the Architect's preceding message must include N, feature-name, Task: 1, Review cycle: 1, and Branch: feature/{N}-{feature-name}
 
 ### Clarification Mode (re-invocation from Developer spec query)
 
@@ -84,7 +84,7 @@ If invoked via the "→ Architect: Requirements resolved — continue initial sp
 2. If the updated requirements reveal new unresolvable ambiguities, use the "→ Analyst: Clarify requirements gap" handoff before proceeding
 3. Write the spec following the template in `architecture-spec.md`
 4. Save the spec to `.github/artifacts/architect/{N}-spec-{feature-name}.md`, creating the directory if it does not already exist. If a partial spec file already exists at this path, overwrite it entirely — do not merge or append.
-5. Present the "→ Developer: Implement first task" handoff for the user to approve; the Architect's preceding message must include N, feature-name, Task: 1, Review cycle: 1, and Branch: feature/{feature-name}
+5. Present the "→ Developer: Implement first task" handoff for the user to approve; the Architect's preceding message must include N, feature-name, Task: 1, Review cycle: 1, and Branch: feature/{N}-{feature-name}
 
    > Note: This mode writes a brand-new spec (no prior version exists), so `Version` is 1 per the template default — do not increment it.
 
